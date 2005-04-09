@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- You may freely edit this file. See commented blocks below for -->
+<!-- some examples of how to customize the build. -->
+<!-- (If you delete it and reopen the project it will be recreated.) -->
+<project name="wizard" default="default" basedir=".">
+    <description>Builds, tests, and runs the project wizard.</description>
+    <import file="nbproject/build-impl.xml"/> 
+    
+    <target name="javadoc">
+        <mkdir dir="dist/javadoc"/>
+        <property file="${basedir}/nbproject/project.properties"/>
+        <property file="${basedir}/nbproject/private/private.properties"/>
+        <javadoc overview="${basedir}/doc/api/overview.html" 
+                 destdir="dist/javadoc" 
+                 source="1.4" 
+                 notree="${javadoc.notree}" 
+                 use="${javadoc.use}" 
+                 nonavbar="${javadoc.nonavbar}" 
+                 noindex="${javadoc.noindex}" 
+                 splitindex="${javadoc.splitindex}" 
+                 author="${javadoc.author}" 
+                 version="${javadoc.version}" 
+                 windowtitle="${javadoc.windowtitle}" 
+                 private="${javadoc.private}" 
+                 failonerror="true"
+                 >
+            <classpath>
+                <path path="${javac.classpath}"/>
+            </classpath>
+
+            <packageset dir="src" defaultexcludes="yes">
+              <include name="org/netbeans/api/**" />
+              <include name="org/netbeans/spi/**" />
+              <exclude name="org/netbeans/modules/**"/>
+            </packageset>            
+        </javadoc>
+    </target>
+    
+</project>
