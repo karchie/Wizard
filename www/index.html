@@ -9,14 +9,18 @@ Provides a simple API and UI for Wizards, a commonly used UI pattern in GUI inte
 <p>
 Download the javadoc <a href="WizardAPI.zip">here</a>.  Download the library <a href="wizard.jar">here.</a>
 <p>
-This library aims to allow someone to implement a Wizard with minimal code.  The model for a wizard
-is essentially a list of String IDs, which a user-supplied factory can map back to panels and 
+The model for a wizard
+is a list of String IDs, which a user-supplied factory can map back to panels and 
 human-readable descriptions.  As much of the management of panels and IDs as possible is handled
-automatically. Decision points at which the list of future steps change are supported.
+automatically. Decision points at which the list of future steps change and wizards with
+an indeterminite number of steps are supported.  User supplied panels collect data from the
+user, which is placed into a <code>Map</code> which will be used to do whatever the wizard 
+does when <code>finish()</code> is called.  Removal of map entries when the user navigates 
+backward in a wizard is handled automatically. 
 <p>
 Creating a wizard can be as simple as extending <code>WizardPanelProvider</code>, passing an
 array of step IDs and implementing <code>createPanel</code> and <code>Finish</code>.  Then just
-call <code>WizardDisplayer.show(myPanelProvider.createWizard())</code>.
+call <code>WizardDisplayer.showWizard(myPanelProvider.createWizard())</code>.
 <p>
 A basic UI/implementation of <code>WizardDisplayer</code> is provided (needs polish); the
 implementation of <code>WizardDisplayer</code> is pluggable, so applications can provide a 
