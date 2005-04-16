@@ -5,41 +5,27 @@
 </head>
 
 <body bgcolor="#FFFFFF" text="#000000">
-<h1>Default project home page </h1>
-<p>Congratulations on your new java.net project! </p>
-<p>This page is the home page for your new project. This content is appearing 
-  because you have selected the option <b>Use project index.html</b>. To edit 
-  the information displayed on this page, just use CVS to check out your project's 
-  CVS repository and edit index.html in directory www. You can get more information 
-  on how to set-up your local CVS client, click on <b>Version Control</b> on the 
-  left nav bar. </p>
-<p>If you don't want to use CVS to manage your home page, click on the <b>Edit 
-  project</b> link on this page and unclick the option <b>Use project index.html</b>. 
-  Your project home page contents will be generated from the <b>Edit project</b> 
-  field <b>Description</b>. Edit the text on that field to change your home page 
-  contents. Click on <b>Submit changes</b> to save your edits. </p>
-<p>If you are looking for <a href="https://java-net.dev.java.net/ProjectPages.html#templates">sample 
-  home page templates</a>, check out the <a href="https://java-net.dev.java.net/ProjectPages.html">java.net 
-  Project Starter Kit</a>. Copy either of the templates into your project's html 
-  to get started on your project's home page. </p>
-<p>You can find lots of helpful information in the Starter Kit to get your project 
-  started. Some of the things you will find in there include:</p>
-<ul>
-  <li>Hints on how to <a href="https://java-net.dev.java.net/ProjectPages.html#pages">set-up 
-    your project's</a> home page</li>
-  <li>Ideas on how to <a href="https://java-net.dev.java.net/ProjectPages.html#publicity">publicize 
-    your project</a> including RSS feeds</li>
-  <li>Hints on <a href="https://java-net.dev.java.net/pagedesign.html">project 
-    page HTML</a></li>
-  <li>Setting up project <a href="https://java-net.dev.java.net/ProjectPages.html#wiki">wiki 
-    pages</a></li>
-  <li>And places to go if <a href="https://java-net.dev.java.net/ProjectPages.html#feedback">you 
-    have questions</a>.</li>
+Provides a simple API and UI for Wizards, a commonly used UI pattern in GUI interfaces. Traditionally, everybody has needed to write their own Wizards, and such code is painful and hard to get right. This library aims to provide a simple API for writing Wizards, and default UI that resembles Wizards in other applications, but with the ability to plug in alternative UI implementations if desired. This library was designed as a replacement for NetBeans' Wizards API, and takes into account the long history of that API, problems encountered with it over the years, and provide a simple, easy to use solution that enables any Swing application to provide Wizards with a minimum of code and effort.
+<p>
+Download the javadoc <a href="WizardAPI.zip">here</a>.  Download the library <a href="wizard.jar">here.</a>
+<p>
+This library aims to allow someone to implement a Wizard with minimal code.  The model for a wizard
+is essentially a list of String IDs, which a user-supplied factory can map back to panels and 
+human-readable descriptions.  As much of the management of panels and IDs as possible is handled
+automatically. Decision points at which the list of future steps change are supported.
+<p>
+Creating a wizard can be as simple as extending <code>WizardPanelProvider</code>, passing an
+array of step IDs and implementing <code>createPanel</code> and <code>Finish</code>.  Then just
+call <code>WizardDisplayer.show(myPanelProvider.createWizard())</code>.
+<p>
+A basic UI/implementation of <code>WizardDisplayer</code> is provided (needs polish); the
+implementation of <code>WizardDisplayer</code> is pluggable, so applications can provide a 
+completely different UI if desired.
+<p>
+<b>To Do:</b><br>
+<ul><li>Add support for post-finish summary panels per the JLF spec</li>
+<li>Localize and possibly improve <code>TrivialWizardDisplayer</code></li>
 </ul>
-<p>Remember that you will attract more new members and your project team will 
-  work more effectively if you, as the project owner, supply sufficient information 
-  about your project for visitors to your project space. Good luck with your new 
-  project! </p>
 </body>
 </html>
 

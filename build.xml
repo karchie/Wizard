@@ -4,7 +4,12 @@
 <!-- (If you delete it and reopen the project it will be recreated.) -->
 <project name="wizard" default="default" basedir=".">
     <description>Builds, tests, and runs the project wizard.</description>
-    <import file="nbproject/build-impl.xml"/> 
+    <import file="nbproject/build-impl.xml"/>
+
+    <target name="release" depends="jar,javadoc">
+        <copy file="dist/wizard.jar" todir="www"/>
+        <zip destfile="www/WizardAPI.zip" basedir="dist/javadoc" update="false" whenempty="fail" compress="true"/>
+    </target> 
     
     <target name="javadoc">
         <mkdir dir="dist/javadoc"/>
