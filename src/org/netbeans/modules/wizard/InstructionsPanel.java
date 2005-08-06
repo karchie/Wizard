@@ -25,7 +25,8 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.image.BufferedImage;
-import javax.accessibility.Accessible;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 import javax.swing.JComponent;
 import javax.swing.UIManager;
 import org.netbeans.spi.wizard.Wizard;
@@ -45,6 +46,7 @@ import org.netbeans.spi.wizard.Wizard.WizardListener;
 public class InstructionsPanel extends JComponent implements WizardListener {
     private final BufferedImage img;
     private final Wizard wizard;
+    private static final int MARGIN = 12;
 
     public InstructionsPanel (Wizard wiz) {
         this (null, wiz);
@@ -65,6 +67,14 @@ public class InstructionsPanel extends JComponent implements WizardListener {
     }
     
     public InstructionsPanel(BufferedImage img, Wizard wizard) {
+        if (img == null) {
+            try {
+                img = ImageIO.read(InstructionsPanel.class.getResourceAsStream(
+                        "defaultWizard.gif")); //NOI18N
+            } catch (IOException ioe) {
+                ioe.printStackTrace();
+            }
+        }
         this.img = img;
         this.wizard = wizard;
     }
@@ -75,7 +85,7 @@ public class InstructionsPanel extends JComponent implements WizardListener {
     
     public void paintComponent(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
-        Font f = getFont() != null ? getFont() : UIManager.getFont("controlFont");
+        Font f = getFont() != null ? getFont() : UIManager.getFont("controlFont"); //NOI18N
         FontMetrics fm = g.getFontMetrics (f);
         Insets ins = getInsets();
         if (img != null) {
@@ -90,8 +100,8 @@ public class InstructionsPanel extends JComponent implements WizardListener {
             g.fillRect (ins.left, ins.top, getWidth() - (ins.left + ins.right), getHeight() - (ins.top + ins.bottom));
         }
         String[] steps = wizard.getAllSteps();
-        int y = fm.getMaxAscent() + ins.top;
-        int x = ins.left;
+        int y = fm.getMaxAscent() + ins.top + MARGIN;
+        int x = ins.left + MARGIN;
         int h = fm.getMaxAscent() + fm.getMaxDescent() + 3;
         g.setColor (getForeground());
         
@@ -143,11 +153,15 @@ public class InstructionsPanel extends JComponent implements WizardListener {
             String desc = i + ". " + (Wizard.UNDETERMINED_STEP.equals(steps[i]) ?
                 "..." : wizard.getStepDescription(steps[i]));
             if (desc != null) {
-                w = Math.max (w, fm.stringWidth(desc));
+                w = Math.max (w, fm.stringWidth(desc) + MARGIN);
             }
         }
         if (Integer.MIN_VALUE == w) {
             w = 250;
+        }
+        if (img != null) {
+            w = Math.max (w, img.getWidth());
+//            h = Math.max (h, img.getHeight());
         }
         //Make sure we can grow but not shrink
         w = Math.max (w, historicWidth);

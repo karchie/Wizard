@@ -6,12 +6,25 @@
     <description>Builds, tests, and runs the project wizard.</description>
     <import file="nbproject/build-impl.xml"/>
 
-    <target name="release" depends="jar,javadoc">
+    <target name="cleanjavadoc" description="Delete javadoc files from the web site area">
+        <!-- Delete all the javadoc files, so no stale files for deleted 
+         classes can possibly be around (though nobody should really be 
+         deleting any classes) -->
+        <delete failonerror="false">
+            <fileset dir="www/javadoc" includes="**/*.html"/>
+        </delete>
+    </target>
+    
+    <target name="release" depends="jar,cleanjavadoc,javadoc" description="Prepare a new release">
         <copy file="dist/wizard.jar" todir="www"/>
         <zip destfile="www/WizardAPI.zip" basedir="dist/javadoc" update="false" whenempty="fail" compress="true"/>
+        <mkdir dir="www/javadoc"/>
+        <copy todir="www/javadoc">
+            <fileset dir="dist/javadoc" includes="**"/>
+        </copy>
     </target> 
     
-    <target name="javadoc">
+    <target name="javadoc" description="Build the javadoc">
         <mkdir dir="dist/javadoc"/>
         <property file="${basedir}/nbproject/project.properties"/>
         <property file="${basedir}/nbproject/private/private.properties"/>

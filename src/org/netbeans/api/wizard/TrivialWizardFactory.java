@@ -8,9 +8,13 @@ package org.netbeans.api.wizard;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.ComponentOrientation;
+import java.awt.Cursor;
 import java.awt.Dialog;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Insets;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
@@ -45,7 +49,46 @@ class TrivialWizardFactory extends WizardDisplayer {
     static volatile JButton[] buttons;
     
     protected Object show(final Wizard wizard) {
-        final JPanel panel = new JPanel();
+        final JPanel panel = new JPanel() {
+            public Dimension getPreferredSize() {
+                Dimension d = super.getPreferredSize();
+                d.width = Math.max (600, d.width);
+                d.height = Math.max (400, d.height);
+                return d;
+            }
+        };
+        if (wizard.getAllSteps().length == 0) {
+            throw new IllegalArgumentException ("Wizard has no steps");
+        }
+        
+        final JLabel ttlLabel = new JLabel (wizard.getStepDescription(wizard.getAllSteps()[0]));
+        ttlLabel.setBorder (BorderFactory.createCompoundBorder(
+                BorderFactory.createEmptyBorder(5, 5, 12, 5),
+                BorderFactory.createMatteBorder(0, 0, 1, 0, UIManager.getColor("textText"))));
+        JPanel ttlPanel = new JPanel() {
+            public void doLayout() {
+                Dimension d = ttlLabel.getPreferredSize();
+                if (ttlLabel.getComponentOrientation() == ComponentOrientation.RIGHT_TO_LEFT) {
+                    ttlLabel.setBounds (getWidth() - d.width, 0, d.width, d.height);
+                } else {
+                    ttlLabel.setBounds (0, 0, d.width, d.height);
+                }
+            }
+            
+            public Dimension getPreferredSize() {
+                return ttlLabel.getPreferredSize();
+            }
+        };
+        ttlPanel.add (ttlLabel);
+        Font f = ttlLabel.getFont();
+        if (f == null) {
+            f = UIManager.getFont("controlFont"); //NOI18N
+        }
+        if (f != null) {
+            f = f.deriveFont(Font.BOLD);
+            ttlLabel.setFont(f);
+        }
+        
         panel.setLayout (new BorderLayout());
         final InstructionsPanel instructions = new InstructionsPanel (wizard);
         
@@ -64,13 +107,13 @@ class TrivialWizardFactory extends WizardDisplayer {
         
         final JPanel inner = new JPanel();
         inner.setLayout (new BorderLayout());
+        inner.add (ttlPanel, BorderLayout.NORTH);
         
         final JLabel problem = new JLabel("  ");
         Color fg = UIManager.getColor ("nb.errorColor");
         problem.setForeground (fg == null ? Color.BLUE : fg);
         inner.add (problem, BorderLayout.SOUTH);
         problem.setPreferredSize (new Dimension (20,20));
-        
         
         JPanel buttons = new JPanel() {
             public void doLayout() {
@@ -143,6 +186,7 @@ class TrivialWizardFactory extends WizardDisplayer {
                         settings.push(nextId);
                         JComponent comp = wizard.navigatingTo (nextId, settings);
                         instructions.setCurrentStep (nextId);
+                        ttlLabel.setText(wizard.getStepDescription(nextId));
                         inner.add (comp, BorderLayout.CENTER);
                         inner.remove (currCenter);
                         inner.invalidate();
@@ -157,6 +201,7 @@ class TrivialWizardFactory extends WizardDisplayer {
                         settings.popAndCalve();
                         JComponent pcomp = wizard.navigatingTo (prevId, settings);
                         instructions.setCurrentStep (prevId);
+                        ttlLabel.setText(wizard.getStepDescription(prevId));
                         inner.add (pcomp, BorderLayout.CENTER);
                         inner.remove (currCenter);
                         centerPanel[0] = pcomp;
@@ -181,6 +226,7 @@ class TrivialWizardFactory extends WizardDisplayer {
                                 settings.push (id);
                                 JComponent comp1 = wizard.navigatingTo (id, settings);
                                 instructions.setCurrentStep (id);
+                                ttlLabel.setText(wizard.getStepDescription(id));
                                 if (comp1 != centerPanel[0]) {
                                     inner.add (comp1, BorderLayout.CENTER);
                                     inner.remove (centerPanel[0]);
@@ -201,7 +247,7 @@ class TrivialWizardFactory extends WizardDisplayer {
                     case 3 : //cancel
                         Dialog dlg = (Dialog) 
                             ((JComponent) ae.getSource()).getTopLevelAncestor();
-                        dlg.hide();
+                        dlg.setVisible(false);
                         dlg.dispose();
                         break;
                     default : assert false;
@@ -222,9 +268,11 @@ class TrivialWizardFactory extends WizardDisplayer {
             }
             
             private void update() {
-                next.setEnabled (wizard.getNextStep() != null);
-                finish.setEnabled (wizard.canFinish());
-                prev.setEnabled (wizard.getPreviousStep() != null);
+                if (!wizard.isBusy()) {
+                    next.setEnabled (wizard.getNextStep() != null);
+                    finish.setEnabled (wizard.canFinish());
+                    prev.setEnabled (wizard.getPreviousStep() != null);
+                }
                 if (next.isEnabled()) {
                     next.getRootPane().setDefaultButton(next);
                 } else if (finish.isEnabled()) {
@@ -238,10 +286,23 @@ class TrivialWizardFactory extends WizardDisplayer {
         cancel.addActionListener(buttonListener);
         
         final WizardListener l = new WizardListener() {
+            boolean wasBusy = false;
             public void stepsChanged(Wizard wizard) {
                 //do nothing
             }
             public void navigabilityChanged(Wizard wizard) {
+                if (wizard.isBusy()) {
+                    next.setEnabled(false);
+                    prev.setEnabled(false);
+                    finish.setEnabled(false);
+                    cancel.setEnabled(false);
+                    panel.setCursor (Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                    wasBusy = true;
+                    return;
+                } else if (wasBusy) {
+                    cancel.setEnabled(true);
+                    panel.setCursor (Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                }
                 next.setEnabled (wizard.getNextStep() != null);
                 prev.setEnabled (wizard.getPreviousStep() != null);
                 finish.setEnabled (wizard.canFinish());
@@ -274,9 +335,15 @@ class TrivialWizardFactory extends WizardDisplayer {
         dlg.getContentPane().setLayout (new BorderLayout());
         dlg.getContentPane().add (panel, BorderLayout.CENTER);
         dlg.pack();
+        Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
+        //XXX get screen insets?
+        int x = (d.width / 2) - (dlg.getWidth() / 2);
+        int y = (d.height / 2) - (dlg.getWidth() / 2);
+        dlg.setLocation(x, y);
+        
         dlg.setModal (true);
         dlg.getRootPane().setDefaultButton (next);
-        dlg.show();
+        dlg.setVisible(true);
         
         return result[0];
     }

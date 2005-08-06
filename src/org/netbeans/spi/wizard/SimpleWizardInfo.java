@@ -40,6 +40,7 @@ final class SimpleWizardInfo implements WizardController {
     private String problem = UNINIT;
     private final String title;
     private final WizardPanelProvider provider;
+    private boolean busy = false;
 
     SimpleWizardInfo (WizardPanelProvider provider) {
         this (provider.title, provider.steps, provider.descriptions, provider);
@@ -106,6 +107,7 @@ final class SimpleWizardInfo implements WizardController {
      * gathered data.
      */
     protected Object finish (Map settings) throws WizardException {
+        assert canFinish();
         return provider.finish (settings);
     }
 
@@ -141,16 +143,25 @@ final class SimpleWizardInfo implements WizardController {
         }
     }
 
+    public final void setBusy (boolean value) {
+        if (value != busy) {
+            busy = value;
+            fire();
+            knownCanProceed[index()] = value ? Boolean.FALSE : Boolean.TRUE;
+        }
+    }
+    
     /**
      * Set whether or not the contents of this panel are valid.  When
      * user-entered information in a panel changes, call this method as
      * appropriate.
      */
     public final void setProblem (String value) {
-        String old = problem;
         this.problem = value;
+        int idx = index();
+        knownCanProceed[idx] = problem == null ? Boolean.TRUE : Boolean.FALSE;
+        provider.setKnownProblem(problem, idx);
         fire();
-        knownCanProceed[index()] = problem == null ? Boolean.TRUE : Boolean.FALSE;
     }
 
     private boolean canFinish = false;
@@ -178,10 +189,11 @@ final class SimpleWizardInfo implements WizardController {
         if (knownCanFinish[idx] != null) {
             boolean known = knownCanFinish[idx].booleanValue();
             if (known != canFinish) {
-                change = true;
                 canFinish = known;
             }
+            change = true;
         }
+        setProblem (provider.getKnownProblem(idx));
         if (change) {
             fire();
         }
@@ -212,6 +224,10 @@ final class SimpleWizardInfo implements WizardController {
 
     final String getProblem() {
         return problem;
+    }
+    
+    boolean isBusy() {
+        return busy;
     }
     
     public boolean equals (Object o) {

@@ -89,6 +89,10 @@ final class BranchingWizard implements Wizard {
     public final boolean canFinish() {
         return curr != base && curr.canFinish();
     }
+    
+    public final boolean isBusy() {
+        return curr.isBusy();
+    }
 
     public final Object finish(Map settings) throws WizardException {
         try {

@@ -81,6 +81,7 @@ public abstract class WizardPanelProvider {
     final String title;
     final String[] descriptions;
     final String[] steps;
+    final String[] knownProblems;
     
     /**
      * Create a WizardPanelProvider.  The passed array of steps and descriptions
@@ -116,6 +117,11 @@ public abstract class WizardPanelProvider {
         this.title = title;
         this.steps = steps;
         this.descriptions = descriptions;
+        knownProblems = new String[steps.length];
+        if (steps.length != descriptions.length) {
+            throw new IllegalArgumentException ("Length of steps and" +
+                    " descriptions arrays do not match");
+        }
     }
     
     /**
@@ -198,6 +204,16 @@ public abstract class WizardPanelProvider {
             wizard = new SimpleWizard (this);
         }
         return wizard;
+    }
+    
+    void setKnownProblem (String problem, int idx) {
+        //Record a problem message so we can put it back if the user does
+        //prev and then next
+        knownProblems[idx] = problem;
+    }
+    
+    String getKnownProblem(int idx) {
+        return knownProblems[idx];
     }
     
 }

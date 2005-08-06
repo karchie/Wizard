@@ -22,6 +22,8 @@ package org.netbeans.api.wizard;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.Map;
 import javax.swing.AbstractButton;
 import javax.swing.JButton;
@@ -44,7 +46,8 @@ public class TrivialWizardFactoryTest extends TestCase {
     public TrivialWizardFactoryTest(String testName) {
         super(testName);
     }
-
+    
+    
     public static Test suite() {
         TestSuite suite = new TestSuite(TrivialWizardFactoryTest.class);
         
@@ -147,6 +150,19 @@ public class TrivialWizardFactoryTest extends TestCase {
         assertTrue (cancel.isEnabled());
         assertEquals ("b", impl.cb.getText());
         
+        impl.controller.setBusy(true);
+        JButton[] b = getButtons();
+        for (int i=0; i < b.length; i++) {
+            assertFalse ("All buttons should be enabled when " +
+                    "wizard is busy, but " + b[i].getText() + " is enabled", 
+                    b[i].isEnabled());
+        }
+        impl.controller.setBusy(false);
+        assertTrue ("SetBusy(false) should restore former state", prev.isEnabled());
+        assertTrue ("SetBusy(false) should restore former state", next.isEnabled());
+        assertFalse ("SetBusy(false) should restore former state", finish.isEnabled());
+        assertTrue ("SetBusy(false) should restore former state", cancel.isEnabled());
+        
         click (impl.cb);
         assertTrue (prev.isEnabled());
         assertFalse (next.isEnabled());
@@ -174,7 +190,147 @@ public class TrivialWizardFactoryTest extends TestCase {
         click (finish);
         assertFalse (impl.cb.isShowing());
         assertTrue (impl.finished);
+    }
+
+//    public void testManual() throws Exception {
+//        PanelProviderImpl impl = new PanelProviderImpl();
+//        Wizard wiz = impl.createWizard();
+//        show (wiz);
+//        Thread.currentThread().sleep (40000);
+//    }
+    
+    public void testProblemDisappearsOnBackButton() throws Exception {
+        System.out.println("testProblemDisappearsOnBackButton");
+        PanelProviderImpl impl = new PanelProviderImpl();
+        Wizard wiz = impl.createWizard();
+        show (wiz);
         
+        while (!impl.active) {
+            Thread.currentThread().sleep (200);
+        }
+        
+        JButton next = TrivialWizardFactory.buttons[0];
+        JButton prev = TrivialWizardFactory.buttons[1];
+        JButton finish = TrivialWizardFactory.buttons[2];
+        JButton cancel = TrivialWizardFactory.buttons[3];
+        
+        impl.assertCurrent("a");
+        assertFalse (next.isEnabled());
+        assertFalse (prev.isEnabled());
+        assertFalse (finish.isEnabled());
+        assertTrue (cancel.isEnabled());
+        
+        click (impl.cb);
+        JCheckBox mcb = impl.cb;
+        assertTrue (next.isEnabled());
+        assertFalse (prev.isEnabled());
+        assertFalse (finish.isEnabled());
+        assertTrue (cancel.isEnabled());
+        
+        click (next);
+        impl.assertCurrent("b");
+        assertTrue (prev.isEnabled());
+        assertFalse (next.isEnabled());
+        assertFalse (finish.isEnabled());
+        assertTrue (cancel.isEnabled());
+        assertEquals ("b", impl.cb.getText());
+        assertNotSame (impl.cb, mcb);
+        click(impl.cb);
+        assertTrue(next.isEnabled());
+        String problem = "Houston, we have a problem...";
+        impl.dontResetProblem = true;
+        setProblem(problem, impl.controller);
+        impl.assertCurrent("b");
+        assertTrue (prev.isEnabled());
+        assertFalse (next.isEnabled());
+        
+        click (prev);
+        impl.assertCurrent ("a");
+        impl.assertRecycledId("a");
+        assertTrue (next.isEnabled());
+        assertFalse (prev.isEnabled());
+        
+        click (next);
+        impl.assertCurrent("b");
+        String[] problems = getKnownProblems(impl);
+        assertEquals ("Last set problem should still be present " + Arrays.asList(problems), problem, problems[1]);
+        
+        assertFalse (next.isEnabled());
+        assertTrue (prev.isEnabled());
+        
+        setProblem (null, impl.controller);
+        assertTrue (next.isEnabled());
+        setCanFinish (true, impl.controller);
+        assertTrue (finish.isEnabled());
+        assertTrue (next.isEnabled());
+        setProblem ("Uh oh...", impl.controller);
+        assertFalse (finish.isEnabled());
+        assertFalse (next.isEnabled());
+        
+        click (prev);
+        assertTrue (next.isEnabled());
+        
+        click (next);
+        impl.assertCurrent("b");
+        assertFalse (next.isEnabled());
+        assertTrue (prev.isEnabled());
+        setProblem (null, impl.controller);
+        
+        assertTrue (next.isEnabled());
+        assertTrue (finish.isEnabled());
+        
+        click (next);
+        impl.assertCurrent("c");
+        setProblem (null, impl.controller);
+        for (int i=0; i < problems.length; i++) {
+            assertNull ("All problems should be null but " + i +" is " + problems[i], problems[i]);
+        }
+        assertFalse (next.isEnabled());
+        assertTrue (finish.isEnabled());
+        
+        setProblem ("Cant do anything", impl.controller);
+        
+        assertFalse (finish.isEnabled());
+        assertFalse (next.isEnabled());
+        impl.assertCurrent("c");
+        click(prev);
+        click(prev);
+        impl.assertCurrent("a");
+        
+        assertTrue (next.isEnabled());
+        assertFalse (prev.isEnabled());
+    }
+    
+    public void testReflectionHackWorks() {
+        try {
+            Field f = WizardPanelProvider.class.getDeclaredField("knownProblems");
+        } catch (Exception e) {
+            fail ("The field 'knownProblems' on WizardPanelProvider has been " +
+                    "deleted.  Please update TrivialWizardFactoryTest to be" +
+                    " able to locate the array of known problems.");
+        }
+    }
+    
+    private static String[] getKnownProblems (WizardPanelProvider prov) throws Exception {
+        Field f = WizardPanelProvider.class.getDeclaredField("knownProblems");
+        f.setAccessible(true);
+        return (String[]) f.get(prov);
+    }
+    
+    private void setCanFinish (final boolean val, final WizardController ctl) throws Exception {
+        SwingUtilities.invokeAndWait (new Runnable() {
+            public void run() {
+                ctl.setCanFinish(val);
+            }
+        });
+    }
+    
+    private void setProblem (final String problem, final WizardController ctl) throws Exception {
+        SwingUtilities.invokeAndWait (new Runnable() {
+            public void run() {
+                ctl.setProblem (problem);
+            }
+        });
     }
     
     private static void show (final Wizard wiz) {
@@ -209,13 +365,14 @@ public class TrivialWizardFactoryTest extends TestCase {
     private static class PanelProviderImpl extends WizardPanelProvider {
         private boolean finished = false;
         private int step = -1;
+        WizardController controller = null;
 
         PanelProviderImpl(java.lang.String title, java.lang.String[] steps, java.lang.String[] descriptions) {
             super(title, steps, descriptions);
         }
 
         PanelProviderImpl() {
-            super("Test Wizard", new String[] {"a", "b", "c"}, new String[] {"d_a", "d_b", "d_c"});
+            super("Test Wizard", new String[] {"a", "b", "c"}, new String[] {"Step 1", "Step 2", "Step 3"});
         }
 
         boolean active = false;
@@ -223,6 +380,7 @@ public class TrivialWizardFactoryTest extends TestCase {
         JCheckBox cb = null;
         protected JComponent createPanel(final WizardController controller, final java.lang.String id, final java.util.Map settings) {
             step++;
+            this.controller = controller;
             active = true;
             JPanel result = new JPanel();
             result.setLayout (new BorderLayout());
@@ -254,19 +412,23 @@ public class TrivialWizardFactoryTest extends TestCase {
             } else if ((id == null) != (currId == null)) {
                 fail ("Non-match: " + id + ", " + currId);
             } else {
-                assertEquals (currId, id);
+                assertEquals (id, currId);
             }
         }
 
         private JComponent recycled = null;
         private String recycledId = null;
         private Map recycledSettings = null;
+        boolean dontResetProblem = false;
         protected void recycleExistingPanel (String id, WizardController controller, Map settings, JComponent panel) {
             recycled = panel;
             recycledId = id;
+            currId = id;
             recycledSettings = settings;
             cb = (JCheckBox) panel.getComponents()[0];
-            controller.setProblem (cb.isSelected() ? null : "problem");
+            if (!dontResetProblem) {
+                controller.setProblem (cb.isSelected() ? null : "problem");
+            }
         }
 
         public void assertRecycledSettingsContains (String key, String value) {

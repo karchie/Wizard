@@ -144,6 +144,10 @@ final class SimpleWizard implements Wizard {
         return info.getProblem();
     }
     
+    public boolean isBusy() {
+        return info.isBusy();
+    }
+    
     public int hashCode() {
         return info.hashCode() ^ 17;
     }

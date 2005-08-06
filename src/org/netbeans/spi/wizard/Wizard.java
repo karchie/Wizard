@@ -200,12 +200,17 @@ public interface Wizard {
      */
     public Object finish(Map settings) throws WizardException;
     
-    /**
-     * Get the title of the wizard.  
-     * @return A human-readable, localized title that should be displayed
+    /** Get the title of the wizard.  
+     *  @return A human-readable, localized title that should be displayed
      *   in any dialog showing this wizard
      */
     public String getTitle();
+    
+    /** Determine if all navigation buttons should be disabled - if the
+     * wizard is currently doing some kind of progress/background processing
+     * task that cannot be interrupted.
+     */
+    public boolean isBusy();
     
     /**
      * Listener which can detect changes in the state of a wizard as the

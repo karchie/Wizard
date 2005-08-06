@@ -57,4 +57,13 @@ public interface WizardController {
      * and it should try to find the next sub-wizard to continue.
      */
     void setCanFinish (boolean value);
+    
+    /**
+     * Indicate that some sort of background process is happening (presumably
+     * a progress bar is being shown to the user) which cannot be interrupted.
+     * <i>Calling this menu disables all navigation and the ability to close
+     * the wizard dialog.  Use this option with caution and liberal use of
+     * <code>finally</code> to reenable navigation.</i>
+     */
+    void setBusy (boolean busy);
 }
