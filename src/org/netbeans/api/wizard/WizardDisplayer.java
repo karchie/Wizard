@@ -18,6 +18,7 @@
 
 package org.netbeans.api.wizard;
 
+import java.awt.Rectangle;
 import java.util.Arrays;
 import java.util.HashSet;
 import org.netbeans.spi.wizard.Wizard;
@@ -36,7 +37,7 @@ public abstract class WizardDisplayer {
      * Display a wizard in a dialog, using the default implementation of
      * WizardDisplayer.
      */
-    public static Object showWizard (Wizard wizard) {
+    public static Object showWizard (Wizard wizard, Rectangle r) {
         assert nonBuggyWizard (wizard);
         
 //        WizardFactory factory = (WizardFactory) Lookup.getDefault().lookup(
@@ -47,8 +48,12 @@ public abstract class WizardDisplayer {
             factory = new TrivialWizardFactory();
         }
         
-        return factory.show (wizard);
+        return factory.show (wizard, r);
     }
+    
+    public static Object showWizard (Wizard wizard) {
+        return showWizard (wizard, null);
+    }    
     
     /**
      * Show a wizard.
@@ -56,7 +61,7 @@ public abstract class WizardDisplayer {
      * @return Whatever object the wizard returns from its <code>finish()</code>
      *  method, if the Wizard was completed by the user.
      */
-    protected abstract Object show (Wizard wizard);
+    protected abstract Object show (Wizard wizard, Rectangle r);
     
     
     private static boolean nonBuggyWizard (Wizard wizard) {

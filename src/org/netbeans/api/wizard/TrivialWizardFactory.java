@@ -13,8 +13,12 @@ import java.awt.Cursor;
 import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.awt.Frame;
 import java.awt.Insets;
+import java.awt.KeyboardFocusManager;
+import java.awt.Rectangle;
 import java.awt.Toolkit;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
@@ -48,7 +52,7 @@ class TrivialWizardFactory extends WizardDisplayer {
     //for unit tests
     static volatile JButton[] buttons;
     
-    protected Object show(final Wizard wizard) {
+    protected Object show(final Wizard wizard, Rectangle bounds) {
         final JPanel panel = new JPanel() {
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
@@ -330,11 +334,23 @@ class TrivialWizardFactory extends WizardDisplayer {
         l.navigabilityChanged(wizard);
         wizard.addWizardListener (l);
         
-        JDialog dlg = new JDialog ();
+        JDialog dlg;
+        Object o = findLikelyOwnerWindow();
+        if (o instanceof Frame) {
+            dlg = new JDialog((Frame) o);
+        } else if (o instanceof Dialog) {
+            dlg = new JDialog ((Dialog) o);
+        } else {
+            dlg = new JDialog();
+        }
         dlg.setTitle (wizard.getTitle());
         dlg.getContentPane().setLayout (new BorderLayout());
         dlg.getContentPane().add (panel, BorderLayout.CENTER);
-        dlg.pack();
+        if (bounds != null) {
+            dlg.setBounds(bounds);
+        } else {
+            dlg.pack();
+        }
         Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
         //XXX get screen insets?
         int x = (d.width / 2) - (dlg.getWidth() / 2);
@@ -346,6 +362,10 @@ class TrivialWizardFactory extends WizardDisplayer {
         dlg.setVisible(true);
         
         return result[0];
+    }
+    
+    private Window findLikelyOwnerWindow() {
+        return KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusedWindow();
     }
     
 }

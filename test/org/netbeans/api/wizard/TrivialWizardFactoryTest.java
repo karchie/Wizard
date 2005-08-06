@@ -337,7 +337,7 @@ public class TrivialWizardFactoryTest extends TestCase {
         try {
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
-                    new TrivialWizardFactory().show (wiz);
+                    new TrivialWizardFactory().show (wiz, null);
                 }
             });
             Thread.currentThread().sleep (1000);
