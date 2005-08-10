@@ -13,24 +13,53 @@
   creating Wizards with minimum effort.
   
   <h2>Basics</h2>
-  A Wizard is basically a factory for panels - each panel lets the user set
-  some values, and listeners listen on those components and change the contents
-  of a <code>Map</code> belonging to the wizard.  If the combination of settings
-  is enough to continue, the Next or Finish button will be enabled.  On finish,
-  the wizard will create an object or do something that modifies its external
-  environment - it is up to the wizard implementation to determine what that
-  means.
+  A wizard is essentially a sequence of panels.  The sequence of panels may
+  be fixed, or may contain <i>branch points</i> - panels where, depending on
+  the user's input, the list of next steps may change.  Wizards collect input
+  on each panel, and at the final step, they create some object or perform
+  some task.  They do not alter their environment in any way until the user
+  presses the finish button.
+  <p>
+  Each step of a Wizard is represented by a unique ID string, and a Wizard is
+  a factory for JComponent panels corresponding to those IDs.  Each panel is
+  constructed only once.  The method that creates the panels is passed a Map.
+  Panels of the wizard typically listen to the GUI components they contain, and
+  write data into the Map.  What the keys and values are is up to the wizard
+  author.  When the user navigates to a new panel, that panel can check the
+  data gathered from previous panels and decide whether the Next and/or 
+  Finish buttons should be enabled.  Bidirectional navigation is possible - when
+  the user navigates back to a previous step, all settings from now-future
+  steps disappear from the settings map.  They will reappear if the user
+  navigates forward again.
+  <p>
+  On finish, the Wizard will create an object or do something that alters the
+  external environment, deciding what to do based on the input gathered in the
+  map.
+  <h2>Using the API</h2>
   <p>
   Mostly to use this API you'll be extending very simple convenience classes
   that do most of the work. Those classes are:
   <ul>
   <li>{@link org.netbeans.spi.wizard.WizardPanelProvider WizardPanelProvider} - the
-    tool for creating simple wizards with a fixed list of steps</li>
+    tool for creating simple wizards with a fixed list of steps.  Pass the
+    steps and their localized descriptions to the superclass constructor;
+    override <code>createPanel()</code> to construct panels for the various
+    IDs as they are passed;  override <code>finish()</code> to do whatever the
+    wizard does with the data it collects.</li>
   <li>{@link org.netbeans.spi.wizard.WizardBranchController WizardBranchController} -
-    the tool for creating Wizards that decide on the fly what the next steps are
+    Pass the superclass constructor a WizardPanelProvider that handles the 
+    initial steps; if the steps after that point are fixed, override 
+    <code>getPanelProviderForStep()</code> to return another WizardPanelProvider
+    for the subsequent steps - decide what exactly to return based on the
+    user's choices.  If there are more branch points, override 
+    <code>getWizardForStep()</code>, and use another WizardBranchController's
+    <code>getWizard()</code> method as the return value - in this way you can
+    have an indefinite number of branches.
   </li>
-  <li>{@link org.netbeans.spi.wizard.Wizard Wizard} Most of the time you won't 
-    need this - the overall interface for Wizards</li>
+  <li>{@link org.netbeans.spi.wizard.Wizard Wizard} - The overall interface for 
+     Wizards.  Typically you will not implement this directly - it is useful
+     if you are implementing a custom ui (@link org.netbeans.api.wizard.WizardDisplayer)
+     for displaying wizards instead of using the default one</li>
   </ul>
   <p>
   
