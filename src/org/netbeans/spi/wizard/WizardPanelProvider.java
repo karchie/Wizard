@@ -18,6 +18,7 @@
 
 package org.netbeans.spi.wizard;
 
+import java.util.Arrays;
 import java.util.Map;
 import javax.swing.JComponent;
 
@@ -45,7 +46,7 @@ import javax.swing.JComponent;
  *       //the wizard can show for that one step</font>
  *       super ("Click the box", "click", "Click the checkbox");
  *    }
- *    protected abstract JComponent createPanel (final WizardController controller, String id, final Map settings) {
+ *    protected JComponent createPanel (final WizardController controller, String id, final Map settings) {
  *       <font color="gray">//A quick sanity check</font>
  *       assert "click".equals (id);
  *       <font color="gray">//Remember this method will only be called <i>once</i> for any panel</font>
@@ -66,7 +67,7 @@ import javax.swing.JComponent;
  *       return result;
  *    }
  *
- *    protected abstract Object finish (Map settings) throws WizardException {
+ *    protected Object finish (Map settings) throws WizardException {
  *       <font color="gray">//if we had some interesting information (Strings a user put in a 
  *       //text field or something, we'd generate some interesting object or
  *       //create some files or something here</font>
@@ -160,14 +161,18 @@ public abstract class WizardPanelProvider {
     
     /**
      * Instantiate whatever object (if any) the wizard creates from its
-     * gathered data.
+     * gathered data.  The default implementation is a no-op that returns
+     * null.
+     *
      * @param settings The settings map, now fully populated with all settings needed
      *  to complete the wizard (this method will only be called if 
      *  <code>setProblem(null)</code> and <code>setCanFinish(true)</code> have
      *  been called on the <code>WizardController</code> passed to 
      *  <code>createPanel()</code>.  
      */
-    protected abstract Object finish (Map settings) throws WizardException;
+    protected Object finish (Map settings) throws WizardException {
+        return null;
+    }
 
     /**
      * The method provides a chance to call setProblem() or setCanFinish() when
@@ -204,6 +209,14 @@ public abstract class WizardPanelProvider {
             wizard = new SimpleWizard (this);
         }
         return wizard;
+    }
+    
+    /**
+     * Convenience method to get the index into the array of steps passed to
+     * the constructor of a specific step id.  
+     */
+    protected final int indexOfStep (String id) {
+        return Arrays.asList(steps).indexOf(id);
     }
     
     void setKnownProblem (String problem, int idx) {

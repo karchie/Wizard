@@ -231,11 +231,15 @@ final class SimpleWizardInfo implements WizardController {
     }
     
     public boolean equals (Object o) {
-        if (o.getClass() == getClass()) {
+        if (o != null && o.getClass() == getClass()) {
             SimpleWizardInfo info = (SimpleWizardInfo) o;
+            
+            assert info.descriptions != null : "Info.descriptions == null";
+            assert info.steps != null : "Info.steps == null";
+
             return Arrays.equals(info.descriptions, descriptions) &&
                    Arrays.equals(info.steps, steps) &&
-                   info.title.equals(title);
+                   info.title == title;
         } else {
             return false;
         }
