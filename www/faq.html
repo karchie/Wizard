@@ -1,0 +1,47 @@
+<html>
+<head>
+<title>Wizard API FAQ</title>
+</head>
+<body>
+<h1>Wizards FAQ</h1>
+<p>
+<b>How do I disable the next button?</b><br>
+Call <code>WizardController.setProblem(&quot;[problem-string]&quot;) on the
+<code>WizardController</code> instance that was passed when your panel was
+created.  The string that is passed
+will appear at the bottom of the wizard.  It should be something that describes
+what information is missing or incorrect, and how it is incorrect.
+<p>
+<b>How do I disable the next button but not show any problem text?</b><br>
+First, <i>don't do that.</i>  Even if you think it's
+obvious what's wrong, that doesn't mean it will be obvious to the user.  Really.
+You are not your target audience (if you were, you wouldn't be writing a wizard).
+<p>
+Consistency is good.  If whenever something is wrong, some blue text appears in
+the wizard, that's an added cue that something is wrong that makes the wizard
+easy to use (not to mention that you can tell them how to fix it).  It is 
+better for all wizard panels to behave the same way when something is wrong.
+Things that silently fail and wizards that can't be completed make people go 
+out and download other software that is friendlier.  Seriously.
+<p>
+Now, if you've read all that and you are <i>absolutely determined</i> to disable
+the Next button without telling the user why you're doing that...call 
+<code>setProblem(&quot;  &quot;);</code> on the <code>WizardController</code>.
+<p>
+<b>How do I change the background image on the left side of the wizard dialog?</b><br>
+Set the system property &quot;wizard.sidebar.image&quot; to a URL that points
+to the image file inside a jar that is on the classpath.  The image must be in
+a format readable by <code>ImageIO.read()</code>.
+<br>
+<i>This item is subject to change</i>
+<p>
+<b>It says the wizard UI is pluggable.  How do I provide my own implementation
+of <code>WizardDisplayer</code>?</b><br>
+Write an implementation of <code>WizardDisplayer</code> which has a public,
+no argument constructor.  Set the system property 
+&quot;WizardDisplayer.default&quot; to the fully qualified name of the class.
+<p>
+<i>This item is subject to change</i>
+Longer term, it would be nicer to use the NetBeans lookup library to do this - 
+then a jar on the classpath just needs to have a file in <code>META-INF/services</code>
+naming the class, which is cleaner than doing it programmatically.
