@@ -259,6 +259,12 @@ class TrivialWizardFactory extends WizardDisplayer {
                     
                 }
                 String prob = wizard.getProblem();
+                problem.setText (prob == null ? " " : prob);
+                if (prob != null && prob.trim().length() == 0) {
+                    //Issue 3 - provide ability to disable next w/o 
+                    //showing the error line
+                    prob = null;
+                }
                 Border b = prob == null ? BorderFactory.createEmptyBorder (1, 0, 0, 0)
                     : BorderFactory.createMatteBorder (1, 0, 0, 0, problem.getForeground());
                 
@@ -266,9 +272,6 @@ class TrivialWizardFactory extends WizardDisplayer {
                         BorderFactory.createEmptyBorder (0, 12, 0, 12), b);
                 
                 problem.setBorder (b1);
-                problem.setText (prob == null ? " " : prob);
-                
-                
             }
             
             private void update() {
