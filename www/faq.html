@@ -46,6 +46,17 @@ set of steps, do the following:
     </li>
 </ol>
 <p>
+<b>Where are the examples?</b><br>
+Check out the sources:
+<pre>
+    cvs -d:pserver:anoncvs@cvs.dev.java.net login
+    cvs -d:pserver:anoncvs@cvs.dev.java.net co wizard
+</pre>
+Look in <code>wizard/wizardPageDemo</code> for a sample of 
+using <code>WizardPage</code> to create a simple wizard;
+look in <code>wizard/WizardDemo</code> for an example of how to
+do branching and other more complex things.
+<p>
 <b>How do I disable the next button?</b><br>
 Call <code>WizardController.setProblem(&quot;[problem-string]&quot;)</code> on the
 <code>WizardController</code> instance that was passed when your panel was
@@ -86,11 +97,16 @@ Now, if you've read all that and you are <i>absolutely determined</i> to disable
 the Next button without telling the user why you're doing that...call 
 <code>setProblem(&quot;  &quot;);</code> on the <code>WizardController</code>.
 <p>
+<b>But <code>setProblem(&quot; &quot;)</code> looks like a hack?</b><br>
+It is one.  Tell the user what's wrong instead.
+
+<p>
 <b>How do I disable the Prev button?</b><br>
 You don't.  There is only one reason for wanting that:  The wizard has done
 something irrevocable (changed files on disk, etc.) before the user clicked
 finish.  The entire point of this library is to make it easy to create wizards
-that <i>never do things like that</i> (as it's a great way to have lots of bugs).
+that <i>never do things like that</i> (it's a great way to have 
+<i>really</i> nasty bugs that eat user data permanently, etc.).
 <p>
 You can <i>temporarily</i> disable all navigation with 
 <code>WizardPanelProvider.setBusy()</code>.  This is for use when, for example,
