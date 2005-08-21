@@ -26,6 +26,8 @@ import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import javax.imageio.ImageIO;
 import javax.swing.JComponent;
 import javax.swing.UIManager;
@@ -67,6 +69,23 @@ public class InstructionsPanel extends JComponent implements WizardListener {
     }
     
     public InstructionsPanel(BufferedImage img, Wizard wizard) {
+        String imgStr = System.getProperty ("wizard.sidebar.image");
+        if (img != null) {
+            try {
+                URL url = new URL (imgStr);
+                try {
+                    img = ImageIO.read(url);
+                } catch (IOException ioe) {
+                    System.err.println("Could not load wizard image " + 
+                            ioe.getMessage());
+                    System.setProperty ("wizard.sidebar.image", null);
+                    
+                }
+            } catch (MalformedURLException mue) {
+                System.err.println("Bad URL for wizard image " + imgStr);
+                System.setProperty ("wizard.sidebar.image", null);
+            }
+        }
         if (img == null) {
             try {
                 img = ImageIO.read(InstructionsPanel.class.getResourceAsStream(

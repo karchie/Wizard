@@ -33,6 +33,8 @@ public abstract class WizardDisplayer {
     protected WizardDisplayer() {
     }
     
+    
+    private static final String SYSPROP_KEY = "WizardDisplayer.default";
     /**
      * Display a wizard in a dialog, using the default implementation of
      * WizardDisplayer.
@@ -43,6 +45,17 @@ public abstract class WizardDisplayer {
 //        WizardFactory factory = (WizardFactory) Lookup.getDefault().lookup(
 //                WizardFactory.class);
         WizardDisplayer factory = null;
+        String wdProp = System.getProperty (SYSPROP_KEY);
+        if (wdProp != null) {
+            try {
+                //XXX use this for now
+                factory = (WizardDisplayer) Class.forName (wdProp).newInstance();
+            } catch (Exception e) {
+                System.err.println("Could not instantiate " + wdProp);
+                System.setProperty (SYSPROP_KEY, null);
+            }
+                
+        }
         
         if (factory == null) {
             factory = new TrivialWizardFactory();

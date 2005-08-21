@@ -19,6 +19,7 @@
 package org.netbeans.spi.wizard;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
 import javax.swing.JComponent;
 
@@ -123,6 +124,27 @@ public abstract class WizardPanelProvider {
             throw new IllegalArgumentException ("Length of steps and" +
                     " descriptions arrays do not match");
         }
+        assert validData (steps, descriptions) == null : validData (steps, descriptions);
+    }
+    
+    
+    private String validData (String[] steps, String[] descriptions) {
+        if (steps.length != descriptions.length) {
+            return steps.length + " steps but " + descriptions.length + 
+                    " descriptions";
+        }
+        for (int i=0; i < steps.length; i++) {
+            if (steps[i] == null) {
+                throw new NullPointerException ("Step id " + i + " is null");
+            }
+            if (descriptions[i] == null) {
+                throw new NullPointerException ("Description " + i + " is null");
+            }
+        }
+        if (new HashSet(Arrays.asList(steps)).size() != steps.length) {
+            return "Duplicate step ids: " + Arrays.asList(steps);
+        }
+        return null;
     }
     
     /**

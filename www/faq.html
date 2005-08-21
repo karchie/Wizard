@@ -5,6 +5,47 @@
 <body>
 <h1>Wizards FAQ</h1>
 <p>
+<b>Help!  Where do I start?</b>
+If you just want to create a simple wizard with a fixed
+set of steps, do the following:
+<ol>
+    <li>Create the panels you want in your favorite Swing GUI builder</li>
+    <li>Have them subclass WizardPage</li>
+    <li>For each component on each panel that affects what the wizard 
+        will do or create, set
+        the <code>name</code> of that component to some unique string.</li>
+    <li>On each one, add two static methods:
+        <ul>
+            <li><code>public static String getID()</code> - this should
+                return a short unique string that names the step this panel
+                represents</li>
+            <li><code>public static String getDescription()</code> -
+                this should return a <i>localized</i> string that
+                describes the step - keep it short.
+        </ul>
+    </li>
+    <li>Implement the one-method interface 
+        <code>WizardPage.WizardResultProducer</code>.  It is going to be
+        passed a <code>Map</code>, where the keys are the names of your
+        components, and the values are the current values in those 
+        components (i.e. if a checkbox is checked and has the name "foo",
+        if you call <code>get("foo")</code> on the map, you will get
+        Boolean.TRUE - all the standard Swing components are handled
+        appropriately.</li>
+    <li>Do something like: 
+        <pre>
+            Class[] clazz = new Class[] {
+                MyFirstPage.class,
+                MySecondPage.class,
+                MyThirdPage.class
+                };
+            WizardResultProducer finishIt = new MyResultProducer();
+            Object result = WizardDisplayer.showWizard (
+                WizardPage.createWizard(clazz, finishIt));
+        </pre>
+    </li>
+</ol>
+    
 <b>How do I disable the next button?</b><br>
 Call <code>WizardController.setProblem(&quot;[problem-string]&quot;) on the
 <code>WizardController</code> instance that was passed when your panel was
@@ -35,6 +76,18 @@ a format readable by <code>ImageIO.read()</code>.
 <br>
 <i>This item is subject to change</i>
 <p>
+<b>How do I disable the Prev button</b><br>
+You don't.  There is only one reason for wanting that:  The wizard has done
+something irrevocable (changed files on disk, etc.) before the user clicked
+finish.  The entire point of this library is to make it easy to create wizards
+that <i>never do things like that</i> (as it's a great way to have lots of bugs).
+<p>
+You can <i>temporarily</i> disable all navigation with 
+<code>WizardPanelProvider.setBusy()</code>.  This is for use when, for example,
+some lengthy background process is happening and navigation should 
+temporarily be disabled while it completes.
+
+<p>
 <b>It says the wizard UI is pluggable.  How do I provide my own implementation
 of <code>WizardDisplayer</code>?</b><br>
 Write an implementation of <code>WizardDisplayer</code> which has a public,
@@ -45,3 +98,4 @@ no argument constructor.  Set the system property
 Longer term, it would be nicer to use the NetBeans lookup library to do this - 
 then a jar on the classpath just needs to have a file in <code>META-INF/services</code>
 naming the class, which is cleaner than doing it programmatically.
+<p>
