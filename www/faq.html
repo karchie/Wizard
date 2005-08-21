@@ -47,12 +47,28 @@ set of steps, do the following:
 </ol>
     
 <b>How do I disable the next button?</b><br>
-Call <code>WizardController.setProblem(&quot;[problem-string]&quot;) on the
+Call <code>WizardController.setProblem(&quot;[problem-string]&quot;)</code> on the
 <code>WizardController</code> instance that was passed when your panel was
 created.  The string that is passed
 will appear at the bottom of the wizard.  It should be something that describes
 what information is missing or incorrect, and how it is incorrect.
 <p>
+<b>What is the basis for the ui/button set/the way wizards look?</b>    
+The Java Look and Feel guidelines for wizards.  A lot of time, expertise and
+effort went into figuring out how to create wizards that somebody's
+grandmother could use in creating those - experimenting with different
+designs and putting real users in front of them.  They are Good Stuff[tm].
+<p>
+<b>How do I change the background image on the left side of the wizard dialog?</b><br>
+Set the system property &quot;wizard.sidebar.image&quot; to a URL that points
+to the image file inside a jar that is on the classpath.  The image must be in
+a format readable by <code>ImageIO.read()</code>.
+<br>
+<i>This item is subject to change</i>
+<p>
+<b>What is the default image behind the steps on the left side of wizards?</b><br>
+It's the standard side panel for wizards in NetBeans - because nobody's gotten
+around to replacing it with something more generic.  Contributions are welcome.
 <b>How do I disable the next button but not show any problem text?</b><br>
 First, <i>don't do that.</i>  Even if you think it's
 obvious what's wrong, that doesn't mean it will be obvious to the user.  Really.
@@ -69,13 +85,6 @@ Now, if you've read all that and you are <i>absolutely determined</i> to disable
 the Next button without telling the user why you're doing that...call 
 <code>setProblem(&quot;  &quot;);</code> on the <code>WizardController</code>.
 <p>
-<b>How do I change the background image on the left side of the wizard dialog?</b><br>
-Set the system property &quot;wizard.sidebar.image&quot; to a URL that points
-to the image file inside a jar that is on the classpath.  The image must be in
-a format readable by <code>ImageIO.read()</code>.
-<br>
-<i>This item is subject to change</i>
-<p>
 <b>How do I disable the Prev button</b><br>
 You don't.  There is only one reason for wanting that:  The wizard has done
 something irrevocable (changed files on disk, etc.) before the user clicked
@@ -86,7 +95,6 @@ You can <i>temporarily</i> disable all navigation with
 <code>WizardPanelProvider.setBusy()</code>.  This is for use when, for example,
 some lengthy background process is happening and navigation should 
 temporarily be disabled while it completes.
-
 <p>
 <b>It says the wizard UI is pluggable.  How do I provide my own implementation
 of <code>WizardDisplayer</code>?</b><br>
@@ -94,8 +102,16 @@ Write an implementation of <code>WizardDisplayer</code> which has a public,
 no argument constructor.  Set the system property 
 &quot;WizardDisplayer.default&quot; to the fully qualified name of the class.
 <p>
-<i>This item is subject to change</i>
+<i>This item is subject to change</i><br>
 Longer term, it would be nicer to use the NetBeans lookup library to do this - 
 then a jar on the classpath just needs to have a file in <code>META-INF/services</code>
 naming the class, which is cleaner than doing it programmatically.
 <p>
+<b>Can I create a wizard with only Next/Prev buttons</b><br>
+Yes, if you provide your own implementation of <code>WizardDisplayer</code>.
+<p>
+<b>Why are you so persnickity about the UI</b><br>
+Because I'm a cranky curmudgeon.  Next question.
+
+</body>
+</html>
