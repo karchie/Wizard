@@ -38,19 +38,21 @@ public class NewPetWizard extends WizardBranchController {
         
         WizardDisplayer.showWizard (new NewPetWizard().createWizard(), 
                 new Rectangle (20, 20, 500, 400));
+        System.exit(0);
     }
 
     protected WizardPanelProvider getPanelProviderForStep(String step, Map collectedData) {
         //There's only one branch point, so we don't need to test the
         //value of step
-        
         Object species = collectedData.get(SpeciesPanel.KEY_SPECIES);
         if (SpeciesPanel.VALUE_CAT.equals(species)) {
             return getCatLoversSteps();
         } else if (SpeciesPanel.VALUE_DOG.equals(species)) {
             return getDogLoversSteps();
+        } else if (SpeciesPanel.VALUE_GERBIL.equals(species)) {
+            return null;//new GerbilSteps();
         } else {
-            return new GerbilSteps();
+            return null;
         }
     }
 
@@ -70,8 +72,4 @@ public class NewPetWizard extends WizardBranchController {
     
     private CatLoversSteps catLoversSteps = null;
     private DogLoversSteps dogLoversSteps = null;
-    
-    
-    
-    
 }

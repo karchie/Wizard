@@ -211,9 +211,10 @@ public class LotsOfComponentsPanel extends WizardPage {
             ch.getSelectionModel().setSelectedColor(Color.BLUE);
             
         } else if (c instanceof JTree) {
+            JTree jt = (JTree) c;
             MouseEvent[] me = createMouseEvents (c, 20, 60);
             for (int i=0; i < me.length; i++) {
-                c.dispatchEvent (me[0]);
+                c.dispatchEvent (me[i]);
             }
         }
     }
@@ -261,9 +262,9 @@ public class LotsOfComponentsPanel extends WizardPage {
     
     private MouseEvent[] createMouseEvents (Component c, int x, int y) {
         MouseEvent[] result = new MouseEvent[3];
-        result[0] = new MouseEvent (c, MouseEvent.MOUSE_PRESSED, System.currentTimeMillis(), 0, x, y, 1, false, MouseEvent.BUTTON1);
-        result[1] = new MouseEvent (c, MouseEvent.MOUSE_RELEASED, System.currentTimeMillis(), 0, x, y, 1, false, MouseEvent.BUTTON1);
-        result[2] = new MouseEvent (c, MouseEvent.MOUSE_CLICKED, System.currentTimeMillis(), 0, x, y, 1, false, MouseEvent.BUTTON1);
+        result[0] = new MouseEvent (c, MouseEvent.MOUSE_PRESSED, System.currentTimeMillis(), 0, x, y, 2, false, MouseEvent.BUTTON1);
+        result[1] = new MouseEvent (c, MouseEvent.MOUSE_RELEASED, System.currentTimeMillis(), 0, x, y, 2, false, MouseEvent.BUTTON1);
+        result[2] = new MouseEvent (c, MouseEvent.MOUSE_CLICKED, System.currentTimeMillis(), 0, x, y, 2, false, MouseEvent.BUTTON1);
         return result;
     }
 //    

@@ -201,8 +201,9 @@ public abstract class WizardPanelProvider {
      * the user re-navigates to a panel they've already seen - in the case 
      * that the user pressed the Previous button and then the Next button.
      * <p>
-     * The default implementation does nothing, which is sufficient for 
-     * most implementations.  If whether this panel is valid or not could
+     * The default implementation does nothing, which is sufficient for most
+     * cases.
+     * If whether this panel is valid or not could
      * have changed because of changed data from a previous panel, or it
      * displays data entered on previous panes which may have changed,
      * you may want to override this method to ensure validity and canFinish
@@ -215,9 +216,23 @@ public abstract class WizardPanelProvider {
      * The settings Map passed to this method will always be the same 
      * Settings map instance that was passed to <code>createPanel()</code>
      * when the panel was created.
+     * <p>
+     * If you are implementing WizardPanelProvider and some of the pages are
+     * <code>WizardPage</code>s, you should call the super implementation if
+     * you override this method.
      */
-    protected void recycleExistingPanel (String id, WizardController controller, Map settings, JComponent panel) {
+    protected void recycleExistingPanel (String id, WizardController controller, Map wizardData, JComponent panel) {
         //do nothing
+    }
+
+    void recycle (String id, WizardController controller, Map wizardData, JComponent panel) {
+        if (panel instanceof WizardPage) {
+            WizardPage page = (WizardPage) panel;
+            page.setController(controller);
+            page.setWizardDataMap(wizardData);
+            page.recycle();
+        }
+        recycleExistingPanel (id, controller, wizardData, panel);
     }
     
     private Wizard wizard;

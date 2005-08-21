@@ -23,7 +23,7 @@ public class DogSizePanel extends javax.swing.JPanel {
         
         this.controller = controller;
         this.wizardData = wizardData;
-        controller.setCanFinish (true);
+        controller.setFwdNavMode (WizardController.STATE_CAN_FINISH);
     }
     
     /** This method is called from within the constructor to

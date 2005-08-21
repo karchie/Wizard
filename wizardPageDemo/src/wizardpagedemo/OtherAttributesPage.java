@@ -31,10 +31,6 @@ public class OtherAttributesPage extends WizardPage {
         initComponents();
     }
     
-    public static final String getID() {
-        return "attributes";
-    }
-    
     public static final String getDescription() {
         return "Other Attributes";
     }    

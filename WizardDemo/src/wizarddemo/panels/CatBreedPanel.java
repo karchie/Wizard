@@ -133,7 +133,7 @@ public class CatBreedPanel extends javax.swing.JPanel {
             controller.setProblem("Your pet needs a name");
         } else {
             controller.setProblem (null);
-            controller.setCanFinish(true);
+            controller.setFwdNavMode(WizardController.STATE_CAN_FINISH);
         }
     }
     

@@ -155,7 +155,7 @@ public class InfoTest extends TestCase {
     }
 
     /**
-     * Test of setCanFinish method, of class org.netbeans.spi.wizard.SimpleWizard.Info.
+     * Test of setFwdNavMode method, of class org.netbeans.spi.wizard.SimpleWizard.Info.
      */
     public void testSetCanFinish() {
         System.out.println("testSetCanFinish");
@@ -165,7 +165,7 @@ public class InfoTest extends TestCase {
 
         assertFalse (info.canFinish());
         info.setProblem (null);
-        info.setCanFinish (true);
+        info.setFwdNavMode (WizardController.STATE_CAN_FINISH);
         assertTrue (info.canFinish());
 
         info.setProblem ("problem");

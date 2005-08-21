@@ -1,4 +1,16 @@
 /*
+ *                 Sun Public License Notice
+ * 
+ * The contents of this file are subject to the Sun Public License
+ * Version 1.0 (the "License"). You may not use this file except in
+ * compliance with the License. A copy of the License is available at
+ * http://www.sun.com/
+ * 
+ * The Original Code is NetBeans. The Initial Developer of the Original
+ * Code is Sun Microsystems, Inc. Portions Copyright 1997-2005 Sun
+ * Microsystems, Inc. All Rights Reserved.
+ */
+/*
  * TrivialWizardFactory.java
  *
  * Created on February 22, 2005, 4:42 PM
@@ -44,9 +56,9 @@ import org.netbeans.spi.wizard.WizardException;
  *
  * @author Tim Boudreau
  */
-class TrivialWizardFactory extends WizardDisplayer {
+class DefaultWizardDisplayer extends WizardDisplayer {
     
-    TrivialWizardFactory() {
+    DefaultWizardDisplayer() {
     }
 
     //for unit tests
@@ -100,7 +112,15 @@ class TrivialWizardFactory extends WizardDisplayer {
         
         final JButton next = new JButton ("Next >");
         final JButton prev = new JButton ("< Prev");
-        final JButton finish = new JButton ("Finish");
+        final JButton finish = new JButton ("Finish"); /* {
+            public void setEnabled (boolean val) {
+                if (!val) {
+                    Thread.dumpStack();
+                }
+                super.setEnabled(val);
+            }
+        };
+                                                        */
         final JButton cancel = new JButton ("Cancel");
         final JButton help = new JButton ("Help");
         
@@ -119,30 +139,40 @@ class TrivialWizardFactory extends WizardDisplayer {
         inner.add (problem, BorderLayout.SOUTH);
         problem.setPreferredSize (new Dimension (20,20));
         
+        //Use standard default-button-last order on Aqua L&F
+        final boolean aqua = "Aqua".equals (UIManager.getLookAndFeel().getID());
+        
         JPanel buttons = new JPanel() {
             public void doLayout() {
                 Insets ins = getInsets();
-                Dimension n = cancel.getPreferredSize();
+                JButton b = aqua ? finish : cancel;
+                
+                Dimension n = b.getPreferredSize();
                 int y = ((getHeight() - (ins.top + ins.bottom))/ 2) - (n.height / 2);
                 int gap = 5;
                 int x = getWidth() - (12 + ins.right + n.width);
-                cancel.setBounds (x, y, n.width, n.height);
+                
+                b.setBounds (x, y, n.width, n.height);
 
-                n = finish.getPreferredSize();
+                b = aqua ? next : finish;
+                n = b.getPreferredSize();
                 x -= n.width + gap;
-                finish.setBounds (x, y, n.width, n.height);
+                b.setBounds (x, y, n.width, n.height);
                 
-                n = next.getPreferredSize();
+                b = aqua ? prev : next;
+                n = b.getPreferredSize();
                 x -= n.width + gap;
-                next.setBounds (x, y, n.width, n.height);
+                b.setBounds (x, y, n.width, n.height);
                 
-                n = prev.getPreferredSize();
+                b = aqua ? cancel : prev;
+                n = b.getPreferredSize();
                 x -= n.width + gap;
-                prev.setBounds (x, y, n.width, n.height);
+                b.setBounds (x, y, n.width, n.height);
                 
-                n = help.getPreferredSize();
+                b = help;
+                n = b.getPreferredSize();
                 x -= n.width + (gap * 2);
-                help.setBounds (x, y, n.width, n.height);
+                b.setBounds (x, y, n.width, n.height);
             }
         };
         buttons.setBorder (BorderFactory.createMatteBorder (1, 0, 0, 0, Color.BLACK));
@@ -164,7 +194,7 @@ class TrivialWizardFactory extends WizardDisplayer {
         });
         
         if (Boolean.getBoolean ("TrivialWizardFactory.test")) { //enable unit tests
-            TrivialWizardFactory.buttons = (JButton[]) buttonlist.toArray (new JButton[0]);
+            DefaultWizardDisplayer.buttons = (JButton[]) buttonlist.toArray (new JButton[0]);
         }
         
         String first = wizard.getAllSteps()[0];
@@ -276,8 +306,16 @@ class TrivialWizardFactory extends WizardDisplayer {
             
             private void update() {
                 if (!wizard.isBusy()) {
-                    next.setEnabled (wizard.getNextStep() != null);
-                    finish.setEnabled (wizard.canFinish());
+                    String nextStep = wizard.getNextStep();
+                    next.setEnabled (nextStep != null && wizard.canContinue());
+                    if (next.isEnabled()) {
+                        next.setEnabled(wizard.canContinue());
+                    }
+                    
+                    boolean enableFinish = wizard.canFinish() || 
+                        (!wizard.canContinue() && nextStep != null);
+                    
+                    finish.setEnabled (enableFinish);
                     prev.setEnabled (wizard.getPreviousStep() != null);
                 }
                 if (next.isEnabled()) {
@@ -310,9 +348,24 @@ class TrivialWizardFactory extends WizardDisplayer {
                     cancel.setEnabled(true);
                     panel.setCursor (Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
                 }
-                next.setEnabled (wizard.getNextStep() != null);
+                String nextStep = wizard.getNextStep();
+                next.setEnabled (nextStep != null);
                 prev.setEnabled (wizard.getPreviousStep() != null);
-                finish.setEnabled (wizard.canFinish());
+                
+                
+                if (next.isEnabled()) {
+                    next.setEnabled(wizard.canContinue());
+                }
+                
+                //Butt ugly but works for now:  Issue 4 - allow Finish to be
+                //enabled on a non-last panel w/o a branch controller - in
+                //otherwords, be able to, based on a UI change, be able to
+                //bail out to finish from any panel in a wizard
+                boolean enableFinish = wizard.canFinish() || 
+                        (!wizard.canContinue() && nextStep != null);
+                
+                finish.setEnabled (enableFinish);
+//                System.err.println("CHANGE: enable finish " + enableFinish + " nextStep: " + nextStep + " canContinue " + wizard.canContinue() + " canFinish " + wizard.canFinish());
                 if (finish.getRootPane() != null) {
                     if (finish.isEnabled()) {
                         finish.getRootPane().setDefaultButton(finish);

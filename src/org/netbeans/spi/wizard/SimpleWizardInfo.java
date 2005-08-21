@@ -41,7 +41,7 @@ final class SimpleWizardInfo implements WizardController {
     private final String[] descriptions;
     private final String[] steps;
     final Boolean[] knownCanProceed;
-    final Boolean[] knownCanFinish;
+    final int[] knownFwdNavModes;
     private static String UNINIT = "Uninitialized";
     private String problem = UNINIT;
     private final String title;
@@ -77,7 +77,8 @@ final class SimpleWizardInfo implements WizardController {
             }
         }
         knownCanProceed = new Boolean [steps.length];
-        knownCanFinish = new Boolean [steps.length];
+        knownFwdNavModes = new int [steps.length];
+        Arrays.fill (knownFwdNavModes, -1);
         this.title = title;
         this.provider = provider;
     }
@@ -106,7 +107,12 @@ final class SimpleWizardInfo implements WizardController {
      */
     protected JComponent createPanel (String id, Map settings) {
         try {
-            return provider.createPanel(this, id, settings);
+            JComponent result = provider.createPanel(this, id, settings);
+            if (result instanceof WizardPage) {
+                ((WizardPage) result).setController(this);
+                ((WizardPage) result).setWizardDataMap(settings);
+            }
+            return result;
         } catch (RuntimeException re) {
             JTextArea jta = new JTextArea();
             jta.setBorder (BorderFactory.createMatteBorder(2,2,2,2,Color.RED));
@@ -114,7 +120,6 @@ final class SimpleWizardInfo implements WizardController {
             PrintStream str = new PrintStream(buf);
             re.printStackTrace(str);
             jta.setText (new String(buf.toByteArray()));
-            re.printStackTrace();
             setProblem(re.getLocalizedMessage());
             return new JScrollPane(jta);
         }
@@ -137,11 +142,11 @@ final class SimpleWizardInfo implements WizardController {
      * The default implementation does nothing, which is sufficient for 
      * most implementations.  If whether this panel is valid or not could
      * have changed because of changed data from a previous panel,
-     * you may want to override this method to ensure validity and canFinish
+     * you may want to override this method to ensure validity and currNavMode
      * are set correctly.
      * <p>
      * This method will <i>not</i> be called when a panel is first instantiated - 
-     * <code>createPanel()</code> is expected to set validity and canFinish
+     * <code>createPanel()</code> is expected to set validity and currNavMode
      * appropriately.
      * <p>
      * The settings Map passed to this method will always be the same 
@@ -149,7 +154,7 @@ final class SimpleWizardInfo implements WizardController {
      * when the panel was created.
      */
     protected void recycleExistingPanel (String id, Map settings, JComponent panel) {
-        provider.recycleExistingPanel(id, this, settings, panel);
+        provider.recycle(id, this, settings, panel);
     }
 
     private int index() {
@@ -182,19 +187,40 @@ final class SimpleWizardInfo implements WizardController {
         fire();
     }
 
-    private boolean canFinish = false;
+    private int currNavMode = STATE_CAN_CONTINUE;
 
     /**
-     * Set whether or not the Finish button should be enabled.  Will only
-     * affect the state of the Finish button if <code>isValid()</code> is
-     * true.
+     * Set whether or not the Finish button should be enabled.  Neither 
+     * the Finish nor Next buttons will be enabled if setProblem has 
+     * been called with non-null.
+     * <p>
+     * Legal values are: WizardController.STATE_CAN_CONTINUE,
+     * WizardController.STATE_CAN_FINISH or 
+     * WizardController.STATE_CAN_CONTINUE_OR_FINISH.
+     * <p>
+     * This method is used to set what means of forward navigation should
+     * be available if the current panel is in a valid state (problem is
+     * null).  It is <i>not</i> a way to disable both the next button 
+     * and the finish button, only a way to choose either or both.
+     *
+     * @see setProblem
+     * @param value The forward navigation mode
+     *
      */
-    public final void setCanFinish (boolean value) {
-        if (canFinish != value) {
-            canFinish = value;
-            fire();
-            knownCanFinish[index()] = value ? Boolean.TRUE : Boolean.FALSE;
+    public final void setFwdNavMode (int value) {
+        switch (value) {
+            case STATE_CAN_CONTINUE :
+            case STATE_CAN_FINISH :
+            case STATE_CAN_CONTINUE_OR_FINISH :
+                break;
+            default :
+                throw new IllegalArgumentException (Integer.toString(value));
         }
+        if (currNavMode != value) {
+            currNavMode = value;
+            fire();
+        }
+        knownFwdNavModes[index()] = value;
     }
 
     final String getTitle() {
@@ -203,20 +229,15 @@ final class SimpleWizardInfo implements WizardController {
 
     final void update() {
         int idx = index();
-        boolean change = false;
-        if (knownCanFinish[idx] != null) {
-            boolean known = knownCanFinish[idx].booleanValue();
-            if (known != canFinish) {
-                canFinish = known;
-            }
-            change = true;
-        }
+        boolean change = knownFwdNavModes[idx] != -1 && currNavMode != knownFwdNavModes[idx];
         setProblem (provider.getKnownProblem(idx));
+//    System.err.println("RE-NAV THROUGH " + idx + " currNavMode " + currNavMode + " known nave mode is " + knownFwdNavModes[idx] + " change " + change);
+        currNavMode = knownFwdNavModes[idx] == -1 ? WizardController.STATE_CAN_CONTINUE : knownFwdNavModes[idx];
         if (change) {
             fire();
         }
     }
-
+    
     final void fire() {
         Wizard wiz = getWizard();
         if (wiz != null) {
@@ -229,7 +250,12 @@ final class SimpleWizardInfo implements WizardController {
     }
 
     final boolean canFinish() {
-        return isValid() && canFinish;
+        return isValid() && (currNavMode != -1 && (currNavMode & STATE_CAN_FINISH) != 0);
+    }
+    
+    final boolean canContinue() {
+//        System.err.println("CurrNavMode now " + currNavMode);
+        return isValid() && (currNavMode == -1 || (currNavMode & STATE_CAN_CONTINUE) != 0);
     }
 
     String[] getDescriptions() {

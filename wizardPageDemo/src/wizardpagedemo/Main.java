@@ -39,6 +39,7 @@ public class Main {
         
         //And show it onscreen
         WizardDisplayer.showWizard (wizard);
+        System.exit(0);
     }
     
 }

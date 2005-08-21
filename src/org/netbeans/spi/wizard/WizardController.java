@@ -32,6 +32,10 @@ package org.netbeans.spi.wizard;
  * @author Tim Boudreau
  */
 public interface WizardController {
+    public static final int STATE_CAN_CONTINUE = 1;
+    public static final int STATE_CAN_FINISH = 2;
+    public static final int STATE_CAN_CONTINUE_OR_FINISH = 
+            STATE_CAN_CONTINUE | STATE_CAN_FINISH;
     
     /**
      * Indicate that there is a problem with what the user has (or has not)
@@ -45,18 +49,20 @@ public interface WizardController {
     void setProblem (String value);
     
     /**
-     * Indicate that the Finish button of the wizard should be enabled 
+     * Set the forward navigation mode - 
+     * indicate that the Finish button of the wizard should or should not be enabled 
      * (assuming <code>setProblem</code> has not been called with a non-null
-     * value).  
+     * value), and whether or not the Next button of the wizard should also
+     * be enabled.
      * <p>
-     * <code>setCanFinish</code> means two different things, depending on the
+     * <code>setFwdNavMode</code> means two different things, depending on the
      * type of wizard.  In a wizard created by a <code>WizardBranchController</code>,
      * it only enables the finish button if the sub-wizard in question is the last
      * in the branching structure;  if it is not, setting <code>canFinish</code>
      * to true indicates that the next steps in the wizard may now be known,
      * and it should try to find the next sub-wizard to continue.
      */
-    void setCanFinish (boolean value);
+    void setFwdNavMode (int value);
     
     /**
      * Indicate that some sort of background process is happening (presumably

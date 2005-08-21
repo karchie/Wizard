@@ -113,6 +113,11 @@ public class SpeciesPanel extends javax.swing.JPanel {
         JRadioButton button = (JRadioButton) evt.getSource();
         wizardData.put (KEY_SPECIES, button.getClientProperty(KEY_SPECIES));
         controller.setProblem(null);
+        if (button == gerbilButton) {
+            controller.setFwdNavMode(controller.STATE_CAN_FINISH);
+        } else {
+            controller.setFwdNavMode(controller.STATE_CAN_CONTINUE);
+        }
     }//GEN-LAST:event_speciesSelected
     
     

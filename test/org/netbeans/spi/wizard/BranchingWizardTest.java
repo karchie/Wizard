@@ -275,7 +275,9 @@ public class BranchingWizardTest extends TestCase {
                 practical.setSelected (false);
                 controller.setProblem ("Unacceptable!  You must decide!");
             }
-            controller.setCanFinish(ae.getSource() != neither);
+            controller.setFwdNavMode(ae.getSource() != neither ? 
+                WizardController.STATE_CAN_FINISH 
+                : WizardController.STATE_CAN_CONTINUE);
         }
     }    
     
@@ -329,7 +331,9 @@ public class BranchingWizardTest extends TestCase {
                 colors.setSelected (false);
                 controller.setProblem ("Unacceptable!  You must decide!");
             }
-            controller.setCanFinish(ae.getSource() != neither);
+            controller.setFwdNavMode(ae.getSource() != neither ? 
+                WizardController.STATE_CAN_FINISH 
+                : WizardController.STATE_CAN_CONTINUE);
         }
     }
     
@@ -357,14 +361,15 @@ public class BranchingWizardTest extends TestCase {
                 meatBox.addActionListener (this);
                 result.add (meatBox);
                 controller.setProblem (meatBox.isSelected() ? null : "You must eat meat");
-                controller.setCanFinish (false);
+                controller.setFwdNavMode (WizardController.STATE_CAN_CONTINUE);
             } else if ("mealChoice".equals(id)) {
                 steakBox = new JCheckBox ("I will have the steak");
                 steakBox.addActionListener (this);
                 steakBox.setSelected (Boolean.TRUE.equals (settings.get("eatsSteak")));
                 result.add (steakBox);
                 controller.setProblem (steakBox.isSelected() ? null : "You must order the steak");
-                controller.setCanFinish (steakBox.isSelected());
+                controller.setFwdNavMode (steakBox.isSelected() ? WizardController.STATE_CAN_FINISH :
+                    WizardController.STATE_CAN_CONTINUE);
             } else {
                 throw new Error ("Unknown ID " + id);
             }
@@ -381,7 +386,8 @@ public class BranchingWizardTest extends TestCase {
                 settings.put ("likesMeat", src.isSelected() ? Boolean.TRUE : Boolean.FALSE);
                 controller.setProblem (src.isSelected() ? null : "You must eat meat!");
             } else {
-                controller.setCanFinish (src.isSelected());
+                controller.setFwdNavMode (src.isSelected() ? 
+                    WizardController.STATE_CAN_FINISH : WizardController.STATE_CAN_CONTINUE);
                 settings.put ("eatsSteak", src.isSelected() ? Boolean.TRUE : Boolean.FALSE);
                 controller.setProblem (src.isSelected() ? null : "We only serve steak!");
             }

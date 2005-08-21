@@ -24,7 +24,9 @@ import javax.swing.JComponent;
 
 /**
  * <b>Note:</b>It is quite rare to need to directly implement this interface.
- * If you want to create a Wizard with a fixed set of steps, implement
+ * If you want to create a Wizard with a fixed set of steps, use
+ * <code>WizardPage</code> or 
+ * implement
  * {@link org.netbeans.spi.wizard.WizardPanelProvider WizardPanelProvider}
  * and call {@link org.netbeans.spi.wizard.WizardPanelProvider#createWizard 
  * createWizard} on it.
@@ -44,8 +46,8 @@ import javax.swing.JComponent;
  * The one case in which it may be necessary to implement this interface 
  * directly is if you have a Wizard that for some reason needs to disable
  * the <code>Prev</code> button (this is not a good idea from a usability
- * standpoint).  For all other cases, consider using one of
- * <code>WizardPanelProvider</code> or <code>WizardBranchController</code> - 
+ * standpoint).  For all other cases, consider using one of <code>WizardPage</code>,
+ * <code>WizardPanelProvider</code> and/or <code>WizardBranchController</code> - 
  * they are much simpler to work with.
  * <hr>
  * <p>
@@ -70,6 +72,7 @@ import javax.swing.JComponent;
  * of Strings terminated with the special ID <code>UNDETERMINED_STEP</code>;
  * as the set of following steps becomes known, it should fire <code>
  * stepsChange()</code> to any registered WizardListeners.
+ * @see WizardPage
  * @see WizardPanelProvider
  * @see WizardBranchController
  * @see org.netbeans.api.wizard.WizardDisplayer
@@ -211,6 +214,15 @@ public interface Wizard {
      * task that cannot be interrupted.
      */
     public boolean isBusy();
+    
+    /**
+     * Determine if the Next button should be enabled.  Returning false 
+     * from this method when canFinish() is true is the way to disable the
+     * next button on a panel that is not the last panel, if the user has
+     * entered information that makes the only possible next step to complete
+     * the wizard.
+     */
+    public boolean canContinue();
     
     /**
      * Listener which can detect changes in the state of a wizard as the

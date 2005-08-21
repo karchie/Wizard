@@ -64,6 +64,10 @@ final class SimpleWizard implements Wizard {
         return info.canFinish() || 
             (info.isValid() && currentIndex() == info.getSteps().length - 1);
     }
+    
+    public boolean canContinue() {
+        return info.canContinue();
+    }
 
     public String[] getAllSteps() {
         String[] result = new String[info.getSteps().length];
@@ -99,7 +103,7 @@ final class SimpleWizard implements Wizard {
         if (!info.isValid()) {
             return null;
         }
-            
+
         int idx = currentIndex();
         if (idx < info.getSteps().length - 1) {
             return info.getSteps() [idx + 1];

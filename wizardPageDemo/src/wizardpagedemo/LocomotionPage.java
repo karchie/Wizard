@@ -30,10 +30,7 @@ public class LocomotionPage extends WizardPage  {
     public LocomotionPage() {
         initComponents();
     }
-    
-    public static final String getID() {
-        return "locomotion";
-    }
+
     
     public static final String getDescription() {
         return "Locomotion style";

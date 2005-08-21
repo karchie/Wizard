@@ -49,10 +49,6 @@ public class FinalPage extends WizardPage {
         jTable1.setModel (mdl);
     }
     
-    public static final String getID() {
-        return "final";
-    }
-    
     public static final String getDescription() {
         return "Review animal specification";
     }

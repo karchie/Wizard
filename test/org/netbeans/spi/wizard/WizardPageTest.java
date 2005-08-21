@@ -59,19 +59,8 @@ public class WizardPageTest extends TestCase {
         
         Wizard result = WizardPage.createWizard(clazz, WizardResultProducer.NO_OP);
         assertNotNull (result);
-        
-        clazz = new Class[] {
-            A.class, BadNoId.class, B.class
-        };
 
         Exception e = null;
-        try {
-            result = WizardPage.createWizard(clazz, WizardResultProducer.NO_OP);
-        } catch (Exception ex) {
-            e = ex;
-        }
-        assertNotNull (e);
-        e = null;
         
         clazz = new Class[] {
             A.class, BadNoDescription.class, B.class
@@ -97,7 +86,7 @@ public class WizardPageTest extends TestCase {
         e = null;
         
         clazz = new Class[] {
-            A.class, ADuplicate.class
+            A.class, A.class
         };
         try {
             result = WizardPage.createWizard(clazz, WizardResultProducer.NO_OP);
@@ -174,12 +163,6 @@ public class WizardPageTest extends TestCase {
         }
     }
     
-    public static final class BadNoId extends WizardPage {
-        public static String getDescription() {
-            return "Step b";
-        }
-    }
-    
     public static final class BadNoDescription extends WizardPage {
         public static String getID() {
             return "B";
@@ -196,16 +179,6 @@ public class WizardPageTest extends TestCase {
         }
         public static String getDescription() {
             return "I am bad";
-        }
-    }
-    
-    
-    public static final class ADuplicate extends WizardPage {
-        public static String getID() {
-            return "A";
-        }
-        public static String getDescription() {
-            return "Step a duplicate";
         }
     }
     

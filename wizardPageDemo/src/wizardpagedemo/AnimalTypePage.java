@@ -34,11 +34,7 @@ public class AnimalTypePage extends WizardPage {
     public AnimalTypePage() {
         initComponents();
     }
-    
-    public static final String getID() {
-        return "animalType";
-    }
-    
+
     public static final String getDescription() {
         return "Choose a kind of animal";
     }

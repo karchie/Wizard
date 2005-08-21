@@ -179,7 +179,7 @@ public class SimpleWizardTest extends TestCase {
         }
 
         /**
-         * Test of setCanFinish method, of class org.netbeans.spi.wizard.SimpleWizard.Info.
+         * Test of setFwdNavMode method, of class org.netbeans.spi.wizard.SimpleWizard.Info.
          */
         public void testSetCanFinish() {
             System.out.println("testSetCanFinish");
@@ -189,7 +189,7 @@ public class SimpleWizardTest extends TestCase {
             
             assertFalse (info.canFinish());
             info.setProblem ("problem");
-            info.setCanFinish (true);
+            info.setFwdNavMode (WizardController.STATE_CAN_FINISH);
             assertTrue (info.canFinish());
             
             info.setProblem (null);
@@ -423,7 +423,7 @@ public class SimpleWizardTest extends TestCase {
         assertNotSame (comp2, comp1);
         assertEquals ("c", comp2.getName());
         info.setProblem(null);
-        info.setCanFinish(true);
+        info.setFwdNavMode(WizardController.STATE_CAN_FINISH);
         assertNull (wiz.getNextStep());
         
         settings.popAndCalve();

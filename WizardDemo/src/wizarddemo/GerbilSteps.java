@@ -28,7 +28,7 @@ public class GerbilSteps extends WizardPanelProvider {
     }
     
     protected JComponent createPanel(WizardController controller, String id, Map settings) {
-        controller.setCanFinish (true);
+        controller.setFwdNavMode (WizardController.STATE_CAN_FINISH);
         controller.setProblem(null);
         return new JLabel ("Sorry, Gerbils are a bit dull");
     }

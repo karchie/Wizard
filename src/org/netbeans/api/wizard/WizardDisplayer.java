@@ -58,7 +58,7 @@ public abstract class WizardDisplayer {
         }
         
         if (factory == null) {
-            factory = new TrivialWizardFactory();
+            factory = new DefaultWizardDisplayer();
         }
         
         return factory.show (wizard, r);

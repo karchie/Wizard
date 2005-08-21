@@ -175,6 +175,10 @@ public class WizardPage extends JPanel {
         return new WPP (contents, finisher).createWizard();
     }
 
+    /**
+     * Create a simple Wizard from an array of WizardPages, with a
+     * no-op WizardResultProducer.
+     */
     public static final Wizard createWizard(WizardPage[] contents) {
         return createWizard (contents, WizardResultProducer.NO_OP);
     }
@@ -187,6 +191,11 @@ public class WizardPage extends JPanel {
         return new CWPP (wizardPageClasses, finisher).createWizard();
     }
     
+    /**
+     * Create a simple Wizard from an array of classes, each of which is a 
+     * unique subclass of WizardPage, with a
+     * no-op WizardResultProducer.
+     */
     public static final Wizard createWizard(Class[] wizardPageClasses) {
         return createWizard (wizardPageClasses, WizardResultProducer.NO_OP);
     }
@@ -197,7 +206,7 @@ public class WizardPage extends JPanel {
      * If any content was added by calls to putWizardData() during the
      * constructor, etc., such data is copied to the settings map the first 
      * time this method is called */
-    private void setWizardDataMap (Map m) {
+    void setWizardDataMap (Map m) {
         if (m == null) {
             wizardData = new HashMap();
         } else {
@@ -214,7 +223,7 @@ public class WizardPage extends JPanel {
      * called, it will update the state of the passed controller to  match
      * any state that was set by components during the construction of this
      * component */
-    private void setController (WizardController controller) {
+    void setController (WizardController controller) {
         if (this.wc instanceof WC) {
             ((WC) this.wc).configure (controller);
         }
@@ -247,8 +256,8 @@ public class WizardPage extends JPanel {
      * value, the Finish button will not be enabled until a call to
      * <code>setProblem(null)</code> has been performed.
      */
-    protected final void setCanFinish(boolean value) {
-        getController().setCanFinish(value);
+    protected final void setForwardNavigation(int value) {
+        getController().setFwdNavMode(value);
     }
 
     /**
@@ -402,7 +411,7 @@ public class WizardPage extends JPanel {
      * Called when user interaction has occurred on a component contained by this 
      * panel or one of its children.  Override this method to check if all of
      * the values are legal, such that the Next/Finish button should be enabled,
-     * optionally calling <code>setCanFinish()</code> if warranted.
+     * optionally calling <code>setFwdNavMode()</code> if warranted.
      * <p>
      * This method also may be called with a null argument an effect of 
      * calling <code>putWizardData()</code> from someplace other than within
@@ -418,6 +427,8 @@ public class WizardPage extends JPanel {
      * has been written to).
      * <p>
      * The default implementation returns null.
+     * 
+     * 
      * @param component The component the user interacted with, if it can be
      *  determined.  The infrastructure does track the owners of list models
      *  and such, and can find the associated component, so this will usually
@@ -434,6 +445,22 @@ public class WizardPage extends JPanel {
      */
     protected String validateContents(Component component, Object event) {
         return null;
+    }
+    
+    /**
+     * Called if the user is navigating into this panel when it has already
+     * been displayed at least once - the user has navigated back to this
+     * panel, or back past this panel and is now navigating forward again.
+     * <p>
+     * If some of the UI needs to be set up based on values from earlier 
+     * pages that may have changed, do that here, fetching values from the
+     * settings map by calling <code>getWizardData()</code>.
+     * <p>
+     * The default implementation simply calls 
+     * <code>validateContents (null, null)</code>.
+     */
+    protected void recycle() {
+        validateContents (null, null);
     }
     
     /**
@@ -531,15 +558,23 @@ public class WizardPage extends JPanel {
      * Its state will be dumped into the real one once there is a real one. */
     private static final class WC implements WizardController {
         String problem = null;
-        Boolean canFinish = null;
+        int canFinish = -1;
         Boolean busy = null;
         
         public void setProblem(String value) {
             this.problem = value;
         }
 
-        public void setCanFinish(boolean value) {
-            this.canFinish = value ? Boolean.TRUE : Boolean.FALSE;
+        public void setFwdNavMode(int value) {
+            switch (value) {
+                case STATE_CAN_CONTINUE :
+                case STATE_CAN_FINISH :
+                case STATE_CAN_CONTINUE_OR_FINISH :
+                    break;
+                default :
+                    throw new IllegalArgumentException(Integer.toString(value));
+            }
+            this.canFinish = value;
         }
 
         public void setBusy(boolean busy) {
@@ -550,8 +585,8 @@ public class WizardPage extends JPanel {
             if (busy != null) {
                 other.setBusy (busy.booleanValue());
             }
-            if (canFinish != null) {
-                other.setCanFinish(canFinish.booleanValue());
+            if (canFinish != -1) {
+                other.setFwdNavMode(canFinish);
             }
             if (problem != null) {
                 other.setProblem (problem);
@@ -599,6 +634,8 @@ public class WizardPage extends JPanel {
 //                        "default no argument constructor");
 //            }
             
+            result[i] = pages[i].getName();
+            /*
             Method m = null;
             try {
                 m = pages[i].getDeclaredMethod("getID", null); //NOI18N
@@ -626,7 +663,7 @@ public class WizardPage extends JPanel {
                 throw new IllegalArgumentException ("Could not invoke " + //NOI18N
                         "public static String " + pages[i].getName() +  //NOI18N
                         ".getStep() - make sure it exists. " + iae); //NOI18N
-            }
+            } */
         }
         return result;
     }

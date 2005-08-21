@@ -43,11 +43,11 @@ final class BranchingWizard implements Wizard {
     final Wizard base;
     private Wizard secondary;
     private Wizard curr;
-    private final WizardBranchController iter;
+    private final WizardBranchController brancher;
     private WL wl = null;
     
     public BranchingWizard (WizardBranchController iterator) {
-        this.iter = iterator;
+        this.brancher = iterator;
         base = new SimpleWizard (iterator.getBase());
         setCurrent (base);
     }
@@ -55,7 +55,7 @@ final class BranchingWizard implements Wizard {
     private SimpleWizardInfo lastInfo = null;
     
     protected final Wizard createSecondary (Map settings) {
-        return iter.getWizardForStep(currStep, settings);
+        return brancher.getWizardForStep(currStep, settings);
     }
     
     private void checkForSecondary() {
@@ -88,6 +88,11 @@ final class BranchingWizard implements Wizard {
 
     public final boolean canFinish() {
         return curr != base && curr.canFinish();
+//        return curr.canFinish();
+    }
+    
+    public final boolean canContinue() {
+        return curr.canContinue();
     }
     
     public final boolean isBusy() {
@@ -98,12 +103,18 @@ final class BranchingWizard implements Wizard {
         try {
             Object result = curr.finish (settings);
             base.removeWizardListener (wl);
-            secondary.removeWizardListener (wl);
+            //Can be null, we allow bail-out with finish mid-wizard now
+            if (secondary != null) {
+                secondary.removeWizardListener (wl);
+            }
             return result;
         } catch (WizardException we) {
             if (we.getStepToReturnTo() != null) {
                 base.addWizardListener (wl);
-                secondary.addWizardListener (wl);
+                //Can be null, we allow bail-out with finish mid-wizard now
+                if (secondary != null) {
+                    secondary.addWizardListener (wl);
+                }
             }
             throw we;
         }

@@ -59,7 +59,7 @@ public class TrivialWizardFactoryTest extends TestCase {
     }
     
     public static JButton[] getButtons() {
-        return TrivialWizardFactory.buttons;
+        return DefaultWizardDisplayer.buttons;
     }
     
     public void testShow() throws Exception {
@@ -74,10 +74,10 @@ public class TrivialWizardFactoryTest extends TestCase {
             Thread.currentThread().sleep (200);
         }
         
-        JButton next = TrivialWizardFactory.buttons[0];
-        JButton prev = TrivialWizardFactory.buttons[1];
-        JButton finish = TrivialWizardFactory.buttons[2];
-        JButton cancel = TrivialWizardFactory.buttons[3];
+        JButton next = DefaultWizardDisplayer.buttons[0];
+        JButton prev = DefaultWizardDisplayer.buttons[1];
+        JButton finish = DefaultWizardDisplayer.buttons[2];
+        JButton cancel = DefaultWizardDisplayer.buttons[3];
         
         assertFalse (next.isEnabled());
         assertFalse (prev.isEnabled());
@@ -209,10 +209,10 @@ public class TrivialWizardFactoryTest extends TestCase {
             Thread.currentThread().sleep (200);
         }
         
-        JButton next = TrivialWizardFactory.buttons[0];
-        JButton prev = TrivialWizardFactory.buttons[1];
-        JButton finish = TrivialWizardFactory.buttons[2];
-        JButton cancel = TrivialWizardFactory.buttons[3];
+        JButton next = DefaultWizardDisplayer.buttons[0];
+        JButton prev = DefaultWizardDisplayer.buttons[1];
+        JButton finish = DefaultWizardDisplayer.buttons[2];
+        JButton cancel = DefaultWizardDisplayer.buttons[3];
         
         impl.assertCurrent("a");
         assertFalse (next.isEnabled());
@@ -260,7 +260,7 @@ public class TrivialWizardFactoryTest extends TestCase {
         
         setProblem (null, impl.controller);
         assertTrue (next.isEnabled());
-        setCanFinish (true, impl.controller);
+        setForwardNavigation (WizardController.STATE_CAN_CONTINUE_OR_FINISH, impl.controller);
         assertTrue (finish.isEnabled());
         assertTrue (next.isEnabled());
         setProblem ("Uh oh...", impl.controller);
@@ -299,6 +299,13 @@ public class TrivialWizardFactoryTest extends TestCase {
         
         assertTrue (next.isEnabled());
         assertFalse (prev.isEnabled());
+        
+        impl.controller.setFwdNavMode(WizardController.STATE_CAN_FINISH);
+        
+        assertFalse (prev.isEnabled());
+        assertFalse (next.isEnabled());
+        assertTrue (finish.isEnabled());
+        
     }
     
     public void testReflectionHackWorks() {
@@ -317,10 +324,10 @@ public class TrivialWizardFactoryTest extends TestCase {
         return (String[]) f.get(prov);
     }
     
-    private void setCanFinish (final boolean val, final WizardController ctl) throws Exception {
+    private void setForwardNavigation (final int val, final WizardController ctl) throws Exception {
         SwingUtilities.invokeAndWait (new Runnable() {
             public void run() {
-                ctl.setCanFinish(val);
+                ctl.setFwdNavMode(val);
             }
         });
     }
@@ -337,7 +344,7 @@ public class TrivialWizardFactoryTest extends TestCase {
         try {
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
-                    new TrivialWizardFactory().show (wiz, null);
+                    new DefaultWizardDisplayer().show (wiz, null);
                 }
             });
             Thread.currentThread().sleep (1000);
@@ -381,7 +388,6 @@ public class TrivialWizardFactoryTest extends TestCase {
         protected JComponent createPanel(final WizardController controller, final java.lang.String id, final java.util.Map settings) {
             step++;
             this.controller = controller;
-            active = true;
             JPanel result = new JPanel();
             result.setLayout (new BorderLayout());
             cb = new JCheckBox (id);
@@ -398,6 +404,11 @@ public class TrivialWizardFactoryTest extends TestCase {
             currId = id;
             result.setName (id);
             settings.put (id, Boolean.TRUE);
+            SwingUtilities.invokeLater (new Runnable() {
+                public void run() {
+                    active = true;
+                }
+            });
             return result;
         }
 
