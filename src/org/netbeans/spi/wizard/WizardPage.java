@@ -83,13 +83,11 @@ import javax.swing.tree.TreePath;
  *     needed:  Pass an array of classes all of which
  *      <ul>
  *      <li>Are subclasses of WizardPage</li>
- *      <li>Have two static methods with the following signatures:
- *      <ul><li><code>public static String getId()</code></li>
+ *      <li>Have a static method with the following signature:
+ *      <ul>
  *          <li><code>public static String getDescription()</code></li>
  *      </ul>
  * </li>
- * <li>Do not share a return value from <code>getId()</code> - each class must
- * correspond to a single panel</li>
  * </ul>
  * 
  * Note that during development of a wizard, it is worthwhile to test/run with
