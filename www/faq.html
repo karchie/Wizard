@@ -66,7 +66,9 @@ information is gathered together.
 If you are using <code>WizardPage</code>, most of this is handled 
 automagically - if you set the name of a component (i.e. a combo box,
 text field, list, etc.), whenever the user changes it, the value
-in the component will automatically be written to the settings map.
+in the component will automatically be written to the settings map,
+keyed to the name of the component (be careful not to duplicate
+component names!).
 <p>
 What the wizard really <i>does</i> or creates with that information is
 handled in the <code>finish (Map m)</code> method of the 
