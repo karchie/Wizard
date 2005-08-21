@@ -18,7 +18,7 @@ Wizards.
 <p>
 This library was designed as a 
 replacement for NetBeans' Wizards API, and takes into account the long history 
-of that API, problems encountered with it over the years. It provides a 
+of that API and problems encountered with it over the years. It provides a 
 simple, easy-to-use solution that enables any Swing application to provide 
 Wizards with a minimum of code and effort.
 <p>
@@ -45,6 +45,9 @@ but using your favorite GUI designer.  See the first item in the
     <li>Leverage knowledge of known problems in existing wizard APIs to
         avoid them in this one</li>
     <li>Make it easy to create wizards that end users find easy to use</li>
+    <li>Minimalism - the API should be low-surface-area, exposing
+        no more concepts or classes than necessary</li>
+    <li>Robustness - keep the code simple and heavily covered by tests</li>
 </ul>
 <p>
 <h3>Status</h3>
