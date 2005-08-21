@@ -7,62 +7,30 @@
 <body bgcolor="#FFFFFF" text="#000000">
 Provides a simple API and UI for Wizards, a commonly used UI pattern in GUI 
 interfaces. Traditionally, everybody has needed to write their own 
-Wizards from scratch, and such code is painful and hard to get right. This 
-library aims to provide a simple API for writing Wizards, and default UI that 
-resembles Wizards in other applications, but with the ability to plug in 
-alternative UI implementations if desired. This library was designed as a 
+Wizards from scratch, and such code is painful and hard to get right. 
+<p>
+This 
+library aims to provide a simple, relatively bulletproof API 
+for writing Wizards.  The UI for Wizards is pluggable;  the default
+implementation conforms to the JLF usability guidelines for
+Wizards.
+<p>
+This library was designed as a 
 replacement for NetBeans' Wizards API, and takes into account the long history 
-of that API, problems encountered with it over the years, and provides a 
+of that API, problems encountered with it over the years. It provides a 
 simple, easy-to-use solution that enables any Swing application to provide 
 Wizards with a minimum of code and effort.
 <p>
 Download the javadoc <a href="WizardAPI.zip">here</a>, or browse it online
 <a href="http://wizard.dev.java.net/nonav/javadoc/index.html">here</a>.  
 Download the library <a href="wizard.jar">here.</a>  Read the FAQ
-<a href="faq.html">here</a>.
+<a href="faq.html">here</a>.  Browse the 
+<a href="https://wizard.dev.java.net/source/browse/wizard/WizardDemo/src/wizarddemo/?hideattic=1">examples</a>.
 <p>
-<i>(new as of 8/20/05)</i> A convenience class, WizardPage, has been added,
+<font color="#4444ff"><i>(new as of 8/20/05)</i> A convenience class, WizardPage, has been added,
 which makes it even easier to create new wizards, often doing almost nothing
 but using your favorite GUI designer.  See the first item in the
-<a href="faq.html">FAQ</a>.
-<p>
-The model for a wizard
-is a list of String IDs, which a user-supplied factory can map back to panels and 
-human-readable descriptions.  As much of the management of panels and IDs as possible is handled
-automatically. Decision points at which the list of future steps change and wizards with
-an indeterminite number of steps are supported.  User supplied panels collect data from the
-user, which is placed into a <code>Map</code> which will be used to do whatever the wizard 
-does when <code>finish()</code> is called.  Removal of map entries when the user navigates 
-backward in a wizard is handled automatically. 
-<p>
-Creating a wizard can be as simple as extending <code>WizardPanelProvider</code>, passing an
-array of step IDs and implementing <code>createPanel</code> and <code>Finish</code>.  Then just
-call <code>WizardDisplayer.showWizard(myPanelProvider.createWizard())</code>.  Essentially
-you implement something like this:
-<p>
-<pre>
-    protected JComponent createPanel(WizardController wc, String step, Map data) {
-        System.err.println("CreatePanel " + s);
-        if ("step1".equals(step)) {
-            wc.setProblem(null);
-            return new Panel1(data, wc);
-        } else if ("step2".equals(step)) {
-            wc.setProblem ("Select a doohickey");
-            return new Panel2(data, wc);
-        } else if ("step3".equals(step)) {
-            ...
-        } else {
-            throw new IllegalArgumentException(step);
-        }
-    }    
-</pre>    
-The panels typically will use the WizardController to enable/disable navigation
-depending on the state of the controls, and write data into the map to be 
-used by the <code>finish()</code> method or other panels.
-<p>
-A basic UI/implementation of <code>WizardDisplayer</code> is provided; the
-implementation of <code>WizardDisplayer</code> is pluggable, so applications can provide a 
-completely different UI if desired.
+<a href="faq.html">FAQ</a>.</font>
 <p>
 <b>To Do:</b><br>
 <ul><li>Add support for post-finish summary panels per the JLF spec</li>
