@@ -120,7 +120,7 @@ Now, if you've read all that and you are <i>absolutely determined</i> to disable
 the Next button without telling the user why you're doing that...call 
 <code>setProblem(&quot;  &quot;);</code> on the <code>WizardController</code>.
 <p>
-<b>But <code>setProblem(&quot; &quot;)</code> looks like a hack?</b><br>
+<b>But <code>setProblem(&quot; &quot;)</code> looks like a hack...</b><br>
 It is one.  Tell the user what's wrong instead.
 
 <p>
@@ -149,6 +149,9 @@ naming the class, which is cleaner than doing it programmatically.
 <p>
 <b>Can I create a wizard with only Next/Prev buttons?</b><br>
 Yes, if you provide your own implementation of <code>WizardDisplayer</code>.
+But there are a lot of reasons why the default UI is the way it is and 
+most of them come from research on how to make very, very usable wizards.
+Be sure you really want to do this.
 <p>
 <b>Why are you so persnickity about the UI?</b><br>
 Because I'm a cranky curmudgeon.  Next question.
