@@ -70,7 +70,7 @@ a format readable by <code>ImageIO.read()</code>.
 It's the standard side panel for wizards in NetBeans - because nobody's gotten
 around to replacing it with something more generic.  Contributions are welcome.
 <p>
-<b>How do I disable the next button but  problem text?</b><br>
+<b>How do I disable the next button without showing a string to the user?</b><br>
 First, <i>don't do that.</i>  Even if you think it's
 obvious what's wrong, that doesn't mean it will be obvious to the user.  Really.
 You are not your target audience (if you were, you wouldn't be writing a wizard).
@@ -86,7 +86,7 @@ Now, if you've read all that and you are <i>absolutely determined</i> to disable
 the Next button without telling the user why you're doing that...call 
 <code>setProblem(&quot;  &quot;);</code> on the <code>WizardController</code>.
 <p>
-<b>How do I disable the Prev button</b><br>
+<b>How do I disable the Prev button?</b><br>
 You don't.  There is only one reason for wanting that:  The wizard has done
 something irrevocable (changed files on disk, etc.) before the user clicked
 finish.  The entire point of this library is to make it easy to create wizards
@@ -108,10 +108,10 @@ Longer term, it would be nicer to use the NetBeans lookup library to do this -
 then a jar on the classpath just needs to have a file in <code>META-INF/services</code>
 naming the class, which is cleaner than doing it programmatically.
 <p>
-<b>Can I create a wizard with only Next/Prev buttons</b><br>
+<b>Can I create a wizard with only Next/Prev buttons?</b><br>
 Yes, if you provide your own implementation of <code>WizardDisplayer</code>.
 <p>
-<b>Why are you so persnickity about the UI</b><br>
+<b>Why are you so persnickity about the UI?</b><br>
 Because I'm a cranky curmudgeon.  Next question.
 
 </body>
