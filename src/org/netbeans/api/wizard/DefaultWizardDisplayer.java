@@ -58,6 +58,11 @@ import org.netbeans.spi.wizard.WizardException;
  */
 class DefaultWizardDisplayer extends WizardDisplayer {
     
+    //XXX this class was intended to be a trivial example of how one
+    //might implement a wizard UI, but it is morphing into a full blown
+    //implementation.  Should clean it up at some point, it's rather
+    //spaghetti-ish, unlike the rest of the library
+    
     DefaultWizardDisplayer() {
     }
 
