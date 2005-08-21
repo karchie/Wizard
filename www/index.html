@@ -9,6 +9,7 @@ Provides a simple API and UI for Wizards, a commonly used UI pattern in GUI
 interfaces. Traditionally, everybody has needed to write their own 
 Wizards from scratch, and such code is painful and hard to get right. 
 <p>
+<img align="right" src="logo.png"/> 
 This 
 library aims to provide a simple, relatively bulletproof API 
 for writing Wizards.  The UI for Wizards is pluggable;  the default
@@ -21,16 +22,28 @@ of that API, problems encountered with it over the years. It provides a
 simple, easy-to-use solution that enables any Swing application to provide 
 Wizards with a minimum of code and effort.
 <p>
+Read the FAQ
+<a href="faq.html">here</a>.
 Download the javadoc <a href="WizardAPI.zip">here</a>, or browse it online
 <a href="http://wizard.dev.java.net/nonav/javadoc/index.html">here</a>.  
-Download the library <a href="wizard.jar">here.</a>  Read the FAQ
-<a href="faq.html">here</a>.  Browse the 
+Download the library <a href="wizard.jar">here.</a>  Browse the 
 <a href="https://wizard.dev.java.net/source/browse/wizard/WizardDemo/src/wizarddemo/?hideattic=1">examples</a>.
+<p>
+<h3>Goals</h3>
 <p>
 <font color="#4444ff"><i>(new as of 8/20/05)</i> A convenience class, WizardPage, has been added,
 which makes it even easier to create new wizards, often doing almost nothing
 but using your favorite GUI designer.  See the first item in the
 <a href="faq.html">FAQ</a>.</font>
+<p>
+<ul>
+    <li>Provide an easy-to-use API for creating wizards</li>
+    <li>Leverage existing research into how to make wizards easy to use 
+        for end users</li>
+    <li>Leverage knowledge of known problems in existing wizard APIs to
+        avoid them in this one</li>
+    <li>Make it easy to create wizards that end users find easy to use</li>
+</ul>
 <p>
 <b>To Do:</b><br>
 <ul><li>Add support for post-finish summary panels per the JLF spec</li>

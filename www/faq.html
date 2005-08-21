@@ -5,14 +5,15 @@
 <body>
 <h1>Wizards FAQ</h1>
 <p>
-<b>Help!  Where do I start?</b>
+<b>Help!  Where do I start?</b><br>
 If you just want to create a simple wizard with a fixed
 set of steps, do the following:
 <ol>
     <li>Create the panels you want in your favorite Swing GUI builder</li>
     <li>Have them subclass WizardPage</li>
     <li>For each component on each panel that affects what the wizard 
-        will do or create, set
+        will do or create (i.e. not panels, but checkboxes, text 
+        fields, combo boxes, etc.), set
         the <code>name</code> of that component to some unique string.</li>
     <li>On each one, add two static methods:
         <ul>
@@ -31,7 +32,10 @@ set of steps, do the following:
         components (i.e. if a checkbox is checked and has the name "foo",
         if you call <code>get("foo")</code> on the map, you will get
         Boolean.TRUE - all the standard Swing components are handled
-        appropriately).</li>
+        appropriately).  This is where you will take the values gathered
+        into the map from user input as the user progressed through the
+        wizard, and use them to do something or create some object.
+    </li>
     <li>Do something like: 
         <pre>
             Class[] clazz = new Class[] {
