@@ -57,6 +57,23 @@ using <code>WizardPage</code> to create a simple wizard;
 look in <code>wizard/WizardDemo</code> for an example of how to
 do branching and other more complex things.
 <p>
+<b>What is the settings map?</b><br>
+A wizard should not do anything to its environment until the user clicks the
+finish button - until then a wizard is just a thing that gathers information
+on its panels.  The map is passed to each panel, and is a place where the
+information is gathered together.
+<p>
+If you are using <code>WizardPage</code>, most of this is handled 
+automagically - if you set the name of a component (i.e. a combo box,
+text field, list, etc.), whenever the user changes it, the value
+in the component will automatically be written to the settings map.
+<p>
+What the wizard really <i>does</i> or creates with that information is
+handled in the <code>finish (Map m)</code> method of the 
+<code>WizardPanelProvider</code> or 
+<code>WizardPage.WizardResultProducer</code>.
+
+<p>
 <b>How do I disable the next button?</b><br>
 Call <code>WizardController.setProblem(&quot;[problem-string]&quot;)</code> on the
 <code>WizardController</code> instance that was passed when your panel was
