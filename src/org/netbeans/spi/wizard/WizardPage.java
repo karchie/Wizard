@@ -709,11 +709,22 @@ public class WizardPage extends JPanel {
     }
     
     /**
-     * Interface that is passed to WizardPage.createWizard()
+     * Interface that is passed to WizardPage.createWizard().  For wizards
+     * created from a set of WizardPages or WizardPage subclasses, this is
+     * the object that whose code will be run to create or do whatever the
+     * wizard does when the user clicks the Finish button.
      */
     public static interface WizardResultProducer {
+        /**
+         * Conclude a wizard, doing whatever the wizard does with the data
+         * gathered into the map on the various panels.
+         */
         public Object finish (Map wizardData) throws WizardException;
-        public static final WizardResultProducer NO_OP = new WizardResultProducer() { 
+        
+        /**
+         * A no-op WizardResultProducer that returns null.
+         */
+        static final WizardResultProducer NO_OP = new WizardResultProducer() { 
             public Object finish (Map wizardData) { return null; } 
         };
     }

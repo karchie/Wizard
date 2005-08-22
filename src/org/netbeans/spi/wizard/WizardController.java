@@ -38,21 +38,21 @@ package org.netbeans.spi.wizard;
  */
 public interface WizardController {
     /**
-     * Constant that can be returned by <code>getFwdNavMode</code> to indicate
+     * Constant that can be passed to <code>setForwardNavigationMode</code> to indicate
      * that the Next button can be enabled if the problem string is null.
      * 
      * @see Wizard.MODE_CAN_CONTINUE
      */
     public static final int MODE_CAN_CONTINUE = 1;
     /**
-     * Constant that can be returned by <code>getFwdNavMode</code> to indicate
+     * Constant that can be passed to <code>setForwardNavigationMode</code> to indicate
      * that the Finish button can be enabled if the problem string is null.
      * 
      * @see Wizard.MODE_CAN_FINISH
      */
     public static final int MODE_CAN_FINISH = 2;
     /**
-     * Constant that can be returned by <code>getFwdNavMode</code> to indicate
+     * Constant that can be passed to <code>setForwardNavigationMode</code> to indicate
      * that both the Finish and Next buttons can be enabled if the problem 
      * string is null.  This value is a bitmask - i.e. 
      * <code>MODE_CAN_CONTINUE_OR_FINISH == MODE_CAN_CONTINUE | 
