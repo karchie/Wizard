@@ -40,16 +40,16 @@ import org.netbeans.spi.wizard.Wizard.WizardListener;
  * @author Tim Boudreau
  */
 final class BranchingWizard implements Wizard {
-    final Wizard base;
-    private Wizard secondary;
-    private Wizard curr;
+    final Wizard initialSteps;
+    private Wizard subsequentSteps;
+    private Wizard activeWizard;
     private final WizardBranchController brancher;
     private WL wl = null;
     
-    public BranchingWizard (WizardBranchController iterator) {
-        this.brancher = iterator;
-        base = new SimpleWizard (iterator.getBase());
-        setCurrent (base);
+    public BranchingWizard (WizardBranchController brancher) {
+        this.brancher = brancher;
+        initialSteps = new SimpleWizard(brancher.getBase(), true);
+        setCurrent (initialSteps);
     }
     
     private SimpleWizardInfo lastInfo = null;
@@ -59,77 +59,78 @@ final class BranchingWizard implements Wizard {
     }
     
     private void checkForSecondary() {
-        if (settings == null) {
+        if (wizardData == null) {
             return;
         }
-        Wizard newSecondary = createSecondary (settings);
-        if (((secondary == null) != (newSecondary == null)) || (secondary != null && !secondary.equals (newSecondary))) {
-            secondary = newSecondary;
+        Wizard newSecondary = createSecondary (wizardData);
+        if (((subsequentSteps == null) != (newSecondary == null)) || (subsequentSteps != null && !subsequentSteps.equals (newSecondary))) {
+            subsequentSteps = newSecondary;
             fireStepsChanged();
         }
     }
     
+    public int getForwardNavigationMode() {
+        return activeWizard.getForwardNavigationMode();
+    }    
+    
     private void setCurrent (Wizard curr) {
-        if (this.curr == curr) {
+        if (this.activeWizard == curr) {
             return;
         }
         if (curr == null) {
             throw new NullPointerException ("Can't set current wizard to null");
         }
-        if (this.curr != null) {
-            this.curr.removeWizardListener (wl);
+        if (this.activeWizard != null) {
+            this.activeWizard.removeWizardListener (wl);
         }
-        this.curr = curr;
+        this.activeWizard = curr;
         if (wl == null) {
             wl = new WL();
         }
         curr.addWizardListener (wl);
     }
-
-    public final boolean canFinish() {
-        return curr != base && curr.canFinish();
-//        return curr.canFinish();
-    }
-    
-    public final boolean canContinue() {
-        return curr.canContinue();
-    }
     
     public final boolean isBusy() {
-        return curr.isBusy();
+        return activeWizard.isBusy();
     }
 
     public final Object finish(Map settings) throws WizardException {
+        WizardException exc = null;
         try {
-            Object result = curr.finish (settings);
-            base.removeWizardListener (wl);
+            Object result = activeWizard.finish (settings);
+            initialSteps.removeWizardListener (wl);
             //Can be null, we allow bail-out with finish mid-wizard now
-            if (secondary != null) {
-                secondary.removeWizardListener (wl);
+            if (subsequentSteps != null) {
+                subsequentSteps.removeWizardListener (wl);
             }
             return result;
         } catch (WizardException we) {
+            exc = we;
             if (we.getStepToReturnTo() != null) {
-                base.addWizardListener (wl);
+                initialSteps.addWizardListener (wl);
                 //Can be null, we allow bail-out with finish mid-wizard now
-                if (secondary != null) {
-                    secondary.addWizardListener (wl);
+                if (subsequentSteps != null) {
+                    subsequentSteps.addWizardListener (wl);
                 }
             }
             throw we;
+        } finally {
+            if (exc == null) {
+                subsequentSteps = null;
+            }
         }
     }
 
     public final String[] getAllSteps() {
         String[] result;
-        if (secondary == null) {
-            String[] bsteps = base.getAllSteps();
+        if (subsequentSteps == null) {
+            String[] bsteps = initialSteps.getAllSteps();
             result = new String[bsteps.length + 1];
             System.arraycopy (bsteps, 0, result, 0, bsteps.length);
             result[result.length-1] = UNDETERMINED_STEP;
         } else {
-            String[] bsteps = base.getAllSteps();
-            String[] csteps = secondary.getAllSteps();
+            String[] bsteps = initialSteps.getAllSteps();
+            String[] csteps = subsequentSteps.getAllSteps();
             result = new String[bsteps.length + csteps.length];
             System.arraycopy (bsteps, 0, result, 0, bsteps.length);
             System.arraycopy (csteps, 0, result, bsteps.length,  csteps.length);
@@ -145,22 +146,22 @@ final class BranchingWizard implements Wizard {
             String[] steps = getAllSteps();
             int idx = Arrays.asList(steps).indexOf(currStep);
             if (idx == -1) {
-                throw new IllegalStateException ("Current step not in" +
-                        " available steps:  " + currStep + " not in " +
+                throw new IllegalStateException ("Current step not in" + //NOI18N
+                        " available steps:  " + currStep + " not in " + //NOI18N
                         Arrays.asList(steps));
             } else {
                 if (idx == steps.length - 1) {
-                    if (secondary == null) {
+                    if (subsequentSteps == null) {
                         result = UNDETERMINED_STEP;
                     } else {
-                        result = secondary.getNextStep();
+                        result = subsequentSteps.getNextStep();
                     }
                 } else {
                     Wizard w = ownerOf (currStep);
-                    if (w == base && w.canFinish() && idx == base.getAllSteps().length -1) {
+                    if (w == initialSteps && idx == initialSteps.getAllSteps().length -1) {
                         checkForSecondary();
-                        if (secondary != null) {
-                            result = secondary.getAllSteps()[0];
+                        if (subsequentSteps != null) {
+                            result = subsequentSteps.getAllSteps()[0];
                         } else {
                             result = UNDETERMINED_STEP;
                         }
@@ -170,19 +171,19 @@ final class BranchingWizard implements Wizard {
                 }
             }
         }
-        return result;
+        return getProblem() == null ? result : UNDETERMINED_STEP.equals(result) ? result : null;
     }
 
     public final String getPreviousStep() {
-        if (curr == secondary && secondary.getAllSteps() [0].equals(currStep)) {
-            return base.getAllSteps()[base.getAllSteps().length-1];
+        if (activeWizard == subsequentSteps && subsequentSteps.getAllSteps() [0].equals(currStep)) {
+            return initialSteps.getAllSteps()[initialSteps.getAllSteps().length-1];
         } else {
-            return curr.getPreviousStep();
+            return activeWizard.getPreviousStep();
         }
     }
 
     public final String getProblem() {
-        return curr.getProblem();
+        return activeWizard.getProblem();
     }
 
     public final String getStepDescription(String id) {
@@ -196,27 +197,27 @@ final class BranchingWizard implements Wizard {
     private Wizard ownerOf (String id) {
         if (UNDETERMINED_STEP.equals(id)) {
             checkForSecondary();
-            return secondary;
+            return subsequentSteps;
         }
-        if (Arrays.asList(base.getAllSteps()).contains(id)) {
-            return base;
+        if (Arrays.asList(initialSteps.getAllSteps()).contains(id)) {
+            return initialSteps;
         } else {
             checkForSecondary();
-            return secondary;
+            return subsequentSteps;
         }
     }
 
     public final String getTitle() {
-        return curr.getTitle();
+        return activeWizard.getTitle();
     }
 
-    private Map settings;
+    private Map wizardData;
     private String currStep = null;
     public final JComponent navigatingTo(String id, Map settings) {
-        this.settings = settings;
+        this.wizardData = settings;
         currStep = id;
         setCurrent (ownerOf (id));
-        return curr.navigatingTo(id, settings);
+        return activeWizard.navigatingTo(id, settings);
     }
 
     private Set listeners = Collections.synchronizedSet (new HashSet());

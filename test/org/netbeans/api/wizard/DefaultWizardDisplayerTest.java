@@ -25,7 +25,9 @@ import java.awt.event.ActionListener;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Map;
+import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
+import javax.swing.Action;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import junit.framework.*;
@@ -38,18 +40,20 @@ import org.netbeans.spi.wizard.WizardController;
 
 
 /**
+ * Tests the default UI for wizards, and, implicitly, a lot of the logic 
+ * in the support classes.
  *
- * @author tim
+ * @author Tim Boudreau
  */
-public class TrivialWizardFactoryTest extends TestCase {
+public class DefaultWizardDisplayerTest extends TestCase {
     
-    public TrivialWizardFactoryTest(String testName) {
+    public DefaultWizardDisplayerTest(String testName) {
         super(testName);
     }
     
     
     public static Test suite() {
-        TestSuite suite = new TestSuite(TrivialWizardFactoryTest.class);
+        TestSuite suite = new TestSuite(DefaultWizardDisplayerTest.class);
         
         return suite;
     }
@@ -62,13 +66,29 @@ public class TrivialWizardFactoryTest extends TestCase {
         return DefaultWizardDisplayer.buttons;
     }
     
+    // A help action for testing
+    private static class HA extends AbstractAction {
+        ActionEvent ae = null;
+        public void actionPerformed (ActionEvent ae) {
+            this.ae = ae;
+        }
+        
+        public void assertPerformed() {
+            ActionEvent x = ae;
+            ae = null;
+            assertNotNull (x);
+        }
+    };
+    
     public void testShow() throws Exception {
         System.out.println("testShow");
         PanelProviderImpl impl = new PanelProviderImpl();
         
         Wizard wiz = impl.createWizard();
         
-        show (wiz);
+        HA ha = new HA();
+        
+        show (wiz, ha);
         
         while (!impl.active) {
             Thread.currentThread().sleep (200);
@@ -78,6 +98,12 @@ public class TrivialWizardFactoryTest extends TestCase {
         JButton prev = DefaultWizardDisplayer.buttons[1];
         JButton finish = DefaultWizardDisplayer.buttons[2];
         JButton cancel = DefaultWizardDisplayer.buttons[3];
+        JButton help = DefaultWizardDisplayer.buttons[4];
+        
+        assertTrue ("Help button should be shown", help.isShowing());
+        
+        click (help);
+        ha.assertPerformed();
         
         assertFalse (next.isEnabled());
         assertFalse (prev.isEnabled());
@@ -153,9 +179,11 @@ public class TrivialWizardFactoryTest extends TestCase {
         impl.controller.setBusy(true);
         JButton[] b = getButtons();
         for (int i=0; i < b.length; i++) {
-            assertFalse ("All buttons should be enabled when " +
-                    "wizard is busy, but " + b[i].getText() + " is enabled", 
-                    b[i].isEnabled());
+            if (b[i] != help) {
+                assertFalse ("All navigation buttons should be enabled when " +
+                        "wizard is busy, but " + b[i].getText() + " is enabled", 
+                        b[i].isEnabled());
+            }
         }
         impl.controller.setBusy(false);
         assertTrue ("SetBusy(false) should restore former state", prev.isEnabled());
@@ -260,7 +288,7 @@ public class TrivialWizardFactoryTest extends TestCase {
         
         setProblem (null, impl.controller);
         assertTrue (next.isEnabled());
-        setForwardNavigation (WizardController.STATE_CAN_CONTINUE_OR_FINISH, impl.controller);
+        setForwardNavigation (WizardController.MODE_CAN_CONTINUE_OR_FINISH, impl.controller);
         assertTrue (finish.isEnabled());
         assertTrue (next.isEnabled());
         setProblem ("Uh oh...", impl.controller);
@@ -300,7 +328,7 @@ public class TrivialWizardFactoryTest extends TestCase {
         assertTrue (next.isEnabled());
         assertFalse (prev.isEnabled());
         
-        impl.controller.setFwdNavMode(WizardController.STATE_CAN_FINISH);
+        impl.controller.setForwardNavigationMode(WizardController.MODE_CAN_FINISH);
         
         assertFalse (prev.isEnabled());
         assertFalse (next.isEnabled());
@@ -327,7 +355,7 @@ public class TrivialWizardFactoryTest extends TestCase {
     private void setForwardNavigation (final int val, final WizardController ctl) throws Exception {
         SwingUtilities.invokeAndWait (new Runnable() {
             public void run() {
-                ctl.setFwdNavMode(val);
+                ctl.setForwardNavigationMode(val);
             }
         });
     }
@@ -341,10 +369,14 @@ public class TrivialWizardFactoryTest extends TestCase {
     }
     
     private static void show (final Wizard wiz) {
+        show (wiz, null);
+    }
+    
+    private static void show (final Wizard wiz, final Action helpAction) {
         try {
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
-                    new DefaultWizardDisplayer().show (wiz, null);
+                    new DefaultWizardDisplayer().show (wiz, null, helpAction);
                 }
             });
             Thread.currentThread().sleep (1000);

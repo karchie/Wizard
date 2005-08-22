@@ -5,8 +5,10 @@
 <body>
 <h1>Wizards FAQ</h1>
 <img align="right" src="logo.png"/> 
+
 <p>
-<b>Help!  Where do I start?</b><br>
+<b>Help!  Where do I start?</b>
+<br>
 If you just want to create a simple wizard with a fixed
 set of steps, do the following:
 <ol>
@@ -18,9 +20,6 @@ set of steps, do the following:
         the <code>name</code> of that component to some unique string.</li>
     <li>On each WizardPage subclass, add a static method:
         <ul>
-<!--            <li><code>public static String getID()</code> - this should
-                return a short unique string that names the step this panel
-                represents</li> -->
             <li><code>public static String getDescription()</code> -
                 this should return a <i>localized</i> string that
                 describes the step - keep it short.
@@ -50,8 +49,11 @@ set of steps, do the following:
         </pre>
     </li>
 </ol>
+
+
 <p>
-<b>Where are the examples?</b><br>
+<b>Where are the examples?</b>
+<br>
 Check out the sources:
 <pre>
     cvs -d:pserver:anoncvs@cvs.dev.java.net login
@@ -61,6 +63,8 @@ Look in <code>wizard/wizardPageDemo</code> for a sample of
 using <code>WizardPage</code> to create a simple wizard;
 look in <code>wizard/WizardDemo</code> for an example of how to
 do branching and other more complex things.
+
+
 <p>
 <b>What is the settings map?</b><br>
 A wizard should not do anything to its environment until the user clicks the
@@ -80,32 +84,59 @@ handled in the <code>finish (Map m)</code> method of the
 <code>WizardPanelProvider</code> or 
 <code>WizardPage.WizardResultProducer</code>.
 
+
 <p>
-<b>How do I disable the next button?</b><br>
+<b>I'm using WizardPage, and I have named components, but their initial values are 
+not being automatically written to the wizard data map.  What's wrong?</b>
+<br>
+Make sure you call <code>setName</code> on your component <i>before</i> you
+add it to the component hierarchy. <i><code>java.awt.Component</code>
+does not fire property changes when you call <code>setName()</code></i>.
+That means, if you set the name <i>after</i> you add it to your 
+<code>WizardPage</code>, the system has no way of knowing about it, and 
+it won't have written anything into the wizard data map when the component
+was first added.
+
+
+<p>
+<b>How do I disable the next button?</b>
+<br>
 Call <code>WizardController.setProblem(&quot;[problem-string]&quot;)</code> on the
 <code>WizardController</code> instance that was passed when your panel was
 created.  The string that is passed
 will appear at the bottom of the wizard.  It should be something that describes
 what information is missing or incorrect, and how it is incorrect.
+
+
 <p>
-<b>What is the basis for the ui/button set/the way wizards look?</b> <br>
+<b>What is the basis for the ui/button set/the way wizards look?</b>
+<br>
 The Java Look and Feel guidelines for wizards.  A lot of time, expertise and
 effort went into figuring out how to create wizards that somebody's
 grandmother could use in creating those - experimenting with different
 designs and putting real users in front of them.  They are Good Stuff[tm].
+
+
 <p>
-<b>How do I change the background image on the left side of the wizard dialog?</b><br>
+<b>How do I change the background image on the left side of the wizard dialog?</b>
+<br>
 Set the system property &quot;wizard.sidebar.image&quot; to a URL that points
 to the image file inside a jar that is on the classpath.  The image must be in
 a format readable by <code>ImageIO.read()</code>.
 <br>
 <i>This item is subject to change</i>
+
+
 <p>
-<b>What is the default image behind the steps on the left side of wizards?</b><br>
+<b>What is the default image behind the steps on the left side of wizards?</b>
+<br>
 It's the standard side panel for wizards in NetBeans - because nobody's gotten
 around to replacing it with something more generic.  Contributions are welcome.
+
+
 <p>
-<b>How do I disable the next button without showing a string to the user?</b><br>
+<b>How do I disable the next button without showing a string to the user?</b>
+<br>
 First, <i>don't do that.</i>  Even if you think it's
 obvious what's wrong, that doesn't mean it will be obvious to the user.  Really.
 You are not your target audience (if you were, you wouldn't be writing a wizard).
@@ -120,12 +151,17 @@ out and download other software that is friendlier.  Seriously.
 Now, if you've read all that and you are <i>absolutely determined</i> to disable
 the Next button without telling the user why you're doing that...call 
 <code>setProblem(&quot;  &quot;);</code> on the <code>WizardController</code>.
-<p>
-<b>But <code>setProblem(&quot; &quot;)</code> looks like a hack...</b><br>
-It is one.  Tell the user what's wrong instead.
+
 
 <p>
-<b>How do I disable the Prev button?</b><br>
+<b>But <code>setProblem(&quot; &quot;)</code> looks like a hack...</b>
+<br>
+It is one.  Tell the user what's wrong instead.
+
+
+<p>
+<b>How do I disable the Prev button?</b>
+<br>
 You don't.  There is only one reason for wanting that:  The wizard has done
 something irrevocable (changed files on disk, etc.) before the user clicked
 finish.  The entire point of this library is to make it easy to create wizards
@@ -137,24 +173,37 @@ You can <i>temporarily</i> disable all navigation with
 some lengthy background process is happening and navigation should 
 temporarily be disabled while it completes.
 <p>
+Now, if you're <i>absolutely determined</i> to do that, clear your mind and
+stare at the <code>Wizard</code> interface for ten uninterrupted minutes.
+The answer will come in a blinding flash.
+
+
+<p>
 <b>It says the wizard UI is pluggable.  How do I provide my own implementation
-of <code>WizardDisplayer</code>?</b><br>
+of <code>WizardDisplayer</code>?</b>
+<br>
 Write an implementation of <code>WizardDisplayer</code> which has a public,
 no argument constructor.  Set the system property 
 &quot;WizardDisplayer.default&quot; to the fully qualified name of the class.
 <p>
-<i>This item is subject to change</i><br>
 Longer term, it would be nicer to use the NetBeans lookup library to do this - 
-then a jar on the classpath just needs to have a file in <code>META-INF/services</code>
-naming the class, which is cleaner than doing it programmatically.
+then a jar on the classpath just needs to have a file in 
+<code>META-INF/services</code> naming the class, which is much cleaner.
+<br><i>This item is subject to change</i>
+
+
 <p>
-<b>Can I create a wizard with only Next/Prev buttons?</b><br>
+<b>Can I create a wizard with only Next/Prev buttons?</b>
+<br>
 Yes, if you provide your own implementation of <code>WizardDisplayer</code>.
 But there are a lot of reasons why the default UI is the way it is and 
 most of them come from research on how to make very, very usable wizards.
 Be sure you really want to do this.
+
+
 <p>
-<b>Why are you so persnickity about the UI?</b><br>
+<b>Why are you so persnickity about UI?</b>
+<br>
 Because I'm a cranky curmudgeon.  Next question.
 
 </body>

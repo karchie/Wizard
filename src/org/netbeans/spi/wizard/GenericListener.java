@@ -113,7 +113,7 @@ final class GenericListener implements ActionListener, PropertyChangeListener, C
         }
         if (accept (jc) && !(jc instanceof JPanel)) {
             jc.addPropertyChangeListener("name", this); //NOI18N
-            if (jc.getName() != null) {
+            if (pnl.getMapKeyFor(jc) != null) {
                 pnl.maybeUpdateMap((JComponent) jc);
             }
         }
@@ -147,11 +147,12 @@ final class GenericListener implements ActionListener, PropertyChangeListener, C
         }
         if (accept (jc) && !(jc instanceof JPanel)) {
             jc.removePropertyChangeListener("name", this); //NOI18N
-            if (jc.getName() != null) {
+            Object key = pnl.getMapKeyFor(jc);
+            if (key != null) {
                 if (LOG) log ("Named component removed from hierarchy: " + //NOI18N
-                        jc.getName() + ".  Removing any corresponding " + //NOI18N
+                        key + ".  Removing any corresponding " + //NOI18N
                         "value from the wizard settings map."); //NOI18N
-                pnl.removeFromMap(jc.getName());
+                pnl.removeFromMap(key);
             }
         }
         if (LOG && accept(jc)) {

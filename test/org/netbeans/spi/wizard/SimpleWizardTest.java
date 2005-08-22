@@ -179,7 +179,7 @@ public class SimpleWizardTest extends TestCase {
         }
 
         /**
-         * Test of setFwdNavMode method, of class org.netbeans.spi.wizard.SimpleWizard.Info.
+         * Test of setForwardNavigationMode method, of class org.netbeans.spi.wizard.SimpleWizard.Info.
          */
         public void testSetCanFinish() {
             System.out.println("testSetCanFinish");
@@ -189,7 +189,7 @@ public class SimpleWizardTest extends TestCase {
             
             assertFalse (info.canFinish());
             info.setProblem ("problem");
-            info.setFwdNavMode (WizardController.STATE_CAN_FINISH);
+            info.setForwardNavigationMode (WizardController.MODE_CAN_FINISH);
             assertTrue (info.canFinish());
             
             info.setProblem (null);
@@ -398,7 +398,7 @@ public class SimpleWizardTest extends TestCase {
         SimpleWizardInfo info = new SimpleWizardInfo (impl);
         SimpleWizard wiz = new SimpleWizard (info);
         
-        assertNull (wiz.getNextStep());
+        assertNotNull (wiz.getNextStep());
         assertNull (wiz.getPreviousStep());
         
         MergeMap settings = new MergeMap ("a");
@@ -423,7 +423,7 @@ public class SimpleWizardTest extends TestCase {
         assertNotSame (comp2, comp1);
         assertEquals ("c", comp2.getName());
         info.setProblem(null);
-        info.setFwdNavMode(WizardController.STATE_CAN_FINISH);
+        info.setForwardNavigationMode(WizardController.MODE_CAN_FINISH);
         assertNull (wiz.getNextStep());
         
         settings.popAndCalve();
@@ -446,8 +446,11 @@ public class SimpleWizardTest extends TestCase {
         impl.assertCurrent("c");
         impl.assertRecycled(comp4);
         impl.assertRecycledId("c");
+
+        boolean canContinue = (wiz.getForwardNavigationMode() & WizardController.MODE_CAN_CONTINUE) != 0;
+        boolean canFinish =  (wiz.getForwardNavigationMode() & WizardController.MODE_CAN_FINISH) != 0;
         
-        assertTrue (wiz.canFinish());
+        assertTrue (canFinish);
         try {
             assertEquals ("finished", wiz.finish(settings));
         } catch (WizardException e) {

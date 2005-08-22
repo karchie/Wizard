@@ -33,9 +33,11 @@ import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
+import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -43,6 +45,7 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JRootPane;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
 import org.netbeans.modules.wizard.MergeMap;
@@ -69,7 +72,7 @@ class DefaultWizardDisplayer extends WizardDisplayer {
     //for unit tests
     static volatile JButton[] buttons;
     
-    protected Object show(final Wizard wizard, Rectangle bounds) {
+    protected Object show(final Wizard wizard, Rectangle bounds, Action helpAction) {
         final JPanel panel = new JPanel() {
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
@@ -79,13 +82,13 @@ class DefaultWizardDisplayer extends WizardDisplayer {
             }
         };
         if (wizard.getAllSteps().length == 0) {
-            throw new IllegalArgumentException ("Wizard has no steps");
+            throw new IllegalArgumentException ("Wizard has no steps"); //NOI18N
         }
         
         final JLabel ttlLabel = new JLabel (wizard.getStepDescription(wizard.getAllSteps()[0]));
         ttlLabel.setBorder (BorderFactory.createCompoundBorder(
                 BorderFactory.createEmptyBorder(5, 5, 12, 5),
-                BorderFactory.createMatteBorder(0, 0, 1, 0, UIManager.getColor("textText"))));
+                BorderFactory.createMatteBorder(0, 0, 1, 0, UIManager.getColor("textText")))); //NOI18N
         JPanel ttlPanel = new JPanel() {
             public void doLayout() {
                 Dimension d = ttlLabel.getPreferredSize();
@@ -117,35 +120,36 @@ class DefaultWizardDisplayer extends WizardDisplayer {
         
         final JButton next = new JButton ("Next >");
         final JButton prev = new JButton ("< Prev");
-        final JButton finish = new JButton ("Finish"); /* {
-            public void setEnabled (boolean val) {
-                if (!val) {
-                    Thread.dumpStack();
-                }
-                super.setEnabled(val);
-            }
-        };
-                                                        */
+        final JButton finish = new JButton ("Finish");
         final JButton cancel = new JButton ("Cancel");
-        final JButton help = new JButton ("Help");
+        final JButton help = new JButton();
+        if (helpAction != null) {
+            help.setAction (helpAction);
+            if (helpAction.getValue(Action.NAME) == null) {
+                help.setText ("Help");
+            }
+        } else {
+            help.setText ("Help");
+        }
         
         next.setDefaultCapable(true);
         prev.setDefaultCapable(true);
         
-        help.setVisible (false);
+        help.setVisible (helpAction != null);
         
         final JPanel inner = new JPanel();
         inner.setLayout (new BorderLayout());
         inner.add (ttlPanel, BorderLayout.NORTH);
         
         final JLabel problem = new JLabel("  ");
-        Color fg = UIManager.getColor ("nb.errorColor");
+        Color fg = UIManager.getColor ("nb.errorColor"); //NOI18N
         problem.setForeground (fg == null ? Color.BLUE : fg);
         inner.add (problem, BorderLayout.SOUTH);
         problem.setPreferredSize (new Dimension (20,20));
         
         //Use standard default-button-last order on Aqua L&F
-        final boolean aqua = "Aqua".equals (UIManager.getLookAndFeel().getID());
+        final boolean aqua = "Aqua".equals (
+                UIManager.getLookAndFeel().getID()); //NOI18N
         
         JPanel buttons = new JPanel() {
             public void doLayout() {
@@ -153,7 +157,8 @@ class DefaultWizardDisplayer extends WizardDisplayer {
                 JButton b = aqua ? finish : cancel;
                 
                 Dimension n = b.getPreferredSize();
-                int y = ((getHeight() - (ins.top + ins.bottom))/ 2) - (n.height / 2);
+                int y = ((getHeight() - (ins.top + ins.bottom))/ 2) - 
+                        (n.height / 2);
                 int gap = 5;
                 int x = getWidth() - (12 + ins.right + n.width);
                 
@@ -180,15 +185,14 @@ class DefaultWizardDisplayer extends WizardDisplayer {
                 b.setBounds (x, y, n.width, n.height);
             }
         };
-        buttons.setBorder (BorderFactory.createMatteBorder (1, 0, 0, 0, Color.BLACK));
-        
+        buttons.setBorder (BorderFactory.createMatteBorder (1, 0, 0, 0, 
+                UIManager.getColor("textText"))); //NOI18N
         
         buttons.add (prev);
         buttons.add (next);
         buttons.add (finish);
         buttons.add (cancel);
         buttons.add (help);
-//        instructions.setLayout(new BoxLayout(instructions, BoxLayout.Y_AXIS));
         
         panel.add (instructions, BorderLayout.WEST);
         panel.add (buttons, BorderLayout.SOUTH);
@@ -198,8 +202,11 @@ class DefaultWizardDisplayer extends WizardDisplayer {
             next, prev, finish, cancel
         });
         
-        if (Boolean.getBoolean ("TrivialWizardFactory.test")) { //enable unit tests
-            DefaultWizardDisplayer.buttons = (JButton[]) buttonlist.toArray (new JButton[0]);
+        if (Boolean.getBoolean ("TrivialWizardFactory.test")) { //for unit tests //NOI18N
+            List blist = new ArrayList (buttonlist);
+            blist.add (help);
+            DefaultWizardDisplayer.buttons = 
+                    (JButton[]) blist.toArray (new JButton[0]);
         }
         
         String first = wizard.getAllSteps()[0];
@@ -211,11 +218,28 @@ class DefaultWizardDisplayer extends WizardDisplayer {
         inner.add (centerPanel[0], BorderLayout.CENTER);
         prev.setEnabled (false);
         next.setEnabled (wizard.getNextStep() != null);
-        finish.setEnabled (wizard.canFinish());
+        int fwdNavMode = wizard.getForwardNavigationMode();
+        checkLegalNavMode (fwdNavMode);
+        
+        finish.setEnabled ((fwdNavMode & Wizard.MODE_CAN_FINISH) != 0);
         
         final Object[] result = new Object[] { null };
         
         ActionListener buttonListener = new ActionListener() {
+            private void navigateTo (String id) {
+                JComponent comp = wizard.navigatingTo (id, settings);
+                instructions.setCurrentStep (id);
+                ttlLabel.setText(wizard.getStepDescription(id));
+                inner.add (comp, BorderLayout.CENTER);
+                inner.remove (centerPanel[0]);
+                centerPanel[0] = comp;
+                inner.invalidate();
+                inner.revalidate();
+                inner.repaint();
+                comp.requestFocus();
+                update();
+            }
+            
             public void actionPerformed (ActionEvent ae) {
                 int action = buttonlist.indexOf (ae.getSource());
                 JComponent currCenter = centerPanel[0];
@@ -223,32 +247,14 @@ class DefaultWizardDisplayer extends WizardDisplayer {
                     case 0 : //next
                         String nextId = wizard.getNextStep();
                         settings.push(nextId);
-                        JComponent comp = wizard.navigatingTo (nextId, settings);
-                        instructions.setCurrentStep (nextId);
-                        ttlLabel.setText(wizard.getStepDescription(nextId));
-                        inner.add (comp, BorderLayout.CENTER);
-                        inner.remove (currCenter);
-                        inner.invalidate();
-                        inner.revalidate();
-                        inner.repaint();
-                        centerPanel[0] = comp;
-                        comp.requestFocus();
-                        update();
+                        navigateTo (nextId);
+                        
                         break;
                     case 1 : //prev
                         String prevId = wizard.getPreviousStep();
                         settings.popAndCalve();
-                        JComponent pcomp = wizard.navigatingTo (prevId, settings);
-                        instructions.setCurrentStep (prevId);
-                        ttlLabel.setText(wizard.getStepDescription(prevId));
-                        inner.add (pcomp, BorderLayout.CENTER);
-                        inner.remove (currCenter);
-                        centerPanel[0] = pcomp;
-                        inner.invalidate();
-                        inner.revalidate();
-                        inner.repaint();
-                        pcomp.requestFocus();
-                        update();
+                        navigateTo(prevId);
+                        
                         break;
                     case 2 : //finish
                         try {
@@ -263,17 +269,8 @@ class DefaultWizardDisplayer extends WizardDisplayer {
                                     curr = curr = settings.popAndCalve();
                                 }
                                 settings.push (id);
-                                JComponent comp1 = wizard.navigatingTo (id, settings);
-                                instructions.setCurrentStep (id);
-                                ttlLabel.setText(wizard.getStepDescription(id));
-                                if (comp1 != centerPanel[0]) {
-                                    inner.add (comp1, BorderLayout.CENTER);
-                                    inner.remove (centerPanel[0]);
-                                    centerPanel[0] = comp1;
-                                    inner.validate();
-                                    inner.repaint();
-                                    comp1.requestFocus();
-                                }
+                                navigateTo(id);
+                                return;
                             } catch (NoSuchElementException ex) {
                                 throw new IllegalStateException ("Exception " +
                                     "said to return to " + id + " but no such " +
@@ -311,22 +308,7 @@ class DefaultWizardDisplayer extends WizardDisplayer {
             
             private void update() {
                 if (!wizard.isBusy()) {
-                    String nextStep = wizard.getNextStep();
-                    next.setEnabled (nextStep != null && wizard.canContinue());
-                    if (next.isEnabled()) {
-                        next.setEnabled(wizard.canContinue());
-                    }
-                    
-                    boolean enableFinish = wizard.canFinish() || 
-                        (!wizard.canContinue() && nextStep != null);
-                    
-                    finish.setEnabled (enableFinish);
-                    prev.setEnabled (wizard.getPreviousStep() != null);
-                }
-                if (next.isEnabled()) {
-                    next.getRootPane().setDefaultButton(next);
-                } else if (finish.isEnabled()) {
-                    finish.getRootPane().setDefaultButton(finish);
+                    configureNavigationButtons(wizard, prev, next, finish);
                 }
             }
         };
@@ -353,33 +335,8 @@ class DefaultWizardDisplayer extends WizardDisplayer {
                     cancel.setEnabled(true);
                     panel.setCursor (Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
                 }
-                String nextStep = wizard.getNextStep();
-                next.setEnabled (nextStep != null);
-                prev.setEnabled (wizard.getPreviousStep() != null);
-                
-                
-                if (next.isEnabled()) {
-                    next.setEnabled(wizard.canContinue());
-                }
-                
-                //Butt ugly but works for now:  Issue 4 - allow Finish to be
-                //enabled on a non-last panel w/o a branch controller - in
-                //otherwords, be able to, based on a UI change, be able to
-                //bail out to finish from any panel in a wizard
-                boolean enableFinish = wizard.canFinish() || 
-                        (!wizard.canContinue() && nextStep != null);
-                
-                finish.setEnabled (enableFinish);
-//                System.err.println("CHANGE: enable finish " + enableFinish + " nextStep: " + nextStep + " canContinue " + wizard.canContinue() + " canFinish " + wizard.canFinish());
-                if (finish.getRootPane() != null) {
-                    if (finish.isEnabled()) {
-                        finish.getRootPane().setDefaultButton(finish);
-                    } else if (next.isEnabled()) {
-                        next.getRootPane().setDefaultButton(next);
-                    } else {
-                        prev.getRootPane().setDefaultButton(null);
-                    }
-                }
+                configureNavigationButtons(wizard, prev, next, finish);
+
                 String prob = wizard.getProblem();
                 Border b = prob == null ? BorderFactory.createEmptyBorder (1, 0, 0, 0)
                     : BorderFactory.createMatteBorder (1, 0, 0, 0, problem.getForeground());
@@ -390,6 +347,8 @@ class DefaultWizardDisplayer extends WizardDisplayer {
                 problem.setBorder (b1);
                 problem.setText (prob == null ? " " : prob);
             }
+
+
         };
         l.stepsChanged(wizard);
         l.navigabilityChanged(wizard);
@@ -429,4 +388,45 @@ class DefaultWizardDisplayer extends WizardDisplayer {
         return KeyboardFocusManager.getCurrentKeyboardFocusManager().getFocusedWindow();
     }
     
+    private static void checkLegalNavMode (int i) {
+        switch (i) {
+            case Wizard.MODE_CAN_CONTINUE :
+            case Wizard.MODE_CAN_CONTINUE_OR_FINISH :
+            case Wizard.MODE_CAN_FINISH :
+                return;
+            default :
+                throw new IllegalArgumentException ("Illegal forward " + //NOI18N
+                        "navigation mode: " + i); //NOI18N
+        }
+    }
+    
+    private static void configureNavigationButtons(final Wizard wizard, final JButton prev, final JButton next, final JButton finish) {
+        final String nextStep = wizard.getNextStep();
+        final int fwdNavMode = wizard.getForwardNavigationMode();
+        
+        checkLegalNavMode (fwdNavMode);
+        
+        final String problem = wizard.getProblem();
+        
+        boolean canContinue = (fwdNavMode & Wizard.MODE_CAN_CONTINUE) != 0;
+        boolean canFinish =  (fwdNavMode & Wizard.MODE_CAN_FINISH) != 0;
+        boolean enableFinish = canFinish && problem == null;
+        boolean enableNext = nextStep != null && canContinue && problem == null;
+        next.setEnabled (enableNext);
+        prev.setEnabled (wizard.getPreviousStep() != null);
+        finish.setEnabled (enableFinish);
+        JRootPane root = next.getRootPane();
+        if (root != null) {
+            if (next.isEnabled()) {
+                root.setDefaultButton(next);
+            } else if (finish.isEnabled()) {
+                root.setDefaultButton(finish);
+            } else if (prev.isEnabled()) {
+                root.setDefaultButton(prev);
+            } else {
+                root.setDefaultButton(null);
+            }
+        }
+    }    
+
 }

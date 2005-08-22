@@ -67,7 +67,9 @@ import javax.swing.tree.TreePath;
  * never be called automatically.
  * <p>
  * If you have custom components that WizardPage will not know how to listen
- * to automatically, attach an appropriate listener to them.
+ * to automatically, attach an appropriate listener to them and optionally
+ * call <code>userInputReceived()</code> with the component and the event if
+ * you want to run your automatic validation code.
  * <p>
  * For convenience, this class implements the relevant methods for accessing
  * the <code>WizardController</code> and the settings map for the wizard that
@@ -132,7 +134,6 @@ public class WizardPage extends JPanel {
 //        }
         setBorder (BorderFactory.createEmptyBorder(5,5,5,5)); //XXX
     }
-    //XXX use class name as ID and don't require it for .class usage?
     
     public WizardPage(String stepId, String stepDescription) {
         this (stepId, stepDescription, true);
@@ -248,14 +249,15 @@ public class WizardPage extends JPanel {
     }
 
     /**
-     * Set whether the Finish button should be enabled.  Note that this is
-     * independent of whether the Next button is enabled.  If called with
-     * true after <code>setProblem</code> has been called with a non-null
-     * value, the Finish button will not be enabled until a call to
-     * <code>setProblem(null)</code> has been performed.
+     * Set whether the finish, next or both buttons should be enabled,
+     * assuming no problem string is set.
+     * 
+     * @param value WizardController.MODE_CAN_CONTINUE, 
+     *      WizardController.MODE_CAN_FINISH or 
+     *      WizardController.MODE_CAN_CONTINUE_OR_FINISH;
      */
-    protected final void setForwardNavigation(int value) {
-        getController().setFwdNavMode(value);
+    protected final void setForwardNavigationMode(int value) {
+        getController().setForwardNavigationMode(value);
     }
 
     /**
@@ -278,6 +280,9 @@ public class WizardPage extends JPanel {
         }
     }
     
+    /**
+     * Returns all of the keys in the wizard data map.
+     */
     protected final Object[] getWizardDataKeys() {
         return getWizardDataMap().keySet().toArray();
     }
@@ -354,7 +359,7 @@ public class WizardPage extends JPanel {
     void maybeUpdateMap (Component comp) {
         if (LOG) log ("Maybe update map for " + comp.getClass().getName() +  //NOI18N
                 " named " + comp.getName()); //NOI18N
-        Object mapKey = comp.getName();
+        Object mapKey = getMapKeyFor(comp);
         if (mapKey != null) {
             //XXX do it even if null?
             Object value = valueFrom (comp);
@@ -366,15 +371,18 @@ public class WizardPage extends JPanel {
     
     /** Callback for GenericListener to remove a component's value if its name
      * changes or it is removed from the panel. */
-    void removeFromMap (String key) {
+    void removeFromMap (Object key) {
         if (LOG) log ("removeFromMap: " + key); //NOI18N
         getWizardDataMap().remove(key);
     }
     
-    /** Given an ad-hoc swing component, fetch the likely value based on its state */
-    private static Object valueFrom (Component comp) {
-//        assert SwingUtilities.isEventDispatchThread() :
-//            "Not on the event thread.  This is unsafe."; //NOI18N
+    /** Given an ad-hoc swing component, fetch the likely value based on its 
+     * state.  The default implementation handles most common swing components.
+     * If you are using custom components and have assigned them names, override
+     * this method to handle getting an appropriate value out of your 
+     * custom component and call super for the others.
+     */
+    protected Object valueFrom (Component comp) {
         if (comp instanceof JRadioButton || comp instanceof JCheckBox || comp instanceof JToggleButton) {
             return ((AbstractButton) comp).getModel().isSelected() ? Boolean.TRUE : Boolean.FALSE;
         } else if (comp instanceof JTree) {
@@ -406,10 +414,26 @@ public class WizardPage extends JPanel {
     }
     
     /**
+     * Get the map key that should be used to automatically put the value
+     * represented by this component into the wizard data map.  
+     * <p>
+     * The default implementation returns the result of <code>c.getName()</code>,
+     * which is almost always sufficient and convenient - just set the 
+     * component names in a GUI builder and everything will be handled.
+     * @return null if the component's value should not be automatically
+     *  written to the wizard data map, or an object which is the key that
+     *  later code will use to find this value.  By default, it returns the
+     *  component's name.
+     */
+    protected Object getMapKeyFor (Component c) {
+        return c.getName();
+    }
+    
+    /**
      * Called when user interaction has occurred on a component contained by this 
      * panel or one of its children.  Override this method to check if all of
      * the values are legal, such that the Next/Finish button should be enabled,
-     * optionally calling <code>setFwdNavMode()</code> if warranted.
+     * optionally calling <code>setForwardNavigationMode()</code> if warranted.
      * <p>
      * This method also may be called with a null argument an effect of 
      * calling <code>putWizardData()</code> from someplace other than within
@@ -425,6 +449,7 @@ public class WizardPage extends JPanel {
      * has been written to).
      * <p>
      * The default implementation returns null.
+     * 
      * 
      * 
      * @param component The component the user interacted with, if it can be
@@ -563,11 +588,11 @@ public class WizardPage extends JPanel {
             this.problem = value;
         }
 
-        public void setFwdNavMode(int value) {
+        public void setForwardNavigationMode(int value) {
             switch (value) {
-                case STATE_CAN_CONTINUE :
-                case STATE_CAN_FINISH :
-                case STATE_CAN_CONTINUE_OR_FINISH :
+                case MODE_CAN_CONTINUE :
+                case MODE_CAN_FINISH :
+                case MODE_CAN_CONTINUE_OR_FINISH :
                     break;
                 default :
                     throw new IllegalArgumentException(Integer.toString(value));
@@ -584,7 +609,7 @@ public class WizardPage extends JPanel {
                 other.setBusy (busy.booleanValue());
             }
             if (canFinish != -1) {
-                other.setFwdNavMode(canFinish);
+                other.setForwardNavigationMode(canFinish);
             }
             if (problem != null) {
                 other.setProblem (problem);
@@ -626,42 +651,8 @@ public class WizardPage extends JPanel {
                 throw new IllegalArgumentException (pages[i].getName() + 
                         " is not a subclass of WizardPage"); //NOI18N
             }
-            
-//            if (!hasDefaultConstructor (pages[i])) {
-//                throw new IllegalArgumentException (pages[i] + " has no " +
-//                        "default no argument constructor");
-//            }
-            
+
             result[i] = pages[i].getName();
-            /*
-            Method m = null;
-            try {
-                m = pages[i].getDeclaredMethod("getID", null); //NOI18N
-            } catch (Exception e) {
-                throw new IllegalArgumentException ("Could not find or access " + //NOI18N
-                        "public static String " + pages[i].getName() +  //NOI18N
-                        ".getStep() - make sure it exists"); //NOI18N
-            }
-            if (m.getReturnType() != String.class) {
-                throw new IllegalArgumentException ("getStep has wrong " //NOI18N
-                        + " return type: " + m.getReturnType() + " on " + //NOI18N
-                        pages[i]);
-            }
-            if ((m.getModifiers() | Modifier.STATIC) == 0) {
-                throw new IllegalArgumentException ("getStep is not " + //NOI18N
-                        "static on " + pages[i]); //NOI18N
-            }
-            try {
-                result[i] = (String) m.invoke(null, null);
-            } catch (InvocationTargetException ite) {
-                throw new IllegalArgumentException ("Could not invoke " + //NOI18N
-                        "public static String " + pages[i].getName() +  //NOI18N
-                        ".getStep() - make sure it exists. " + ite); //NOI18N
-            } catch (IllegalAccessException iae) {
-                throw new IllegalArgumentException ("Could not invoke " + //NOI18N
-                        "public static String " + pages[i].getName() +  //NOI18N
-                        ".getStep() - make sure it exists. " + iae); //NOI18N
-            } */
         }
         return result;
     }

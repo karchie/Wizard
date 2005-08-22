@@ -143,19 +143,17 @@ public class InfoTest extends TestCase {
         SimpleWizard wiz = new SimpleWizard (info);
         WL l = new WL (wiz);
 
-        assertFalse (info.isValid());
         info.setProblem("problem");
-
-//        l.assertNoChange("Going from false to false should not fire an event");
+        assertFalse (info.isValid());
 
         assertFalse (info.isValid());
         info.setProblem (null);
         assertTrue (info.isValid());
-        l.assertCanProceedChanged("Setting valid to true did not fire an event");
+        l.assertCanProceedChanged("Setting problem to null did not fire an event");
     }
 
     /**
-     * Test of setFwdNavMode method, of class org.netbeans.spi.wizard.SimpleWizard.Info.
+     * Test of setForwardNavigationMode method, of class org.netbeans.spi.wizard.SimpleWizard.Info.
      */
     public void testSetCanFinish() {
         System.out.println("testSetCanFinish");
@@ -165,7 +163,7 @@ public class InfoTest extends TestCase {
 
         assertFalse (info.canFinish());
         info.setProblem (null);
-        info.setFwdNavMode (WizardController.STATE_CAN_FINISH);
+        info.setForwardNavigationMode (WizardController.MODE_CAN_FINISH);
         assertTrue (info.canFinish());
 
         info.setProblem ("problem");

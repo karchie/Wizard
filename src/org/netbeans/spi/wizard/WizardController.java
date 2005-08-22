@@ -20,49 +20,87 @@ package org.netbeans.spi.wizard;
 
 /**
  * Controller which can be used to modify the UI state of a wizard.  Passed
- * as an argument to methods of <code>PanelProvider</code>.  Use this interface
+ * as an argument to methods of <code>WizardPanelProvider</code>.  Use this 
+ * interface
  * to determine whether the Next/Finish buttons should be enabled, and if some
  * problem explanation text should be displayed.
+ * <p>
+ * If you are using {@link WizardPage WizardPage}, methods equivalent to this
+ * interface are available directly on instances of <code>WizardPage</code>.
  * <p>
  * If you are implementing this interface, you are probably doing something
  * wrong.  Use instances of this interface passed to 
  * {@link org.netbeans.spi.wizard.WizardPanelProvider#createPanel 
  * WizardPanelProvider.createPanel}.
  *
+ * @see WizardPanelProvider
  * @author Tim Boudreau
  */
 public interface WizardController {
-    public static final int STATE_CAN_CONTINUE = 1;
-    public static final int STATE_CAN_FINISH = 2;
-    public static final int STATE_CAN_CONTINUE_OR_FINISH = 
-            STATE_CAN_CONTINUE | STATE_CAN_FINISH;
+    /**
+     * Constant that can be returned by <code>getFwdNavMode</code> to indicate
+     * that the Next button can be enabled if the problem string is null.
+     * 
+     * @see Wizard.MODE_CAN_CONTINUE
+     */
+    public static final int MODE_CAN_CONTINUE = 1;
+    /**
+     * Constant that can be returned by <code>getFwdNavMode</code> to indicate
+     * that the Finish button can be enabled if the problem string is null.
+     * 
+     * @see Wizard.MODE_CAN_FINISH
+     */
+    public static final int MODE_CAN_FINISH = 2;
+    /**
+     * Constant that can be returned by <code>getFwdNavMode</code> to indicate
+     * that both the Finish and Next buttons can be enabled if the problem 
+     * string is null.  This value is a bitmask - i.e. 
+     * <code>MODE_CAN_CONTINUE_OR_FINISH == MODE_CAN_CONTINUE | 
+     * MODE_CAN_FINISH</code>
+     * 
+     * @see Wizard.MODE_CAN_CONTINUE_OR_FINISH
+     */
+    public static final int MODE_CAN_CONTINUE_OR_FINISH = 
+            MODE_CAN_CONTINUE | MODE_CAN_FINISH;
     
     /**
      * Indicate that there is a problem with what the user has (or has not)
      * input, such that the Next/Finish buttons should be disabled until the
      * user has made some change.
      * <p>
+     * If you want to disable the Next/Finish buttons, do that by calling
+     * this method with a short description of what is wrong.
+     * <p>
      * Pass null to indicate there is no problem;  non-null indicates there is
      * a problem - the passed string should be a localized, human-readable
-     * description that assists the user in correcting the situation.
+     * description that assists the user in correcting the situation.  It will
+     * be displayed in the UI.
      */
     void setProblem (String value);
     
     /**
-     * Set the forward navigation mode - 
-     * indicate that the Finish button of the wizard should or should not be enabled 
-     * (assuming <code>setProblem</code> has not been called with a non-null
-     * value), and whether or not the Next button of the wizard should also
-     * be enabled.
+     * Set the forward navigation mode.  This method determines whether 
+     * the Next button, the Finish button or both should be enabled if the
+     * problem string is set to null.  
      * <p>
-     * <code>setFwdNavMode</code> means two different things, depending on the
-     * type of wizard.  In a wizard created by a <code>WizardBranchController</code>,
-     * it only enables the finish button if the sub-wizard in question is the last
-     * in the branching structure;  if it is not, setting <code>canFinish</code>
-     * to true indicates that the next steps in the wizard may now be known,
-     * and it should try to find the next sub-wizard to continue.
+     * On panels where, based on the UI state, the only reasonable next
+     * step is to finish the wizard (even though there may be more panels
+     * if the UI is in a different state), set the navigation mode to
+     * MODE_CAN_FINISH, and the Finish button will be enabled, and the
+     * Next button not.
+     * <p>
+     * On panels where, based on the UI state, the user could either continue
+     * or complete the wizard at that point, set the navigation mode to
+     * MODE_CAN_CONTINUE_OR_FINISH.
+     * <p>
+     * If the finish button should not be enabled, set the navigation mode
+     * to MODE_CAN_CONTINUE.  This is the default on any panel if no 
+     * explicit call to <code>setForwardNavigationMode()</code> has been made.
+     * 
+     * @param navigationMode Legal values are MODE_CAN_CONTINUE, 
+     *  MODE_CAN_FINISH or MODE_CAN_CONTINUE_OR_FINISH
      */
-    void setFwdNavMode (int value);
+    void setForwardNavigationMode (int navigationMode);
     
     /**
      * Indicate that some sort of background process is happening (presumably

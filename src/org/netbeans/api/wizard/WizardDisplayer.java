@@ -21,6 +21,7 @@ package org.netbeans.api.wizard;
 import java.awt.Rectangle;
 import java.util.Arrays;
 import java.util.HashSet;
+import javax.swing.Action;
 import org.netbeans.spi.wizard.Wizard;
 
 
@@ -39,7 +40,7 @@ public abstract class WizardDisplayer {
      * Display a wizard in a dialog, using the default implementation of
      * WizardDisplayer.
      */
-    public static Object showWizard (Wizard wizard, Rectangle r) {
+    public static Object showWizard (Wizard wizard, Rectangle r, Action help) {
         assert nonBuggyWizard (wizard);
         
 //        WizardFactory factory = (WizardFactory) Lookup.getDefault().lookup(
@@ -61,20 +62,30 @@ public abstract class WizardDisplayer {
             factory = new DefaultWizardDisplayer();
         }
         
-        return factory.show (wizard, r);
+        return factory.show (wizard, r, help);
     }
     
     public static Object showWizard (Wizard wizard) {
-        return showWizard (wizard, null);
-    }    
+        return showWizard (wizard, null, null);
+    }
+    
+    public static Object showWizard (Wizard wizard, Action help) {
+        return showWizard (wizard, null, help);
+    }
+    
+    public static Object showWizard (Wizard wizard, Rectangle r) {
+        return showWizard (wizard, r, null);
+    }
     
     /**
      * Show a wizard.
      * @param wizard the Wizard to show
+     * @param r the bounding rectangle for the wizard dialog on screen
+     * @param help An action to be called if the Help button is pressed
      * @return Whatever object the wizard returns from its <code>finish()</code>
      *  method, if the Wizard was completed by the user.
      */
-    protected abstract Object show (Wizard wizard, Rectangle r);
+    protected abstract Object show (Wizard wizard, Rectangle r, Action help);
     
     
     private static boolean nonBuggyWizard (Wizard wizard) {

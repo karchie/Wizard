@@ -51,13 +51,15 @@ public class BranchingWizardTest extends TestCase {
     public void testSettingsAffectNavigation() {
         BranchControllerImpl bci = new BranchControllerImpl();
         BranchingWizard wiz = (BranchingWizard) bci.createWizard();
-        SimpleWizard base = (SimpleWizard) wiz.base;
+        SimpleWizard base = (SimpleWizard) wiz.initialSteps;
         SimpleWizardInfo info = base.info;
         
         WL wl = new WL(wiz);
         
+        assertNull ("Problem should be null, but it is " + wiz.getProblem(), wiz.getProblem());
+        
         String step = wiz.getNextStep();
-        assertEquals (step, "choose");
+        assertEquals ("choose", step);
 
         MergeMap settings = new MergeMap("step");
         JComponent panel1 = wiz.navigatingTo(step, settings);
@@ -275,9 +277,9 @@ public class BranchingWizardTest extends TestCase {
                 practical.setSelected (false);
                 controller.setProblem ("Unacceptable!  You must decide!");
             }
-            controller.setFwdNavMode(ae.getSource() != neither ? 
-                WizardController.STATE_CAN_FINISH 
-                : WizardController.STATE_CAN_CONTINUE);
+            controller.setForwardNavigationMode(ae.getSource() != neither ? 
+                WizardController.MODE_CAN_FINISH 
+                : WizardController.MODE_CAN_CONTINUE);
         }
     }    
     
@@ -331,9 +333,9 @@ public class BranchingWizardTest extends TestCase {
                 colors.setSelected (false);
                 controller.setProblem ("Unacceptable!  You must decide!");
             }
-            controller.setFwdNavMode(ae.getSource() != neither ? 
-                WizardController.STATE_CAN_FINISH 
-                : WizardController.STATE_CAN_CONTINUE);
+            controller.setForwardNavigationMode(ae.getSource() != neither ? 
+                WizardController.MODE_CAN_FINISH 
+                : WizardController.MODE_CAN_CONTINUE);
         }
     }
     
@@ -361,15 +363,15 @@ public class BranchingWizardTest extends TestCase {
                 meatBox.addActionListener (this);
                 result.add (meatBox);
                 controller.setProblem (meatBox.isSelected() ? null : "You must eat meat");
-                controller.setFwdNavMode (WizardController.STATE_CAN_CONTINUE);
+                controller.setForwardNavigationMode (WizardController.MODE_CAN_CONTINUE);
             } else if ("mealChoice".equals(id)) {
                 steakBox = new JCheckBox ("I will have the steak");
                 steakBox.addActionListener (this);
                 steakBox.setSelected (Boolean.TRUE.equals (settings.get("eatsSteak")));
                 result.add (steakBox);
                 controller.setProblem (steakBox.isSelected() ? null : "You must order the steak");
-                controller.setFwdNavMode (steakBox.isSelected() ? WizardController.STATE_CAN_FINISH :
-                    WizardController.STATE_CAN_CONTINUE);
+                controller.setForwardNavigationMode (steakBox.isSelected() ? WizardController.MODE_CAN_FINISH :
+                    WizardController.MODE_CAN_CONTINUE);
             } else {
                 throw new Error ("Unknown ID " + id);
             }
@@ -386,8 +388,8 @@ public class BranchingWizardTest extends TestCase {
                 settings.put ("likesMeat", src.isSelected() ? Boolean.TRUE : Boolean.FALSE);
                 controller.setProblem (src.isSelected() ? null : "You must eat meat!");
             } else {
-                controller.setFwdNavMode (src.isSelected() ? 
-                    WizardController.STATE_CAN_FINISH : WizardController.STATE_CAN_CONTINUE);
+                controller.setForwardNavigationMode (src.isSelected() ? 
+                    WizardController.MODE_CAN_FINISH : WizardController.MODE_CAN_CONTINUE);
                 settings.put ("eatsSteak", src.isSelected() ? Boolean.TRUE : Boolean.FALSE);
                 controller.setProblem (src.isSelected() ? null : "We only serve steak!");
             }

@@ -41,16 +41,24 @@ final class SimpleWizard implements Wizard {
     private final Map ids2panels = new HashMap();
 
     private String currID = null;
+    private boolean subwizard;
     
     public SimpleWizard (WizardPanelProvider prov) {
-        this (new SimpleWizardInfo (prov));
+        this (new SimpleWizardInfo (prov), false);
     }
-    
+        
     /** Creates a new instance of SimpleWizard */
     public SimpleWizard(SimpleWizardInfo info) {
         this.info = info;
         info.setWizard (this);
     }
+    
+    /** Creates a new instance of SimpleWizard */
+    public SimpleWizard(SimpleWizardInfo info, boolean subwizard) {
+        this.info = info;
+        this.subwizard = subwizard;
+        info.setWizard (this);
+    }    
 
     public void addWizardListener(WizardListener listener) {
         listeners.add (listener);
@@ -59,14 +67,19 @@ final class SimpleWizard implements Wizard {
     public void removeWizardListener(WizardListener listener) {
         listeners.remove (listener);
     }    
-
-    public boolean canFinish() {
-        return info.canFinish() || 
-            (info.isValid() && currentIndex() == info.getSteps().length - 1);
+    
+    public int getForwardNavigationMode() {
+//        return info.getFwdNavMode();
+        int result = info.getFwdNavMode();
+        if (!subwizard && ((result & WizardController.MODE_CAN_CONTINUE) != 0) && isLastStep()) {
+            result = WizardController.MODE_CAN_FINISH;
+        }
+        return result;
     }
     
-    public boolean canContinue() {
-        return info.canContinue();
+    boolean isLastStep() {
+        String[] steps = info.getSteps();
+        return currID != null && steps.length > 0 && currID.equals(steps[steps.length-1]);
     }
 
     public String[] getAllSteps() {
@@ -103,8 +116,11 @@ final class SimpleWizard implements Wizard {
         if (!info.isValid()) {
             return null;
         }
+        if ((info.getFwdNavMode() & WizardController.MODE_CAN_CONTINUE) == 0) {
+            return null;
+        }
 
-        int idx = currentIndex();
+        int idx = currentStepIndex();
         if (idx < info.getSteps().length - 1) {
             return info.getSteps() [idx + 1];
         } else {
@@ -113,7 +129,7 @@ final class SimpleWizard implements Wizard {
     }
 
     public String getPreviousStep() {
-        int idx = currentIndex();
+        int idx = currentStepIndex();
         if (idx < info.getSteps().length && idx > 0) {
             return info.getSteps() [idx - 1];
         } else {
@@ -121,7 +137,7 @@ final class SimpleWizard implements Wizard {
         }
     }
     
-    int currentIndex() {
+    int currentStepIndex() {
         int idx = 0;
         if (currID != null) {
             idx = Arrays.asList(info.getSteps()).indexOf (currID);
