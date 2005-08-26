@@ -52,7 +52,7 @@ public class InstructionsPanel extends JComponent implements WizardListener {
 
     public InstructionsPanel (Wizard wiz) {
         this (null, wiz);
-        Font f = UIManager.getFont ("Tree.font");
+        Font f = UIManager.getFont ("Tree.font"); //NOI18N
         if (f != null) {
             setFont (f);
         }
@@ -68,22 +68,37 @@ public class InstructionsPanel extends JComponent implements WizardListener {
         super.removeNotify();
     }
     
+    BufferedImage getImage() { //for unit test
+        return img;
+    }
+    
     public InstructionsPanel(BufferedImage img, Wizard wizard) {
-        String imgStr = System.getProperty ("wizard.sidebar.image");
-        if (img != null) {
-            try {
-                URL url = new URL (imgStr);
+        if (img == null) {
+            //In the event of classloader issues, also have a way to get
+            //the image from UIManager - slightly more portable for large
+            //apps
+            img = (BufferedImage) UIManager.get ("wizard.sidebar.image"); //NOI18N
+        }
+        
+        String imgStr = System.getProperty("wizard.sidebar.image"); //NOI18N
+        //image has not been loaded and user wishes to supply their own image
+        if (img == null && imgStr != null) {
+            //get an URL, works for jars
+            URL url = getClass().getResource(imgStr); //XXX this will not work under a classloader partitioning scheme without tweaks
+            //successfully parsed the URL
+            if(url != null){
                 try {
                     img = ImageIO.read(url);
                 } catch (IOException ioe) {
-                    System.err.println("Could not load wizard image " + 
+                    System.err.println("Could not load wizard image " + //NOI18N
                             ioe.getMessage());
-                    System.setProperty ("wizard.sidebar.image", null);
-                    
+                    System.setProperty("wizard.sidebar.image", null); //NOI18N
+                    img = null; //error loading img, set to null to use default
                 }
-            } catch (MalformedURLException mue) {
-                System.err.println("Bad URL for wizard image " + imgStr);
-                System.setProperty ("wizard.sidebar.image", null);
+            } else { //URL was not successfully parsed, set img to null to use default
+                System.err.println("Bad URL for wizard image " + imgStr); //NOI18N
+                System.setProperty("wizard.sidebar.image", null); //NOI18N
+                img = null;
             }
         }
         if (img == null) {
@@ -97,6 +112,7 @@ public class InstructionsPanel extends JComponent implements WizardListener {
         this.img = img;
         this.wizard = wizard;
     }
+
     
     public boolean isOpaque() {
         return img != null;
