@@ -350,8 +350,7 @@ is divided into following sections:
             <sourcepath>
                 <pathelement location="${src.dir}"/>
             </sourcepath>
-            <packageset dir="${src.dir}" includes="*/**"/>
-            <fileset dir="${src.dir}" includes="*.java"/>
+            <fileset dir="${src.dir}"/>
         </javadoc>
     </target>
     <target name="-javadoc-browse" if="netbeans.home" unless="no.javadoc.preview" depends="init,-javadoc-build">
