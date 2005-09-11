@@ -141,7 +141,7 @@ public class InstructionsPanel extends JComponent implements WizardListener {
         g.setColor (getForeground());
         
         for (int i=0; i < steps.length; i++) {
-            String curr = i + ". " + (Wizard.UNDETERMINED_STEP.equals(steps[i]) ?
+            String curr = (i + 1) + ". " + (Wizard.UNDETERMINED_STEP.equals(steps[i]) ?
                 "..." : wizard.getStepDescription(steps[i]));
             if (curr != null) {
                 boolean selected = steps[i].equals (currentStep);
