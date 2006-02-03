@@ -242,7 +242,7 @@ public interface Wizard {
      * that <code>Wizard</code>'s <code>finish()</code> method has been 
      * called - the results are undefined.
      * 
-     * @param wizardData A map containing all of the wizardData the user has
+     * @param settings A map containing all of the wizardData the user has
      *  entered as they traversed this wizard - presumably enough to do 
      *  whatever this method needs to do (if not, that's a bug in the 
      *  implementation of <code>Wizard</code>).
