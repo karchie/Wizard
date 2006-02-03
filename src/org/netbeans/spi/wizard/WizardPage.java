@@ -674,7 +674,7 @@ public class WizardPage extends JPanel {
         for (int i=0; i < pages.length; i++) {
             Method m = null;
             try {
-                m = pages[i].getDeclaredMethod("getDescription", null); //NOI18N
+                m = pages[i].getDeclaredMethod("getDescription", (Class[]) null); //NOI18N
             } catch (Exception e) {
                 throw new IllegalArgumentException ("Could not find or access " + //NOI18N
                         "public static String " + pages[i].getName() +  //NOI18N
@@ -690,7 +690,7 @@ public class WizardPage extends JPanel {
                         "static on " + pages[i]); //NOI18N
             }
             try {
-                result[i] = (String) m.invoke(null, null);
+                result[i] = (String) m.invoke(null, (Object[]) null);
             } catch (InvocationTargetException ite) {
                 throw new IllegalArgumentException ("Could not invoke " + //NOI18N
                         "public static String " + pages[i].getName() +  //NOI18N
