@@ -85,7 +85,7 @@ public class LotsOfComponentsPanel extends WizardPage {
         Component[] c = con.getComponents();
         for (int i=0; i < c.length; i++) {
             if (c[i].getName() != null) {
-                if (m.containsKey(c[i].getName())) {
+                if (m.containsKey(c[i].getName()) && !"Spinner.formattedTextField".equals(c[i].getName())) { //UGH, shoot me now!
                     throw new IllegalStateException ("Two components named " + c[i].getName());
                 }
                 m.put (c[i].getName(), c[i]);
