@@ -21,14 +21,11 @@ package org.netbeans.spi.wizard;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import junit.framework.*;
 import org.netbeans.modules.wizard.MergeMap;
-
-
 
 /**
  *
@@ -36,14 +33,11 @@ import org.netbeans.modules.wizard.MergeMap;
  */
 public class InfoTest extends TestCase {
     public InfoTest(java.lang.String testName) {
-
         super(testName);
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite(InfoTest.class);
-
-        return suite;
+        return new TestSuite(InfoTest.class);
     }
 
     /**
@@ -222,6 +216,10 @@ private static class WL implements Wizard.WizardListener {
         cpChanged = true;
     }
 
+    public void selectionChanged(Wizard wizard) {
+        assertSame(wizard, wiz);
+    }
+
     public void assertNoChange (String msg) {
         assertFalse (msg, cpChanged);
     }
@@ -315,6 +313,4 @@ private static class PanelProviderImpl extends WizardPanelProvider {
         assertFalse (msg, finished);
     }
 }
-
 }
-

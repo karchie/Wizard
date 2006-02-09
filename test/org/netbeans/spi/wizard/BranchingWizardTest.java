@@ -17,7 +17,6 @@ import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
-import org.netbeans.api.wizard.WizardDisplayer;
 import org.netbeans.modules.wizard.MergeMap;
 
 /**
@@ -31,12 +30,11 @@ public class BranchingWizardTest extends TestCase {
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite(BranchingWizardTest.class);
-        
-        return suite;
+        return new TestSuite(BranchingWizardTest.class);
     }
     
-    public void setUp() throws Exception {
+    protected void setUp() throws Exception {
+        super.setUp();
 //        javax.swing.UIManager.setLookAndFeel (new javax.swing.plaf.metal.MetalLookAndFeel());
     }
     
@@ -118,6 +116,9 @@ public class BranchingWizardTest extends TestCase {
         }
         
         private boolean cpChanged = false;
+        private boolean stepsChanged = false;
+        private boolean selectionChanged = false;
+
         public void stepsChanged(Wizard wizard) {
             assertSame (wizard, wiz);
             stepsChanged = true;
@@ -127,13 +128,18 @@ public class BranchingWizardTest extends TestCase {
             assertSame (wizard, wiz);
             cpChanged = true;
         }
-        
+
+        public void selectionChanged(Wizard wizard) {
+            assertSame(wizard, wiz);
+            selectionChanged = true;
+        }
+
         public void assertNoChange (String msg) {
             assertFalse (msg, cpChanged);
             assertFalse (msg, stepsChanged);
+            assertFalse (msg, selectionChanged);
         }
         
-        private boolean stepsChanged = false;
         public void assertStepsChanged(String msg) {
             boolean was = stepsChanged;
             stepsChanged = false;
@@ -144,6 +150,12 @@ public class BranchingWizardTest extends TestCase {
             boolean was = cpChanged;
             cpChanged = false;
             assertTrue (msg, was);
+        }
+
+        public void assertSelectionChanged(String msg) {
+            boolean was = selectionChanged;
+            selectionChanged = false;
+            assertTrue(msg, was);
         }
     }    
 

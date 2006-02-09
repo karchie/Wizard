@@ -20,7 +20,6 @@ package org.netbeans.spi.wizard;
 
 import java.util.EventListener;
 import java.util.Map;
-import javax.swing.Action;
 import javax.swing.JComponent;
 
 /**
@@ -91,11 +90,12 @@ public interface Wizard {
      */
     public static final int MODE_CAN_CONTINUE = 
             WizardController.MODE_CAN_CONTINUE;
+
     /**
      * Constant that can be returned by <code>getForwardNavigationMode</code> to indicate
      * that the Finish button can be enabled if the problem string is null.
      */
-    public static final int MODE_CAN_FINISH = 
+    public static final int MODE_CAN_FINISH =
             WizardController.MODE_CAN_FINISH;
     /**
      * Constant that can be returned by <code>getForwardNavigationMode</code> to indicate
@@ -161,8 +161,18 @@ public interface Wizard {
      * @return The UI component for this step, which should be displayed in
      *   the wizard
      */
-    public JComponent navigatingTo (String id, Map wizardData);
-    
+    public JComponent navigatingTo(String id, Map wizardData);
+
+    /**
+     * Get the String ID of the current panel.
+     * If there is no current panel, return null.
+     *
+     * @return The unique ID of the step currently
+     *  presented in the UI, as determined by the last call to
+     *  <code>navigateTo</code>
+     */
+    public String getCurrentStep();
+
     /**
      * Get the String ID of the next panel.  If the Next button should be
      * disabled, or this is the final step of the wizard, return null.
@@ -172,6 +182,7 @@ public interface Wizard {
      *  <code>navigateTo</code>
      */
     public String getNextStep();
+
     /**
      * Get the String ID of the previous panel.  If the Prev button should
      * be disabled, return null.
@@ -182,7 +193,6 @@ public interface Wizard {
      */
     public String getPreviousStep();
 
-    
     /**
      * Get a human readable description of the reason the Next/Finish button
      * is not enabled (i.e. "#\foo is not a legal filename").
@@ -214,21 +224,21 @@ public interface Wizard {
      * Get a human-readable description for a given panel, as identified by
      * the passed ID.
      */
-    public String getStepDescription (String id);
+    public String getStepDescription(String id);
     
     /**
      * Add a listener for changes in the count or order of steps in this 
      * wizard and for changes in Next/Previous/Finish button enablement.
      * @param listener A listener to add
      */
-    public void addWizardListener (WizardListener listener);
+    public void addWizardListener(WizardListener listener);
     
     /**
      * Remove a listener for changes in the count or order of steps in this 
      * wizard and for changes in Next/Previous/Finish button enablement.
      * @param listener A listener to remove
      */
-    public void removeWizardListener (WizardListener listener);
+    public void removeWizardListener(WizardListener listener);
     
     /**
      * Finish the wizard, (optionally) instantiating some Object and returning
@@ -298,5 +308,12 @@ public interface Wizard {
          * @param wizard The wizard whose navigability has changed
          */
         public void navigabilityChanged(Wizard wizard);
+
+        /**
+         * Called whenever the current step changes.
+         *
+         * @param wizard The wizard whose current step has changed
+         */
+        public void selectionChanged(Wizard wizard);
     }
 }

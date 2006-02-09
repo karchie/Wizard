@@ -26,7 +26,6 @@ import java.awt.Graphics2D;
 import java.awt.Insets;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import javax.imageio.ImageIO;
 import javax.swing.JComponent;
@@ -134,6 +133,7 @@ public class InstructionsPanel extends JComponent implements WizardListener {
             g.setColor (Color.WHITE);
             g.fillRect (ins.left, ins.top, getWidth() - (ins.left + ins.right), getHeight() - (ins.top + ins.bottom));
         }
+        String currentStep = wizard.getCurrentStep();
         String[] steps = wizard.getAllSteps();
         int y = fm.getMaxAscent() + ins.top + MARGIN;
         int x = ins.left + MARGIN;
@@ -163,12 +163,6 @@ public class InstructionsPanel extends JComponent implements WizardListener {
         }
     }
     
-    private String currentStep = "x";
-    public void setCurrentStep (String s) {
-        this.currentStep = s;
-        repaint();
-    }
-    
     private int historicWidth = Integer.MIN_VALUE;
     public Dimension getPreferredSize() {
         Font f = getFont() != null ? getFont() : UIManager.getFont("controlFont");
@@ -179,7 +173,6 @@ public class InstructionsPanel extends JComponent implements WizardListener {
         f = f.deriveFont (Font.BOLD);
         FontMetrics fm = g.getFontMetrics(f);
         Insets ins = getInsets();
-        int baseW = ins.left + ins.right;
         int h = fm.getHeight();
         
         String[] steps = wizard.getAllSteps();
@@ -214,5 +207,9 @@ public class InstructionsPanel extends JComponent implements WizardListener {
     
     public void navigabilityChanged (Wizard wizard) {
         //do nothing
+    }
+
+    public void selectionChanged(Wizard wizard) {
+        repaint();
     }
 }

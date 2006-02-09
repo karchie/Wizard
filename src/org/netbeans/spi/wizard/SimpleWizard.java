@@ -24,15 +24,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import javax.swing.JComponent;
-import javax.swing.SwingUtilities;
-import org.netbeans.spi.wizard.Wizard.WizardListener;
 
 /**
  * A simple implementation of Wizard for use in wizards which have a 
  * straightforward set of steps with no branching.  To use, implement the
  * simplified interface SimpleWizard.Info and pass that to the constructor.
  *
- * @see SimpleWizard.Info
+ * @see SimpleWizardInfo
  * @author Tim Boudreau
  */
 final class SimpleWizard implements Wizard {
@@ -109,7 +107,12 @@ final class SimpleWizard implements Wizard {
             info.update();
             info.recycleExistingPanel(id, settings, result);
         }
+        fireSelectionChanged();
         return result;
+    }
+
+    public String getCurrentStep() {
+        return currID;
     }
 
     public String getNextStep() {
@@ -151,7 +154,14 @@ final class SimpleWizard implements Wizard {
             l.navigabilityChanged(this);
         }
     }
-    
+
+    private void fireSelectionChanged() {
+        for (Iterator i=listeners.iterator(); i.hasNext();) {
+            WizardListener l = (WizardListener) i.next();
+            l.selectionChanged(this);
+        }
+    }
+
     public Object finish(Map settings) throws WizardException {
         return info.finish(settings);
     }

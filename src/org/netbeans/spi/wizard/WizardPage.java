@@ -118,7 +118,7 @@ public class WizardPage extends JPanel {
      * @param stepDescription the localized description of this step
      * @param autoListen if true, components added will automatically be
      *  listened to for user input
-     * @see validateContents(Object)
+     * @see #validateContents
      */
     public WizardPage(String stepId, String stepDescription, boolean autoListen) {
         this.autoListen = autoListen;
@@ -170,15 +170,23 @@ public class WizardPage extends JPanel {
     /**
      * Create a simple Wizard from an array of <code>WizardPage</code>s
      */
-    public static final Wizard createWizard(WizardPage[] contents, WizardResultProducer finisher) {
+    public static Wizard createWizard(WizardPage[] contents, WizardResultProducer finisher) {
         return new WPP (contents, finisher).createWizard();
+    }
+
+    public static Wizard createWizard(String title, WizardPage[] contents, WizardResultProducer finisher) {
+        return new WPP(title, contents, finisher).createWizard();
+    }
+
+    public static Wizard createWizard(String title, WizardPage[] contents) {
+        return createWizard(title, contents, WizardResultProducer.NO_OP);
     }
 
     /**
      * Create a simple Wizard from an array of WizardPages, with a
      * no-op WizardResultProducer.
      */
-    public static final Wizard createWizard(WizardPage[] contents) {
+    public static Wizard createWizard(WizardPage[] contents) {
         return createWizard (contents, WizardResultProducer.NO_OP);
     }
     
@@ -186,7 +194,7 @@ public class WizardPage extends JPanel {
      * Create simple Wizard from an array of classes, each of which is a 
      * unique subclass of WizardPage.
      */
-    public static final Wizard createWizard(Class[] wizardPageClasses, WizardResultProducer finisher) {
+    public static Wizard createWizard(Class[] wizardPageClasses, WizardResultProducer finisher) {
         return new CWPP (wizardPageClasses, finisher).createWizard();
     }
     
@@ -195,7 +203,7 @@ public class WizardPage extends JPanel {
      * unique subclass of WizardPage, with a
      * no-op WizardResultProducer.
      */
-    public static final Wizard createWizard(Class[] wizardPageClasses) {
+    public static Wizard createWizard(Class[] wizardPageClasses) {
         return createWizard (wizardPageClasses, WizardResultProducer.NO_OP);
     }
     
@@ -234,7 +242,7 @@ public class WizardPage extends JPanel {
      * contains this panel.
      * Return value will never be null.
      */
-    private final WizardController getController() {
+    private WizardController getController() {
         return wc;
     }
     
@@ -512,7 +520,17 @@ public class WizardPage extends JPanel {
             assert finish != null;
         }
         
-        protected JComponent createPanel(WizardController controller, String id, 
+        WPP (String title, WizardPage[] pages, WizardResultProducer finish) {
+            super (title, getSteps(pages), getDescriptions(pages));
+            this.finish = finish;
+            this.pages = pages;
+            //Fail-fast validation - don't wait until something goes wrong
+            //if the data are bad
+            assert valid(pages) == null : valid (pages);
+            assert finish != null;
+        }
+
+        protected JComponent createPanel(WizardController controller, String id,
                 Map wizardData) {
             int idx = indexOfStep(id);
             assert idx != -1 : "Bad ID passed to createPanel: " + id; //NOI18N
@@ -618,7 +636,7 @@ public class WizardPage extends JPanel {
     }
     
     /** Get an array of step ids from an array of WizardPages */
-    private static final String[] getSteps (WizardPage[] pages) {
+    private static String[] getSteps (WizardPage[] pages) {
         String[] result = new String[pages.length];
         for (int i=0; i < pages.length; i++) {
             result[i] = pages[i].getID();
@@ -627,7 +645,7 @@ public class WizardPage extends JPanel {
     }
     
     /** Get an array of descriptions from an array of WizardPages */
-    private static final String[] getDescriptions (WizardPage[] pages) {
+    private static String[] getDescriptions (WizardPage[] pages) {
         String[] result = new String[pages.length];
         for (int i=0; i < pages.length; i++) {
             result[i] = pages[i].getDescription();
@@ -637,7 +655,7 @@ public class WizardPage extends JPanel {
     
     /** Get an array of steps by looking for a static method getID() on each
      * class object passed */
-    private static final String[] getSteps (Class[] pages) {
+    private static String[] getSteps (Class[] pages) {
         if (pages == null) {
             throw new NullPointerException ("Null array of classes"); //NOI18N
         }
@@ -669,10 +687,10 @@ public class WizardPage extends JPanel {
     
     /** Get an array of descriptions by looking for the static method 
      * getDescription() on each passed class object */
-    private static final String[] getDescriptions (Class[] pages) {
+    private static String[] getDescriptions (Class[] pages) {
         String[] result = new String[pages.length];
         for (int i=0; i < pages.length; i++) {
-            Method m = null;
+            Method m;
             try {
                 m = pages[i].getDeclaredMethod("getDescription", (Class[]) null); //NOI18N
             } catch (Exception e) {
@@ -704,7 +722,7 @@ public class WizardPage extends JPanel {
         return result;
     }    
     
-    private static final void log (String s) {
+    private static void log (String s) {
         System.out.println(s);
     }
     

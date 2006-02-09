@@ -28,23 +28,17 @@ import javax.swing.JPanel;
 import junit.framework.*;
 import org.netbeans.modules.wizard.MergeMap;
 
-
-
 /**
  *
  * @author tim
  */
 public class SimpleWizardTest extends TestCase {
-    
     public SimpleWizardTest(String testName) {
         super(testName);
     }
 
-
     public static Test suite() {
-        TestSuite suite = new TestSuite(SimpleWizardTest.class);
-        
-        return suite;
+        return new TestSuite(SimpleWizardTest.class);
     }
 
     /**
@@ -61,14 +55,11 @@ public class SimpleWizardTest extends TestCase {
     public static class InfoTest extends TestCase {
 
         public InfoTest(java.lang.String testName) {
-
             super(testName);
         }
 
         public static Test suite() {
-            TestSuite suite = new TestSuite(InfoTest.class);
-            
-            return suite;
+            return new TestSuite(InfoTest.class);
         }
 
         /**
@@ -166,7 +157,7 @@ public class SimpleWizardTest extends TestCase {
             SimpleWizardInfo info = new SimpleWizardInfo (impl);
             SimpleWizard wiz = new SimpleWizard (info);
             WL l = new WL (wiz);
-            
+
             assertFalse (info.isValid());
             info.setProblem(null);
             
@@ -234,6 +225,7 @@ public class SimpleWizardTest extends TestCase {
     
     private static class WL implements Wizard.WizardListener {
         private Wizard wiz;
+
         public WL (SimpleWizard wiz) {
             this.wiz = wiz;
             wiz.addWizardListener (this);
@@ -248,7 +240,11 @@ public class SimpleWizardTest extends TestCase {
             assertSame (wizard, wiz);
             cpChanged = true;
         }
-        
+
+        public void selectionChanged(Wizard wizard) {
+            assertSame(wizard, wiz);
+        }
+
         public void assertNoChange (String msg) {
             assertFalse (msg, cpChanged);
         }
@@ -274,7 +270,6 @@ public class SimpleWizardTest extends TestCase {
         PanelProviderImpl() {
             super("Test Wizard", new String[] {"a", "b", "c"}, new String[] {"d_a", "d_b", "d_c"});
         }
-
 
         String currId = null;
         protected javax.swing.JComponent createPanel(WizardController controller, java.lang.String id, java.util.Map settings) {
@@ -341,7 +336,6 @@ public class SimpleWizardTest extends TestCase {
         public void assertNotFinished (String msg) {
             assertFalse (msg, finished);
         }
-
     }
 
     /**
@@ -365,7 +359,6 @@ public class SimpleWizardTest extends TestCase {
      * Test of canFinish method, of class org.netbeans.spi.wizard.SimpleWizard.
      */
     public void testCanFinish() {
-
         // TODO add your test code below by replacing the default call to fail.
     }
 
@@ -386,7 +379,6 @@ public class SimpleWizardTest extends TestCase {
         } catch (IllegalArgumentException iae) {
             //do nothing
         }
-        
     }
 
     /**
@@ -456,6 +448,5 @@ public class SimpleWizardTest extends TestCase {
         } catch (WizardException e) {
             fail ("Exception thrown");
         }
-        
     }
 }

@@ -24,7 +24,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import javax.swing.JComponent;
-import org.netbeans.spi.wizard.Wizard.WizardListener;
 
 /**
  * A Wizard with indeterminate branches.  The actual branch decision-making
@@ -51,8 +50,6 @@ final class BranchingWizard implements Wizard {
         initialSteps = new SimpleWizard(brancher.getBase(), true);
         setCurrent (initialSteps);
     }
-    
-    private SimpleWizardInfo lastInfo = null;
     
     protected final Wizard createSecondary (Map settings) {
         return brancher.getWizardForStep(currStep, settings);
@@ -136,6 +133,10 @@ final class BranchingWizard implements Wizard {
             System.arraycopy (csteps, 0, result, bsteps.length,  csteps.length);
         }
         return result;
+    }
+
+    public String getCurrentStep() {
+        return currStep;
     }
 
     public final String getNextStep() {
@@ -245,7 +246,15 @@ final class BranchingWizard implements Wizard {
             l[i].stepsChanged (BranchingWizard.this);
         }
     }
-    
+
+    private void fireSelectionChanged() {
+        WizardListener[] l = (WizardListener[]) listeners.toArray (
+                new WizardListener[listeners.size()]);
+        for (int i=0; i < l.length; i++) {
+            l[i].selectionChanged (BranchingWizard.this);
+        }
+    }
+
     private class WL implements WizardListener {
         public void stepsChanged(Wizard wizard) {
             fireStepsChanged();
@@ -253,6 +262,10 @@ final class BranchingWizard implements Wizard {
         
         public void navigabilityChanged(Wizard wizard) {
             fireNavChanged();
+        }
+
+        public void selectionChanged(Wizard wizard) {
+            fireSelectionChanged();
         }
     }
 }

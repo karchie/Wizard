@@ -214,7 +214,6 @@ class DefaultWizardDisplayer extends WizardDisplayer {
         final JComponent[] centerPanel = new JComponent[] {
             wizard.navigatingTo(first, settings)
         };
-        instructions.setCurrentStep (first);
         inner.add (centerPanel[0], BorderLayout.CENTER);
         prev.setEnabled (false);
         next.setEnabled (wizard.getNextStep() != null);
@@ -228,7 +227,6 @@ class DefaultWizardDisplayer extends WizardDisplayer {
         ActionListener buttonListener = new ActionListener() {
             private void navigateTo (String id) {
                 JComponent comp = wizard.navigatingTo (id, settings);
-                instructions.setCurrentStep (id);
                 ttlLabel.setText(wizard.getStepDescription(id));
                 inner.add (comp, BorderLayout.CENTER);
                 inner.remove (centerPanel[0]);
@@ -242,7 +240,6 @@ class DefaultWizardDisplayer extends WizardDisplayer {
             
             public void actionPerformed (ActionEvent ae) {
                 int action = buttonlist.indexOf (ae.getSource());
-                JComponent currCenter = centerPanel[0];
                 switch (action) {
                     case 0 : //next
                         String nextId = wizard.getNextStep();
@@ -260,15 +257,15 @@ class DefaultWizardDisplayer extends WizardDisplayer {
                         try {
                             result[0] = wizard.finish(settings);
                         } catch (WizardException we) {
-                            JOptionPane pane = new JOptionPane (we.getLocalizedMessage());
+                            JOptionPane pane = new JOptionPane(we.getLocalizedMessage());
                             pane.setVisible(true);
                             String id = we.getStepToReturnTo();
                             String curr = settings.currID();
                             try {
                                 while (id != null && !id.equals(curr)) {
-                                    curr = curr = settings.popAndCalve();
+                                    curr = settings.popAndCalve();
                                 }
-                                settings.push (id);
+                                settings.push(id);
                                 navigateTo(id);
                                 return;
                             } catch (NoSuchElementException ex) {
@@ -348,11 +345,14 @@ class DefaultWizardDisplayer extends WizardDisplayer {
                 problem.setText (prob == null ? " " : prob);
             }
 
-
+            public void selectionChanged(Wizard wizard) {
+                //do nothing
+            }
         };
         l.stepsChanged(wizard);
         l.navigabilityChanged(wizard);
-        wizard.addWizardListener (l);
+        l.selectionChanged(wizard);
+        wizard.addWizardListener(l);
         
         JDialog dlg;
         Object o = findLikelyOwnerWindow();
