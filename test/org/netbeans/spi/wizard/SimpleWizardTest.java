@@ -19,17 +19,18 @@
 
 package org.netbeans.spi.wizard;
 
+import junit.framework.Test;
+import junit.framework.TestCase;
+import junit.framework.TestSuite;
+import org.netbeans.modules.wizard.MergeMap;
+
+import javax.swing.*;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import javax.swing.JComponent;
-import javax.swing.JPanel;
-import junit.framework.*;
-import org.netbeans.modules.wizard.MergeMap;
 
 /**
- *
  * @author tim
  */
 public class SimpleWizardTest extends TestCase {
@@ -47,9 +48,9 @@ public class SimpleWizardTest extends TestCase {
     public void testGetAllIDs() {
         System.out.println("testGetAllIDs");
         PanelProviderImpl impl = new PanelProviderImpl();
-        SimpleWizard wiz = new SimpleWizard (impl);
-        List l = Arrays.asList (wiz.getAllSteps());
-        assertEquals (l, Arrays.asList (new String[] { "a", "b", "c" }));
+        SimpleWizard wiz = new SimpleWizard(impl);
+        List l = Arrays.asList(wiz.getAllSteps());
+        assertEquals(l, Arrays.asList(new String[]{"a", "b", "c"}));
     }
 
     public static class InfoTest extends TestCase {
@@ -68,9 +69,9 @@ public class SimpleWizardTest extends TestCase {
         public void testSetWizard() {
             System.out.println("testSetWizard");
             PanelProviderImpl impl = new PanelProviderImpl();
-            SimpleWizardInfo info = new SimpleWizardInfo (impl);
-            SimpleWizard wiz = new SimpleWizard (info);
-            assertEquals (wiz, info.getWizard());
+            SimpleWizardInfo info = new SimpleWizardInfo(impl);
+            SimpleWizard wiz = new SimpleWizard(info);
+            assertEquals(wiz, info.getWizard());
         }
 
         /**
@@ -79,16 +80,16 @@ public class SimpleWizardTest extends TestCase {
         public void testGetWizard() {
             System.out.println("testGetWizard");
             PanelProviderImpl impl = new PanelProviderImpl();
-            SimpleWizardInfo info = new SimpleWizardInfo (impl);
-            SimpleWizard wiz = new SimpleWizard (info);
-            assertEquals (wiz, info.getWizard());
-            
+            SimpleWizardInfo info = new SimpleWizardInfo(impl);
+            SimpleWizard wiz = new SimpleWizard(info);
+            assertEquals(wiz, info.getWizard());
+
             wiz = null;
-            
-            for (int i=0; i < 10; i++) {
+
+            for (int i = 0; i < 10; i++) {
                 System.gc();
             }
-            assertNull (info.getWizard());
+            assertNull(info.getWizard());
         }
 
         /**
@@ -97,14 +98,14 @@ public class SimpleWizardTest extends TestCase {
         public void testCreatePanel() {
             System.out.println("testCreatePanel");
             PanelProviderImpl impl = new PanelProviderImpl();
-            SimpleWizardInfo info = new SimpleWizardInfo (impl);
-            SimpleWizard wiz = new SimpleWizard (info);
-            
+            SimpleWizardInfo info = new SimpleWizardInfo(impl);
+            SimpleWizard wiz = new SimpleWizard(info);
+
             //Okay, this tests nothing but our impl...
             String id = "a";
             JComponent comp = impl.createPanel(info, id, new MergeMap("a"));
-            assertNotNull (comp);
-            assertEquals ("a", comp.getName());
+            assertNotNull(comp);
+            assertEquals("a", comp.getName());
         }
 
 
@@ -114,38 +115,38 @@ public class SimpleWizardTest extends TestCase {
         public void testRecycleExistingPanel() {
             System.out.println("testRecycleExistingPanel");
             PanelProviderImpl impl = new PanelProviderImpl();
-            SimpleWizard wiz = new SimpleWizard (impl);
-            
+            SimpleWizard wiz = new SimpleWizard(impl);
+
             MergeMap settings = new MergeMap("a");
-            
+
             JComponent comp = wiz.navigatingTo("a", settings);
-            
-            assertEquals (1, settings.size());
-            assertEquals (Boolean.TRUE, settings.get (settings.keySet().iterator().next()));
-            
+
+            assertEquals(1, settings.size());
+            assertEquals(Boolean.TRUE, settings.get(settings.keySet().iterator().next()));
+
             settings.push("b");
-            
-            JComponent comp2 = wiz.navigatingTo ("b", settings);
-            assertEquals (2, settings.size());
-            assertEquals (settings.keySet(), new HashSet (Arrays.asList(new String[] {"a", "b"})));
-            
+
+            JComponent comp2 = wiz.navigatingTo("b", settings);
+            assertEquals(2, settings.size());
+            assertEquals(settings.keySet(), new HashSet(Arrays.asList(new String[]{"a", "b"})));
+
             settings.popAndCalve();
-            JComponent comp3 = wiz.navigatingTo ("a", settings);
-            assertNull (settings.get("b"));
-            
-            assertSame (comp3, comp);
-            
+            JComponent comp3 = wiz.navigatingTo("a", settings);
+            assertNull(settings.get("b"));
+
+            assertSame(comp3, comp);
+
             impl.assertRecycled(comp3);
             impl.assertRecycledId("a");
             impl.clear();
-            
-            settings.push ("b");
-            JComponent comp4 = wiz.navigatingTo ("b", settings);
-            assertSame (comp4, comp2);
-            
-            impl.assertRecycled (comp4);
-            impl.assertRecycledId ("b");
-            
+
+            settings.push("b");
+            JComponent comp4 = wiz.navigatingTo("b", settings);
+            assertSame(comp4, comp2);
+
+            impl.assertRecycled(comp4);
+            impl.assertRecycledId("b");
+
         }
 
         /**
@@ -154,20 +155,25 @@ public class SimpleWizardTest extends TestCase {
         public void testSetValid() {
             System.out.println("testSetValid");
             PanelProviderImpl impl = new PanelProviderImpl();
-            SimpleWizardInfo info = new SimpleWizardInfo (impl);
-            SimpleWizard wiz = new SimpleWizard (info);
-            WL l = new WL (wiz);
+            SimpleWizardInfo info = new SimpleWizardInfo(impl);
+            SimpleWizard wiz = new SimpleWizard(info);
+            WL l = new WL(wiz);
 
-            assertFalse (info.isValid());
+            info.setProblem("problem");
+            assertFalse(info.isValid());
+            l.assertCanProceedChanged("Setting valid to false should fire an event");
+
+            info.setProblem("problem");
+            assertFalse(info.isValid());
+            l.assertCanProceedChanged("Changing the problem should still fire an event");
+
             info.setProblem(null);
-            
-            l.assertNoChange("Going from false to false should not fire an event");
-            
-            assertFalse (info.isValid());
-            info.setProblem ("problem");
-            assertTrue (info.isValid());
-            l.assertCanProceedChanged("Setting valid to true did not fire an event");
-        }
+            assertTrue(info.isValid());
+            l.assertCanProceedChanged("Setting valid to true should fire an event");
+
+            info.setProblem("problem");
+            assertFalse(info.isValid());
+            l.assertCanProceedChanged("Setting valid to false should fire an event");        }
 
         /**
          * Test of setForwardNavigationMode method, of class org.netbeans.spi.wizard.SimpleWizard.Info.
@@ -175,20 +181,19 @@ public class SimpleWizardTest extends TestCase {
         public void testSetCanFinish() {
             System.out.println("testSetCanFinish");
             PanelProviderImpl impl = new PanelProviderImpl();
-            SimpleWizardInfo info = new SimpleWizardInfo (impl);
-            SimpleWizard wiz = new SimpleWizard (info);
-            
-            assertFalse (info.canFinish());
-            info.setProblem ("problem");
-            info.setForwardNavigationMode (WizardController.MODE_CAN_FINISH);
-            assertTrue (info.canFinish());
-            
-            info.setProblem (null);
-            assertFalse (info.canFinish());
-            
-            info.setProblem ("problem");
-            assertTrue (info.canFinish());
-            
+            SimpleWizardInfo info = new SimpleWizardInfo(impl);
+            SimpleWizard wiz = new SimpleWizard(info);
+
+            assertFalse(info.canFinish());
+            info.setProblem("problem");
+            info.setForwardNavigationMode(WizardController.MODE_CAN_FINISH);
+            assertFalse(info.canFinish());
+
+            info.setProblem(null);
+            assertTrue(info.canFinish());
+
+            info.setProblem("problem");
+            assertFalse(info.canFinish());
         }
 
         /**
@@ -197,8 +202,8 @@ public class SimpleWizardTest extends TestCase {
         public void testGetTitle() {
             System.out.println("testGetTitle");
             PanelProviderImpl impl = new PanelProviderImpl();
-            SimpleWizard wiz = new SimpleWizard (impl);
-            assertEquals ("Test Wizard", wiz.getTitle());
+            SimpleWizard wiz = new SimpleWizard(impl);
+            assertEquals("Test Wizard", wiz.getTitle());
         }
 
         /**
@@ -213,31 +218,32 @@ public class SimpleWizardTest extends TestCase {
          */
         public void testFire() {
             PanelProviderImpl impl = new PanelProviderImpl();
-            SimpleWizardInfo info = new SimpleWizardInfo (impl);
-            SimpleWizard wiz = new SimpleWizard (info);
-            WL wl = new WL (wiz);
+            SimpleWizardInfo info = new SimpleWizardInfo(impl);
+            SimpleWizard wiz = new SimpleWizard(info);
+            WL wl = new WL(wiz);
             wl.assertNoChange(null);
             info.fire();
             wl.assertCanProceedChanged("Event should have been fired");
-            
+
         }
     }
-    
+
     private static class WL implements Wizard.WizardListener {
         private Wizard wiz;
 
-        public WL (SimpleWizard wiz) {
+        public WL(SimpleWizard wiz) {
             this.wiz = wiz;
-            wiz.addWizardListener (this);
+            wiz.addWizardListener(this);
         }
-        
+
         private boolean cpChanged = false;
+
         public void stepsChanged(Wizard wizard) {
-            assertSame (wizard, wiz);
+            assertSame(wizard, wiz);
         }
-        
+
         public void navigabilityChanged(Wizard wizard) {
-            assertSame (wizard, wiz);
+            assertSame(wizard, wiz);
             cpChanged = true;
         }
 
@@ -245,14 +251,14 @@ public class SimpleWizardTest extends TestCase {
             assertSame(wizard, wiz);
         }
 
-        public void assertNoChange (String msg) {
-            assertFalse (msg, cpChanged);
+        public void assertNoChange(String msg) {
+            assertFalse(msg, cpChanged);
         }
-        
-        public void assertCanProceedChanged (String msg) {
+
+        public void assertCanProceedChanged(String msg) {
             boolean was = cpChanged;
             cpChanged = false;
-            assertTrue (msg, was);
+            assertTrue(msg, was);
         }
     }
 
@@ -268,16 +274,17 @@ public class SimpleWizardTest extends TestCase {
         }
 
         PanelProviderImpl() {
-            super("Test Wizard", new String[] {"a", "b", "c"}, new String[] {"d_a", "d_b", "d_c"});
+            super("Test Wizard", new String[]{"a", "b", "c"}, new String[]{"d_a", "d_b", "d_c"});
         }
 
         String currId = null;
+
         protected javax.swing.JComponent createPanel(WizardController controller, java.lang.String id, java.util.Map settings) {
             step++;
             JPanel result = new JPanel();
             currId = id;
-            result.setName (id);
-            settings.put (id, Boolean.TRUE);
+            result.setName(id);
+            settings.put(id, Boolean.TRUE);
             return result;
         }
 
@@ -285,38 +292,39 @@ public class SimpleWizardTest extends TestCase {
             return "finished";
         }
 
-        public void assertCurrent (String id) {
+        public void assertCurrent(String id) {
             if (id == null && currId == null) {
                 return;
             } else if ((id == null) != (currId == null)) {
-                fail ("Non-match: " + id + ", " + currId);
+                fail("Non-match: " + id + ", " + currId);
             } else {
-                assertEquals (currId, id);
+                assertEquals(currId, id);
             }
         }
 
         private JComponent recycled = null;
         private String recycledId = null;
         private Map recycledSettings = null;
-        protected void recycleExistingPanel (String id, WizardController controller, Map settings, JComponent panel) {
+
+        protected void recycleExistingPanel(String id, WizardController controller, Map settings, JComponent panel) {
             recycled = panel;
             recycledId = id;
             recycledSettings = settings;
         }
 
-        public void assertRecycledSettingsContains (String key, String value) {
-            assertNotNull (recycledSettings);
-            assertEquals (value, recycledSettings.get(key));
+        public void assertRecycledSettingsContains(String key, String value) {
+            assertNotNull(recycledSettings);
+            assertEquals(value, recycledSettings.get(key));
         }
 
-        public void assertRecycled (JComponent panel) {
-            assertNotNull (recycled);
-            assertSame (panel, recycled);
+        public void assertRecycled(JComponent panel) {
+            assertNotNull(recycled);
+            assertSame(panel, recycled);
         }
 
-        public void assertRecycledId (String id) {
-            assertNotNull (recycledId);
-            assertEquals (id, recycledId);
+        public void assertRecycledId(String id) {
+            assertNotNull(recycledId);
+            assertEquals(id, recycledId);
         }
 
         public void clear() {
@@ -325,16 +333,16 @@ public class SimpleWizardTest extends TestCase {
             recycledSettings = null;
         }
 
-        public void assertStep (int step, String msg) {
-            assertTrue (msg, step == this.step);
+        public void assertStep(int step, String msg) {
+            assertTrue(msg, step == this.step);
         }
 
-        public void assertFinished (String msg) {
-            assertTrue (msg, finished);
+        public void assertFinished(String msg) {
+            assertTrue(msg, finished);
         }
 
-        public void assertNotFinished (String msg) {
-            assertFalse (msg, finished);
+        public void assertNotFinished(String msg) {
+            assertFalse(msg, finished);
         }
     }
 
@@ -344,12 +352,12 @@ public class SimpleWizardTest extends TestCase {
     public void testRemoveWizardListener() {
         System.out.println("testRemoveWizardListener");
         PanelProviderImpl impl = new PanelProviderImpl();
-        SimpleWizardInfo info = new SimpleWizardInfo (impl);
-        SimpleWizard wiz = new SimpleWizard (info);
-        WL wl = new WL (wiz);
+        SimpleWizardInfo info = new SimpleWizardInfo(impl);
+        SimpleWizard wiz = new SimpleWizard(info);
+        WL wl = new WL(wiz);
         info.fire();
         wl.assertCanProceedChanged("Should have fired");
-        
+
         wiz.removeWizardListener(wl);
         info.fire();
         wl.assertNoChange("Should no longer be listening, but got an event");
@@ -368,14 +376,14 @@ public class SimpleWizardTest extends TestCase {
     public void testGetDescription() {
         System.out.println("testGetDescription");
         PanelProviderImpl impl = new PanelProviderImpl();
-        SimpleWizard wiz = new SimpleWizard (impl);
-        
-        assertEquals ("d_a", wiz.getStepDescription("a"));
-        assertEquals ("d_b", wiz.getStepDescription("b"));
-        assertEquals ("d_c", wiz.getStepDescription("c"));
+        SimpleWizard wiz = new SimpleWizard(impl);
+
+        assertEquals("d_a", wiz.getStepDescription("a"));
+        assertEquals("d_b", wiz.getStepDescription("b"));
+        assertEquals("d_c", wiz.getStepDescription("c"));
         try {
             wiz.getStepDescription("something");
-            fail ("IAE should have been thrown");
+            fail("IAE should have been thrown");
         } catch (IllegalArgumentException iae) {
             //do nothing
         }
@@ -387,66 +395,66 @@ public class SimpleWizardTest extends TestCase {
     public void testNavToPanel() {
         System.out.println("testNavToPanel");
         PanelProviderImpl impl = new PanelProviderImpl();
-        SimpleWizardInfo info = new SimpleWizardInfo (impl);
-        SimpleWizard wiz = new SimpleWizard (info);
-        
-        assertNotNull (wiz.getNextStep());
-        assertNull (wiz.getPreviousStep());
-        
-        MergeMap settings = new MergeMap ("a");
-        JComponent comp = wiz.navigatingTo ("a", settings);
-        assertNotNull (comp);
-        assertEquals ("a", comp.getName());
-        
-        info.setProblem (null);
-        assertEquals ("b", wiz.getNextStep());
-        assertNull (wiz.getPreviousStep());
-        
+        SimpleWizardInfo info = new SimpleWizardInfo(impl);
+        SimpleWizard wiz = new SimpleWizard(info);
+
+        assertNotNull(wiz.getNextStep());
+        assertNull(wiz.getPreviousStep());
+
+        MergeMap settings = new MergeMap("a");
+        JComponent comp = wiz.navigatingTo("a", settings);
+        assertNotNull(comp);
+        assertEquals("a", comp.getName());
+
+        info.setProblem(null);
+        assertEquals("b", wiz.getNextStep());
+        assertNull(wiz.getPreviousStep());
+
         settings.push("b");
-        JComponent comp1 = wiz.navigatingTo ("b", settings);
+        JComponent comp1 = wiz.navigatingTo("b", settings);
         assertNotSame(comp, comp1);
-        assertEquals ("c", wiz.getNextStep());
-        assertEquals ("a", wiz.getPreviousStep());
-        assertEquals ("b", comp1.getName());
-        
+        assertEquals("c", wiz.getNextStep());
+        assertEquals("a", wiz.getPreviousStep());
+        assertEquals("b", comp1.getName());
+
         settings.push("c");
-        JComponent comp2 = wiz.navigatingTo ("c", settings);
-        assertNotSame (comp2, comp);
-        assertNotSame (comp2, comp1);
-        assertEquals ("c", comp2.getName());
+        JComponent comp2 = wiz.navigatingTo("c", settings);
+        assertNotSame(comp2, comp);
+        assertNotSame(comp2, comp1);
+        assertEquals("c", comp2.getName());
         info.setProblem(null);
         info.setForwardNavigationMode(WizardController.MODE_CAN_FINISH);
-        assertNull (wiz.getNextStep());
-        
+        assertNull(wiz.getNextStep());
+
         settings.popAndCalve();
-        JComponent comp3 = wiz.navigatingTo ("b", settings);
-        assertSame (comp3, comp1);
-        assertEquals ("b", comp3.getName());
-        info.setProblem (null);
-        assertEquals ("c", wiz.getNextStep());
-        assertEquals ("a", wiz.getPreviousStep());
-        info.setProblem ("problem");
-        assertNull ("On invalid pane, nextID should be null", wiz.getNextStep());
-        info.setProblem (null);
-        assertEquals ("c", wiz.getNextStep());
-        
+        JComponent comp3 = wiz.navigatingTo("b", settings);
+        assertSame(comp3, comp1);
+        assertEquals("b", comp3.getName());
+        info.setProblem(null);
+        assertEquals("c", wiz.getNextStep());
+        assertEquals("a", wiz.getPreviousStep());
+        info.setProblem("problem");
+        assertNull("On invalid pane, nextID should be null", wiz.getNextStep());
+        info.setProblem(null);
+        assertEquals("c", wiz.getNextStep());
+
         impl.clear();
-        
+
         settings.push("c");
-        JComponent comp4 = wiz.navigatingTo ("c", settings);
-        assertSame (comp4, comp2);
+        JComponent comp4 = wiz.navigatingTo("c", settings);
+        assertSame(comp4, comp2);
         impl.assertCurrent("c");
         impl.assertRecycled(comp4);
         impl.assertRecycledId("c");
 
         boolean canContinue = (wiz.getForwardNavigationMode() & WizardController.MODE_CAN_CONTINUE) != 0;
-        boolean canFinish =  (wiz.getForwardNavigationMode() & WizardController.MODE_CAN_FINISH) != 0;
-        
-        assertTrue (canFinish);
+        boolean canFinish = (wiz.getForwardNavigationMode() & WizardController.MODE_CAN_FINISH) != 0;
+
+        assertTrue(canFinish);
         try {
-            assertEquals ("finished", wiz.finish(settings));
+            assertEquals("finished", wiz.finish(settings));
         } catch (WizardException e) {
-            fail ("Exception thrown");
+            fail("Exception thrown");
         }
     }
 }
