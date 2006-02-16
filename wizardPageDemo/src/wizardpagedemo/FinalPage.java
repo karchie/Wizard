@@ -26,18 +26,11 @@ import org.netbeans.spi.wizard.WizardPage;
  * @author  tim
  */
 public class FinalPage extends WizardPage {
-    
     public FinalPage() {
         initComponents();
     }
     
-    public void addNotify() {
-        //If we want to *read* data from the table, we need to set this here.
-        super.addNotify();
-        createTableModel();
-    }
-    
-    private void createTableModel() {
+    protected void renderingPage() {
         DefaultTableModel mdl = new DefaultTableModel();
         mdl.setColumnCount(2);
         Object[] keys = getWizardDataKeys();
@@ -49,7 +42,7 @@ public class FinalPage extends WizardPage {
         jTable1.setModel (mdl);
     }
     
-    public static final String getDescription() {
+    public static String getDescription() {
         return "Review animal specification";
     }
     
