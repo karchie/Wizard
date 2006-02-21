@@ -17,13 +17,11 @@
  */
 
 package org.netbeans.spi.wizard;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import javax.swing.JComponent;
+import javax.swing.event.EventListenerList;
 
 /**
  * A simple implementation of Wizard for use in wizards which have a 
@@ -34,9 +32,10 @@ import javax.swing.JComponent;
  * @author Tim Boudreau
  */
 final class SimpleWizard implements Wizard {
-    final SimpleWizardInfo info;
-    private final List listeners = new ArrayList(1);
+    private final EventListenerList listenerList = new EventListenerList();
     private final Map ids2panels = new HashMap();
+
+    final SimpleWizardInfo info;
 
     private String currID = null;
     private boolean subwizard;
@@ -59,11 +58,11 @@ final class SimpleWizard implements Wizard {
     }    
 
     public void addWizardListener(WizardListener listener) {
-        listeners.add (listener);
+        listenerList.add(WizardListener.class, listener);
     }
     
     public void removeWizardListener(WizardListener listener) {
-        listeners.remove (listener);
+        listenerList.remove(WizardListener.class, listener);
     }    
     
     public int getForwardNavigationMode() {
@@ -81,9 +80,10 @@ final class SimpleWizard implements Wizard {
     }
 
     public String[] getAllSteps() {
-        String[] result = new String[info.getSteps().length];
+        String[] allSteps = info.getSteps();
+        String[] result = new String[allSteps.length];
         //Defensive copy
-        System.arraycopy(info.getSteps(), 0, result, 0, info.getSteps().length);
+        System.arraycopy(allSteps, 0, result, 0, allSteps.length);
         return result;
     }
 
@@ -147,18 +147,26 @@ final class SimpleWizard implements Wizard {
         }
         return idx;
     }
-    
+
     void fireNavigability() {
-        for (Iterator i=listeners.iterator(); i.hasNext();) {
-            WizardListener l = (WizardListener) i.next();
-            l.navigabilityChanged(this);
+        Object[] listeners = listenerList.getListenerList();
+
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i] == WizardListener.class) {
+                WizardListener l = (WizardListener) listeners[i + 1];
+                l.navigabilityChanged(this);
+            }
         }
     }
 
     private void fireSelectionChanged() {
-        for (Iterator i=listeners.iterator(); i.hasNext();) {
-            WizardListener l = (WizardListener) i.next();
-            l.selectionChanged(this);
+        Object[] listeners = listenerList.getListenerList();
+
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i] == WizardListener.class) {
+                WizardListener l = (WizardListener) listeners[i + 1];
+                l.selectionChanged(this);
+            }
         }
     }
 

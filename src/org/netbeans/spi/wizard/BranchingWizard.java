@@ -18,75 +18,86 @@
 
 package org.netbeans.spi.wizard;
 
+import javax.swing.*;
+import javax.swing.event.EventListenerList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-import javax.swing.JComponent;
 
 /**
  * A Wizard with indeterminate branches.  The actual branch decision-making
  * is done by the WizardBranchController passed to the constructor.
- * <p>
- * Wizards with arbitrary numbers of branches can be handled by a 
- * WizardBranchController by returning wizards created by 
+ * <p/>
+ * Wizards with arbitrary numbers of branches can be handled by a
+ * WizardBranchController by returning wizards created by
  * another WizardBranchController's <code>createWizard()</code> method.
- * <p>
- * One important point: There should be no duplicate IDs between steps of 
+ * <p/>
+ * One important point: There should be no duplicate IDs between steps of
  * this wizard.
  *
  * @author Tim Boudreau
  */
 final class BranchingWizard implements Wizard {
+    private final EventListenerList listenerList = new EventListenerList();
+
+    private final WizardBranchController brancher;
     final Wizard initialSteps;
+
     private Wizard subsequentSteps;
     private Wizard activeWizard;
-    private final WizardBranchController brancher;
-    private WL wl = null;
-    
-    public BranchingWizard (WizardBranchController brancher) {
+    private WL wl;
+
+    private String currStep;
+    private Map wizardData;
+
+    public BranchingWizard(WizardBranchController brancher) {
         this.brancher = brancher;
         initialSteps = new SimpleWizard(brancher.getBase(), true);
-        setCurrent (initialSteps);
+        setCurrent(initialSteps);
     }
-    
-    protected final Wizard createSecondary (Map settings) {
+
+    protected final Wizard createSecondary(Map settings) {
         return brancher.getWizardForStep(currStep, settings);
     }
-    
+
     private void checkForSecondary() {
         if (wizardData == null) {
             return;
         }
-        Wizard newSecondary = createSecondary (wizardData);
-        if (((subsequentSteps == null) != (newSecondary == null)) || (subsequentSteps != null && !subsequentSteps.equals (newSecondary))) {
+
+        Wizard newSecondary = createSecondary(wizardData);
+
+        if (((subsequentSteps == null) != (newSecondary == null)) || (subsequentSteps != null && !subsequentSteps.equals(newSecondary))) {
             subsequentSteps = newSecondary;
             fireStepsChanged();
         }
     }
-    
+
     public int getForwardNavigationMode() {
         return activeWizard.getForwardNavigationMode();
-    }    
-    
-    private void setCurrent (Wizard curr) {
-        if (this.activeWizard == curr) {
+    }
+
+    private void setCurrent(Wizard wizard) {
+        if (activeWizard == wizard) {
             return;
         }
-        if (curr == null) {
-            throw new NullPointerException ("Can't set current wizard to null");
+
+        if (wizard == null) {
+            throw new NullPointerException("Can't set current wizard to null");
         }
-        if (this.activeWizard != null) {
-            this.activeWizard.removeWizardListener (wl);
+
+        if ((activeWizard != null) && (wl != null)) {
+            activeWizard.removeWizardListener(wl);
         }
-        this.activeWizard = curr;
+
+        activeWizard = wizard;
+
         if (wl == null) {
             wl = new WL();
         }
-        curr.addWizardListener (wl);
+
+        activeWizard.addWizardListener(wl);
     }
-    
+
     public final boolean isBusy() {
         return activeWizard.isBusy();
     }
@@ -94,20 +105,20 @@ final class BranchingWizard implements Wizard {
     public final Object finish(Map settings) throws WizardException {
         WizardException exc = null;
         try {
-            Object result = activeWizard.finish (settings);
-            initialSteps.removeWizardListener (wl);
+            Object result = activeWizard.finish(settings);
+            initialSteps.removeWizardListener(wl);
             //Can be null, we allow bail-out with finish mid-wizard now
             if (subsequentSteps != null) {
-                subsequentSteps.removeWizardListener (wl);
+                subsequentSteps.removeWizardListener(wl);
             }
             return result;
         } catch (WizardException we) {
             exc = we;
             if (we.getStepToReturnTo() != null) {
-                initialSteps.addWizardListener (wl);
+                initialSteps.addWizardListener(wl);
                 //Can be null, we allow bail-out with finish mid-wizard now
                 if (subsequentSteps != null) {
-                    subsequentSteps.addWizardListener (wl);
+                    subsequentSteps.addWizardListener(wl);
                 }
             }
             throw we;
@@ -123,14 +134,14 @@ final class BranchingWizard implements Wizard {
         if (subsequentSteps == null) {
             String[] bsteps = initialSteps.getAllSteps();
             result = new String[bsteps.length + 1];
-            System.arraycopy (bsteps, 0, result, 0, bsteps.length);
-            result[result.length-1] = UNDETERMINED_STEP;
+            System.arraycopy(bsteps, 0, result, 0, bsteps.length);
+            result[result.length - 1] = UNDETERMINED_STEP;
         } else {
             String[] bsteps = initialSteps.getAllSteps();
             String[] csteps = subsequentSteps.getAllSteps();
             result = new String[bsteps.length + csteps.length];
-            System.arraycopy (bsteps, 0, result, 0, bsteps.length);
-            System.arraycopy (csteps, 0, result, bsteps.length,  csteps.length);
+            System.arraycopy(bsteps, 0, result, 0, bsteps.length);
+            System.arraycopy(csteps, 0, result, bsteps.length, csteps.length);
         }
         return result;
     }
@@ -142,12 +153,12 @@ final class BranchingWizard implements Wizard {
     public final String getNextStep() {
         String result;
         if (currStep == null) {
-            result = getAllSteps() [0];
+            result = getAllSteps()[0];
         } else {
             String[] steps = getAllSteps();
             int idx = Arrays.asList(steps).indexOf(currStep);
             if (idx == -1) {
-                throw new IllegalStateException ("Current step not in" + //NOI18N
+                throw new IllegalStateException("Current step not in" + //NOI18N
                         " available steps:  " + currStep + " not in " + //NOI18N
                         Arrays.asList(steps));
             } else {
@@ -158,8 +169,8 @@ final class BranchingWizard implements Wizard {
                         result = subsequentSteps.getNextStep();
                     }
                 } else {
-                    Wizard w = ownerOf (currStep);
-                    if (w == initialSteps && idx == initialSteps.getAllSteps().length -1) {
+                    Wizard w = ownerOf(currStep);
+                    if (w == initialSteps && idx == initialSteps.getAllSteps().length - 1) {
                         checkForSecondary();
                         if (subsequentSteps != null) {
                             result = subsequentSteps.getAllSteps()[0];
@@ -176,8 +187,8 @@ final class BranchingWizard implements Wizard {
     }
 
     public final String getPreviousStep() {
-        if (activeWizard == subsequentSteps && subsequentSteps.getAllSteps() [0].equals(currStep)) {
-            return initialSteps.getAllSteps()[initialSteps.getAllSteps().length-1];
+        if (activeWizard == subsequentSteps && subsequentSteps.getAllSteps()[0].equals(currStep)) {
+            return initialSteps.getAllSteps()[initialSteps.getAllSteps().length - 1];
         } else {
             return activeWizard.getPreviousStep();
         }
@@ -188,14 +199,14 @@ final class BranchingWizard implements Wizard {
     }
 
     public final String getStepDescription(String id) {
-        Wizard w = ownerOf (id);
+        Wizard w = ownerOf(id);
         if (w == null) {
             return null;
         }
         return w.getStepDescription(id);
     }
-    
-    private Wizard ownerOf (String id) {
+
+    private Wizard ownerOf(String id) {
         if (UNDETERMINED_STEP.equals(id)) {
             checkForSecondary();
             return subsequentSteps;
@@ -212,46 +223,58 @@ final class BranchingWizard implements Wizard {
         return activeWizard.getTitle();
     }
 
-    private Map wizardData;
-    private String currStep = null;
     public final JComponent navigatingTo(String id, Map settings) {
-        this.wizardData = settings;
         currStep = id;
-        setCurrent (ownerOf (id));
+        wizardData = settings;
+
+        setCurrent(ownerOf(id));
+
         return activeWizard.navigatingTo(id, settings);
     }
 
-    private Set listeners = Collections.synchronizedSet (new HashSet());
     public final void removeWizardListener(WizardListener listener) {
-        listeners.remove (listener);
+        listenerList.remove(WizardListener.class, listener);
     }
 
     public final void addWizardListener(WizardListener listener) {
-        listeners.add (listener);
+        listenerList.add(WizardListener.class, listener);
     }
-    
-    private void fireNavChanged() {
-        checkForSecondary();
-        WizardListener[] l = (WizardListener[]) listeners.toArray (
-                new WizardListener[listeners.size()]);
-        for (int i=0; i < l.length; i++) {
-            l[i].navigabilityChanged (BranchingWizard.this);
+
+    private void fireStepsChanged() {
+        Object[] listeners = listenerList.getListenerList();
+
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i] == WizardListener.class) {
+                WizardListener l = (WizardListener) listeners[i + 1];
+
+                l.stepsChanged(this);
+            }
         }
     }
-    
-    private void fireStepsChanged() {
-        WizardListener[] l = (WizardListener[]) listeners.toArray (
-                new WizardListener[listeners.size()]);
-        for (int i=0; i < l.length; i++) {
-            l[i].stepsChanged (BranchingWizard.this);
+
+    private void fireNavigabilityChanged() {
+        checkForSecondary();
+
+        Object[] listeners = listenerList.getListenerList();
+
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i] == WizardListener.class) {
+                WizardListener l = (WizardListener) listeners[i + 1];
+
+                l.navigabilityChanged(this);
+            }
         }
     }
 
     private void fireSelectionChanged() {
-        WizardListener[] l = (WizardListener[]) listeners.toArray (
-                new WizardListener[listeners.size()]);
-        for (int i=0; i < l.length; i++) {
-            l[i].selectionChanged (BranchingWizard.this);
+        Object[] listeners = listenerList.getListenerList();
+
+        for (int i = listeners.length - 2; i >= 0; i -= 2) {
+            if (listeners[i] == WizardListener.class) {
+                WizardListener l = (WizardListener) listeners[i + 1];
+
+                l.selectionChanged(this);
+            }
         }
     }
 
@@ -259,9 +282,9 @@ final class BranchingWizard implements Wizard {
         public void stepsChanged(Wizard wizard) {
             fireStepsChanged();
         }
-        
+
         public void navigabilityChanged(Wizard wizard) {
-            fireNavChanged();
+            fireNavigabilityChanged();
         }
 
         public void selectionChanged(Wizard wizard) {
