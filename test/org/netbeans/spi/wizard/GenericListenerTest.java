@@ -21,19 +21,13 @@ package org.netbeans.spi.wizard;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
-import java.util.Arrays;
 import junit.framework.*;
 import java.util.EventObject;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JTextField;
-
-
-
+import java.util.Map;
+import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.*;
 
 /**
  * Tests that the generic listener for all different component types works.
@@ -41,41 +35,182 @@ import javax.swing.JTextField;
  * @author Tim Boudreau
  */
 public class GenericListenerTest extends TestCase {
-    
+    private GenericListener gl;
+    private WP wp;
+
     public GenericListenerTest(String testName) {
         super(testName);
     }
 
     public static Test suite() {
-        TestSuite suite = new TestSuite(GenericListenerTest.class);
-        return suite;
+        return new TestSuite(GenericListenerTest.class);
     }
 
-    private GenericListener gl = null;
-    private WP wp = null;
     protected void setUp() throws Exception {
-        System.setProperty ("WizardPage.log", "true");
+        super.setUp();
+
+        Logger.getLogger(GenericListener.class.getName()).setLevel(Level.ALL);
         wp = new WP();
-        assertNotNull (gl);
+        gl = new GenericListener(wp);
     }
-    
-    private void assertListenedTo (JPanel pnl) {
+
+    public void testVisualComponentsWork() throws Exception {
+        Logger.getLogger(WizardPage.class.getName()).setLevel(Level.ALL);
+
+        JFrame frame = new JFrame("GenericListener Test");
+        frame.getContentPane().setLayout(new BorderLayout());
+        LotsOfComponentsPanel componentsPanel = new LotsOfComponentsPanel();
+        frame.getContentPane().add(componentsPanel);
+        frame.setBounds(20, 20, 800, 600);
+        frame.setVisible(true);
+
+        //Wait for the frame to be shown
+        Thread.sleep(1000);
+
+        componentsPanel.tickleAll();
+    }
+
+    public void testRadioButtonGroup() throws Exception {
+        ButtonGroupPage page = new ButtonGroupPage();
+        Wizard wizard = WizardPage.createWizard(new WizardPage[] { page });
+
+        Map wizardData = new HashMap();
+        JComponent component = wizard.navigatingTo("group", wizardData);
+        assertEquals("Component should match page", component, page);
+
+        assertEquals("b1 state", Boolean.TRUE, wizardData.get("b1"));
+        assertEquals("b2 state", Boolean.FALSE, wizardData.get("b2"));
+        assertEquals("b3 state", Boolean.TRUE, wizardData.get("b3"));
+        assertEquals("b4 state", Boolean.FALSE, wizardData.get("b4"));
+        assertEquals("b5 state", Boolean.FALSE, wizardData.get("b5"));
+
+        page.pushButton(1);
+        assertEquals("b1 state", Boolean.TRUE, wizardData.get("b1"));
+        assertEquals("b2 state", Boolean.FALSE, wizardData.get("b2"));
+
+        page.pushButton(2);
+        assertEquals("b1 state", Boolean.FALSE, wizardData.get("b1"));
+        assertEquals("b2 state", Boolean.TRUE, wizardData.get("b2"));
+
+        page.pushButton(1);
+        assertEquals("b1 state", Boolean.TRUE, wizardData.get("b1"));
+        assertEquals("b2 state", Boolean.FALSE, wizardData.get("b2"));
+
+        page.pushButton(1);
+        assertEquals("b1 state", Boolean.TRUE, wizardData.get("b1"));
+        assertEquals("b2 state", Boolean.FALSE, wizardData.get("b2"));
+
+        page.pushButton(2);
+        assertEquals("b1 state", Boolean.FALSE, wizardData.get("b1"));
+        assertEquals("b2 state", Boolean.TRUE, wizardData.get("b2"));
+        assertEquals("b3 state", Boolean.TRUE, wizardData.get("b3"));
+        assertEquals("b4 state", Boolean.FALSE, wizardData.get("b4"));
+        assertEquals("b5 state", Boolean.FALSE, wizardData.get("b5"));
+    }
+
+    public void testToggleButtonGroup() throws Exception {
+        ButtonGroupPage page = new ButtonGroupPage();
+        Wizard wizard = WizardPage.createWizard(new WizardPage[] { page });
+
+        Map wizardData = new HashMap();
+        JComponent component = wizard.navigatingTo("group", wizardData);
+        assertEquals("Component should match page", component, page);
+
+        // Initial state; nothing here should change b1 or b2
+        assertEquals("b1 state", Boolean.TRUE, wizardData.get("b1"));
+        assertEquals("b2 state", Boolean.FALSE, wizardData.get("b2"));
+        assertEquals("b3 state", Boolean.TRUE, wizardData.get("b3"));
+        assertEquals("b4 state", Boolean.FALSE, wizardData.get("b4"));
+        assertEquals("b5 state", Boolean.FALSE, wizardData.get("b5"));
+
+        page.pushButton(3);
+        assertEquals("b3 state", Boolean.TRUE, wizardData.get("b3"));
+        assertEquals("b4 state", Boolean.FALSE, wizardData.get("b4"));
+
+        page.pushButton(4);
+        assertEquals("b3 state", Boolean.FALSE, wizardData.get("b3"));
+        assertEquals("b4 state", Boolean.TRUE, wizardData.get("b4"));
+
+        page.pushButton(3);
+        assertEquals("b3 state", Boolean.TRUE, wizardData.get("b3"));
+        assertEquals("b4 state", Boolean.FALSE, wizardData.get("b4"));
+
+        page.pushButton(3);
+        assertEquals("b3 state", Boolean.TRUE, wizardData.get("b3"));
+        assertEquals("b4 state", Boolean.FALSE, wizardData.get("b4"));
+
+        page.pushButton(4);
+        assertEquals("b3 state", Boolean.FALSE, wizardData.get("b3"));
+        assertEquals("b4 state", Boolean.TRUE, wizardData.get("b4"));
+
+        page.pushButton(5);
+        assertEquals("b3 state", Boolean.FALSE, wizardData.get("b3"));
+        assertEquals("b4 state", Boolean.TRUE, wizardData.get("b4"));
+        assertEquals("b5 state", Boolean.TRUE, wizardData.get("b5"));
+
+        page.pushButton(5);
+        assertEquals("b3 state", Boolean.FALSE, wizardData.get("b3"));
+        assertEquals("b4 state", Boolean.TRUE, wizardData.get("b4"));
+        assertEquals("b5 state", Boolean.FALSE, wizardData.get("b5"));
+
+        page.pushButton(5);
+        assertEquals("b1 state", Boolean.TRUE, wizardData.get("b1"));
+        assertEquals("b2 state", Boolean.FALSE, wizardData.get("b2"));
+        assertEquals("b3 state", Boolean.FALSE, wizardData.get("b3"));
+        assertEquals("b4 state", Boolean.TRUE, wizardData.get("b4"));
+        assertEquals("b5 state", Boolean.TRUE, wizardData.get("b5"));
+    }
+
+    private static class ButtonGroupPage extends WizardPage {
+        private JToggleButton[] buttons;
+
+        public ButtonGroupPage() {
+            super("group", "Page with a button group");
+
+            createComponent();
+        }
+
+        void pushButton(int button) {
+            if ((button > 0) && (button <= buttons.length)) {
+                buttons[button-1].doClick();
+            }
+        }
+
+        private void createComponent() {
+            buttons = new JToggleButton[5];
+
+            ButtonGroup group = new ButtonGroup();
+            buttons[0] = new JRadioButton("button1", true);
+            buttons[0].setName("b1");
+            group.add(buttons[0]);
+            buttons[1] = new JRadioButton("button2");
+            buttons[1].setName("b2");
+            group.add(buttons[1]);
+
+            group = new ButtonGroup();
+            buttons[2] = new JToggleButton("button3", true);
+            buttons[2].setName("b3");
+            group.add(buttons[2]);
+            buttons[3] = new JToggleButton("button4");
+            buttons[3].setName("b4");
+            group.add(buttons[3]);
+            buttons[4] = new JToggleButton("button5");
+            buttons[4].setName("b5");
+            // Don't add this to any group
+
+            // Adding the buttons will assign the
+            // GenericListener to the buttons
+            for (int i = 0; i < buttons.length; i++) {
+                add(buttons[i]);
+            }
+        }
+    }
+
+/*
+    private void assertListenedTo(JPanel pnl) {
         assertTrue (Arrays.asList(pnl.getContainerListeners()).contains(gl));
     }
-    
-    public void testVisualComponentsWork() throws Exception {
-        System.setProperty("WizardPage.listener.log", "true");
-        JFrame jf = new JFrame();
-        jf.getContentPane().setLayout (new BorderLayout());
-        LotsOfComponentsPanel lcp = new LotsOfComponentsPanel();
-        jf.getContentPane().add (lcp);
-        jf.setBounds(20, 20, 800, 600);
-        jf.setVisible(true);
-        //Wait for the frame to be shown
-        Thread.currentThread().sleep (1000);
-        lcp.tickleAll();
-    }
-/*
+
     public void testImmediateChildrenListenedTo() {
         System.out.println("testImmediateChildrenListenedTo");
 
@@ -319,149 +454,148 @@ public class GenericListenerTest extends TestCase {
         }
     }
  */
-    
-    
+
+
     private class WP extends WizardPage {
-        public WP () {
-            super ("step", "this is a step", false);
-            gl = new GenericListener(this);
+        private Object evt = null;
+
+        public WP() {
+            super("step", "this is a step", false);
         }
-        
+
         public Object get(Object key) {
             return getWizardData(key);
         }
 
-        private Object evt = null;
         protected String validateContents(Component component, Object event) {
             evt = event;
             return null;
         }
-        
+
         public void assertValidated() {
-            assertValidated (null);
+            assertValidated(null);
         }
-        
+
         public void assertValidated(String msg) {
             Object old = evt;
             evt = null;
-            assertNotNull (old);
+            assertNotNull(old);
         }
-        
+
         public void assertNotValidated() {
-            assertNull (evt);
+            assertNull(evt);
         }
-        
-        public void assertPair (Object key, Object val) {
-            assertEquals ("Didn't find or wrong value for " + key + " in " + 
-                    getWizardDataMap() + "; expected " + val + 
-                    " got " + get(key), val, get(key));
+
+        public void assertPair(Object key, Object val) {
+            assertEquals("Didn't find or wrong value for " + key + " in " +
+                    getWizardDataMap(), val, get(key));
         }
-        
-        public void assertNotPresent (Object key) {
-            assertNull (get(key));
+
+        public void assertNotPresent(Object key) {
+            assertNull(get(key));
         }
-        
-        public void assertEventSource (Object o) {
+
+        public void assertEventSource(Object o) {
             Object old = evt;
             assertValidated();
-            assertTrue ("Wrong event type: " + old, old instanceof EventObject);
-            assertSame (o, ((EventObject) old).getSource());
+            assertTrue("Wrong event type: " + old, old instanceof EventObject);
+            assertSame(o, ((EventObject) old).getSource());
         }
     }
-    
-    
+
+
 /*
-    public void testAttachTo() {
-        Component jc = null;
-        GenericListener instance = null;
+public void testAttachTo() {
+    Component jc = null;
+    GenericListener instance = null;
         
-        instance.attachTo(jc);
-    }
+    instance.attachTo(jc);
+}
 
-    public void testDetachFrom() {
-        Component jc = null;
-        GenericListener instance = null;
+public void testDetachFrom() {
+    Component jc = null;
+    GenericListener instance = null;
         
-        instance.detachFrom(jc);
-    }
+    instance.detachFrom(jc);
+}
 
-    public void testAccept() {
-        Component jc = null;
+public void testAccept() {
+    Component jc = null;
         
-        boolean expResult = true;
-        boolean result = GenericListener.accept(jc);
-        assertEquals(expResult, result);
-    }
+    boolean expResult = true;
+    boolean result = GenericListener.accept(jc);
+    assertEquals(expResult, result);
+}
 
-    public void testSetIgnoreEvents() {
-        boolean val = true;
-        GenericListener instance = null;
+public void testSetIgnoreEvents() {
+    boolean val = true;
+    GenericListener instance = null;
         
-        instance.setIgnoreEvents(val);
-    }
+    instance.setIgnoreEvents(val);
+}
 
-    public void testInsertUpdate() {
-        DocumentEvent e = null;
-        GenericListener instance = null;
+public void testInsertUpdate() {
+    DocumentEvent e = null;
+    GenericListener instance = null;
         
-        instance.insertUpdate(e);
-    }
+    instance.insertUpdate(e);
+}
 
-    public void testChangedUpdate() {
-        DocumentEvent e = null;
-        GenericListener instance = null;
+public void testChangedUpdate() {
+    DocumentEvent e = null;
+    GenericListener instance = null;
         
-        instance.changedUpdate(e);
-    }
+    instance.changedUpdate(e);
+}
 
-    public void testRemoveUpdate() {
-        DocumentEvent e = null;
-        GenericListener instance = null;
+public void testRemoveUpdate() {
+    DocumentEvent e = null;
+    GenericListener instance = null;
         
-        instance.removeUpdate(e);
-    }
+    instance.removeUpdate(e);
+}
 
-    public void testStateChanged() {
-        ChangeEvent e = null;
-        GenericListener instance = null;
+public void testStateChanged() {
+    ChangeEvent e = null;
+    GenericListener instance = null;
         
-        instance.stateChanged(e);
-    }
+    instance.stateChanged(e);
+}
 
-    public void testActionPerformed() {
-        ActionEvent e = null;
-        GenericListener instance = null;
+public void testActionPerformed() {
+    ActionEvent e = null;
+    GenericListener instance = null;
         
-        instance.actionPerformed(e);
-    }
+    instance.actionPerformed(e);
+}
 
-    public void testValueChanged() {
-        ListSelectionEvent e = null;
-        GenericListener instance = null;
+public void testValueChanged() {
+    ListSelectionEvent e = null;
+    GenericListener instance = null;
         
-        instance.valueChanged(e);
-    }
+    instance.valueChanged(e);
+}
 
-    public void testTableChanged() {
-        TableModelEvent e = null;
-        GenericListener instance = null;
+public void testTableChanged() {
+    TableModelEvent e = null;
+    GenericListener instance = null;
         
-        instance.tableChanged(e);
-    }
+    instance.tableChanged(e);
+}
 
-    public void testHierarchyChanged() {
-        HierarchyEvent e = null;
-        GenericListener instance = null;
+public void testHierarchyChanged() {
+    HierarchyEvent e = null;
+    GenericListener instance = null;
         
-        instance.hierarchyChanged(e);
-    }
+    instance.hierarchyChanged(e);
+}
 
-    public void testPropertyChange() {
-        PropertyChangeEvent evt = null;
-        GenericListener instance = null;
+public void testPropertyChange() {
+    PropertyChangeEvent evt = null;
+    GenericListener instance = null;
         
-        instance.propertyChange(evt);
-    }
-    */
-    
+    instance.propertyChange(evt);
+}
+*/
+
 }

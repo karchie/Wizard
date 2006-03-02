@@ -21,7 +21,7 @@ package org.netbeans.spi.wizard;
 import javax.swing.*;
 import javax.swing.text.JTextComponent;
 import javax.swing.tree.TreePath;
-import java.awt.*;
+import java.awt.Component;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -29,6 +29,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -88,6 +90,9 @@ import java.util.Map;
  * @author Tim Boudreau
  */
 public class WizardPage extends JPanel {
+    private static final Logger logger =
+            Logger.getLogger(WizardPage.class.getName());
+
     private final String description;
     private final String id;
 
@@ -98,7 +103,12 @@ public class WizardPage extends JPanel {
     //one the first time it's set
     private WizardController wc = new WC();
 
-    private static final boolean LOG = Boolean.getBoolean("WizardPage.log"); //NOI18N
+    //Flag to make sure we don't reenter userInputReceieved from maybeUpdateMap()
+    private boolean inBeginUIChanged = false;
+    //Flag to make sure we don't reenter userInputReceived because the
+    //implementation of validateContents changed a component's value, triggering
+    //a new event on GenericListener
+    private boolean inUiChanged = false;
 
     /**
      * Construct a new WizardPage with the passed step id and description.
@@ -112,8 +122,9 @@ public class WizardPage extends JPanel {
      * @see #validateContents
      */
     public WizardPage(String stepId, String stepDescription, boolean autoListen) {
-        this.description = stepDescription;
-        this.id = stepId;
+        id = stepId;
+        description = stepDescription;
+
         if (autoListen) {
             //It will attach itself
             new GenericListener(this);
@@ -237,10 +248,11 @@ public class WizardPage extends JPanel {
      * component
      */
     void setController(WizardController controller) {
-        if (this.wc instanceof WC) {
-            ((WC) this.wc).configure(controller);
+        if (wc instanceof WC) {
+            ((WC) wc).configure(controller);
         }
-        this.wc = controller;
+
+        wc = controller;
     }
 
     /**
@@ -287,7 +299,7 @@ public class WizardPage extends JPanel {
      * Store a value in response to user interaction with a GUI component.
      */
     protected final void putWizardData(Object key, Object value) {
-        if (LOG) log("putWizardData " + key + ", " + value); //NOI18N
+        logger.fine("putWizardData " + key + "=" + value); //NOI18N
         getWizardDataMap().put(key, value);
         if (!inBeginUIChanged) {
             setProblem(validateContents(null, null));
@@ -317,13 +329,6 @@ public class WizardPage extends JPanel {
         return getWizardDataMap().containsKey(key);
     }
 
-    //Flag to make sure we don't reenter userInputReceieved from maybeUpdateMap()
-    private boolean inBeginUIChanged = false;
-    //Flag to make sure we don't reenter userInputReceived because the 
-    //implementation of validateContents changed a component's value, triggering
-    //a new event on GenericListener
-    private boolean inUiChanged = false;
-
     /**
      * Called when an event is received from one of the components in the
      * panel that indicates user input.  Typically you won't need to touch this
@@ -343,11 +348,13 @@ public class WizardPage extends JPanel {
      */
     protected final void userInputReceived(Component source, Object event) {
         if (inBeginUIChanged) {
-            if (LOG) log("Ignoring recursive entry to userInputReceived while updating map");
+            logger.fine("Ignoring recursive entry to userInputReceived while updating map");
             return;
         }
+
         //Update the map no matter what
         inBeginUIChanged = true;
+
         if (source != null) {
             try {
                 maybeUpdateMap(source);
@@ -355,13 +362,16 @@ public class WizardPage extends JPanel {
                 inBeginUIChanged = false;
             }
         }
+
         //Possibly some programmatic change from checkState could cause
         //a recursive call
         if (inUiChanged) {
-            if (LOG) log("Ignoring recursive entry to userInputReceieved from validateContents.");
+            logger.fine("Ignoring recursive entry to userInputReceieved from validateContents");
             return;
         }
+
         inUiChanged = true;
+
         try {
             setProblem(validateContents(source, event));
         } finally {
@@ -374,14 +384,20 @@ public class WizardPage extends JPanel {
      * component's name property is not null
      */
     void maybeUpdateMap(Component comp) {
-        if (LOG) log("Maybe update map for " + comp.getClass().getName() +  //NOI18N
-                " named " + comp.getName()); //NOI18N
+        if (logger.isLoggable(Level.FINE)) {
+            logger.fine("Maybe update map for " + comp.getClass().getName() +  //NOI18N
+                    " named " + comp.getName()); //NOI18N
+        }
+
         Object mapKey = getMapKeyFor(comp);
+
         if (mapKey != null) {
             //XXX do it even if null?
             Object value = valueFrom(comp);
-            if (LOG) log("maybeUpdateMap putting " + mapKey + "," + value +
-                    " into settings"); //NOI18N
+            if (logger.isLoggable(Level.FINE)) {
+                logger.fine("maybeUpdateMap putting " + mapKey + "," + value +
+                        " into settings"); //NOI18N
+            }
             putWizardData(mapKey, value);
         }
     }
@@ -391,7 +407,7 @@ public class WizardPage extends JPanel {
      * changes or it is removed from the panel.
      */
     void removeFromMap(Object key) {
-        if (LOG) log("removeFromMap: " + key); //NOI18N
+        logger.fine("removeFromMap: " + key); //NOI18N
         getWizardDataMap().remove(key);
     }
 
@@ -430,6 +446,7 @@ public class WizardPage extends JPanel {
         } else if (comp instanceof JSlider) {
             return new Integer(((JSlider) comp).getValue());
         }
+
         return null;
     }
 
@@ -525,30 +542,37 @@ public class WizardPage extends JPanel {
 
         WPP(WizardPage[] pages, WizardResultProducer finish) {
             super(getSteps(pages), getDescriptions(pages));
-            this.finish = finish;
-            this.pages = pages;
+
             //Fail-fast validation - don't wait until something goes wrong
             //if the data are bad
             assert valid(pages) == null : valid(pages);
             assert finish != null;
+
+            this.pages = pages;
+            this.finish = finish;
         }
 
         WPP(String title, WizardPage[] pages, WizardResultProducer finish) {
             super(title, getSteps(pages), getDescriptions(pages));
-            this.finish = finish;
-            this.pages = pages;
+
             //Fail-fast validation - don't wait until something goes wrong
             //if the data are bad
             assert valid(pages) == null : valid(pages);
             assert finish != null;
+
+            this.pages = pages;
+            this.finish = finish;
         }
 
         protected JComponent createPanel(WizardController controller, String id,
                                          Map wizardData) {
             int idx = indexOfStep(id);
+
             assert idx != -1 : "Bad ID passed to createPanel: " + id; //NOI18N
+
             pages[idx].setController(controller);
             pages[idx].setWizardDataMap(wizardData);
+
             return pages[idx];
         }
 
@@ -556,16 +580,17 @@ public class WizardPage extends JPanel {
          * Make sure we haven't been passed bogus data
          */
         private String valid(WizardPage[] pages) {
-            String result = new HashSet(Arrays.asList(pages)).size() == pages.length ?
-                    (String) null : "Duplicate entry in array: " +  //NOI18N
-                    Arrays.asList(pages);
-            if (result == null) {
-                for (int i = 0; i < pages.length; i++) {
-                    if (pages[i] == null) {
-                        return "Null entry at " + i + " in pages array"; //NOI18N
-                    }
+            if (new HashSet(Arrays.asList(pages)).size() != pages.length) {
+                return "Duplicate entry in array: " +  //NOI18N
+                        Arrays.asList(pages);
+            }
+
+            for (int i = 0; i < pages.length; i++) {
+                if (pages[i] == null) {
+                    return "Null entry at " + i + " in pages array"; //NOI18N
                 }
             }
+
             return null;
         }
 
@@ -579,30 +604,37 @@ public class WizardPage extends JPanel {
      * instantiates them on demand
      */
     private static final class CWPP extends WizardPanelProvider {
-        private final Class[] clazz;
+        private final Class[] classes;
         private final WizardResultProducer finish;
 
-        CWPP(Class[] clazz, WizardResultProducer finish) {
-            super(getSteps(clazz), getDescriptions(clazz));
-            this.finish = finish;
-            assert new HashSet(Arrays.asList(clazz)).size() == clazz.length :
+        CWPP(Class[] classes, WizardResultProducer finish) {
+            super(getSteps(classes), getDescriptions(classes));
+
+            assert classes != null : "Class array may not be null";
+            assert new HashSet(Arrays.asList(classes)).size() == classes.length :
                     "Duplicate entries in class array";
-            this.clazz = clazz;
-            assert finish != null;
+            assert finish != null : "WizardResultProducer may not be null";
+
+            this.classes = classes;
+            this.finish = finish;
         }
 
         protected JComponent createPanel(WizardController controller, String id, Map wizardData) {
             int idx = indexOfStep(id);
+
             assert idx != -1 : "Bad ID passed to createPanel: " + id; //NOI18N
+
             try {
-                WizardPage result = (WizardPage) clazz[idx].newInstance();
+                WizardPage result = (WizardPage) classes[idx].newInstance();
+
                 result.setController(controller);
                 result.setWizardDataMap(wizardData);
+
                 return result;
             } catch (Exception e) {
-                e.printStackTrace();
+                logger.log(Level.WARNING, "Could not instantiate " + classes[idx], e);
                 throw new IllegalArgumentException("Could not instantiate " + //NOI18N
-                        clazz[idx]);
+                        classes[idx]);
             }
         }
 
@@ -617,9 +649,9 @@ public class WizardPage extends JPanel {
      * Its state will be dumped into the real one once there is a real one.
      */
     private static final class WC implements WizardController {
-        String problem = null;
-        int canFinish = -1;
-        Boolean busy = null;
+        private String problem = null;
+        private int canFinish = -1;
+        private Boolean busy = null;
 
         public void setProblem(String value) {
             this.problem = value;
@@ -634,7 +666,8 @@ public class WizardPage extends JPanel {
                 default :
                     throw new IllegalArgumentException(Integer.toString(value));
             }
-            this.canFinish = value;
+
+            canFinish = value;
         }
 
         public void setBusy(boolean busy) {
@@ -642,12 +675,18 @@ public class WizardPage extends JPanel {
         }
 
         void configure(WizardController other) {
+            if (other == null) {
+                return;
+            }
+
             if (busy != null) {
                 other.setBusy(busy.booleanValue());
             }
+
             if (canFinish != -1) {
                 other.setForwardNavigationMode(canFinish);
             }
+
             if (problem != null) {
                 other.setProblem(problem);
             }
@@ -659,9 +698,11 @@ public class WizardPage extends JPanel {
      */
     private static String[] getSteps(WizardPage[] pages) {
         String[] result = new String[pages.length];
+
         for (int i = 0; i < pages.length; i++) {
             result[i] = pages[i].getID();
         }
+
         return result;
     }
 
@@ -670,9 +711,11 @@ public class WizardPage extends JPanel {
      */
     private static String[] getDescriptions(WizardPage[] pages) {
         String[] result = new String[pages.length];
+
         for (int i = 0; i < pages.length; i++) {
             result[i] = pages[i].getDescription();
         }
+
         return result;
     }
 
@@ -684,12 +727,15 @@ public class WizardPage extends JPanel {
         if (pages == null) {
             throw new NullPointerException("Null array of classes"); //NOI18N
         }
+
         String[] result = new String[pages.length];
+
         for (int i = 0; i < pages.length; i++) {
             if (pages[i] == null) {
                 throw new NullPointerException("Null at " + i + " in array " + //NOI18N
                         "of panel classes"); //NOI18N
             }
+
             if (!WizardPage.class.isAssignableFrom(pages[i])) {
                 throw new IllegalArgumentException(pages[i].getName() +
                         " is not a subclass of WizardPage"); //NOI18N
@@ -716,8 +762,10 @@ public class WizardPage extends JPanel {
      */
     private static String[] getDescriptions(Class[] pages) {
         String[] result = new String[pages.length];
+
         for (int i = 0; i < pages.length; i++) {
             Method m;
+
             try {
                 m = pages[i].getDeclaredMethod("getDescription", (Class[]) null); //NOI18N
             } catch (Exception e) {
@@ -725,15 +773,18 @@ public class WizardPage extends JPanel {
                         "public static String " + pages[i].getName() +  //NOI18N
                         ".getStep() - make sure it exists"); //NOI18N
             }
+
             if (m.getReturnType() != String.class) {
                 throw new IllegalArgumentException("getStep has wrong " //NOI18N
                         + " return type: " + m.getReturnType() + " on " + //NOI18N
                         pages[i]);
             }
-            if ((m.getModifiers() | Modifier.STATIC) == 0) {
+
+            if (!Modifier.isStatic(m.getModifiers())) {
                 throw new IllegalArgumentException("getStep is not " + //NOI18N
                         "static on " + pages[i]); //NOI18N
             }
+
             try {
                 result[i] = (String) m.invoke(null, (Object[]) null);
             } catch (InvocationTargetException ite) {
@@ -746,11 +797,8 @@ public class WizardPage extends JPanel {
                         ".getStep() - make sure it exists."); //NOI18N
             }
         }
-        return result;
-    }
 
-    private static void log(String s) {
-        System.out.println(s);
+        return result;
     }
 
     /**
@@ -764,12 +812,12 @@ public class WizardPage extends JPanel {
          * Conclude a wizard, doing whatever the wizard does with the data
          * gathered into the map on the various panels.
          */
-        public Object finish(Map wizardData) throws WizardException;
+        Object finish(Map wizardData) throws WizardException;
 
         /**
          * A no-op WizardResultProducer that returns null.
          */
-        static final WizardResultProducer NO_OP = new WizardResultProducer() {
+        WizardResultProducer NO_OP = new WizardResultProducer() {
             public Object finish(Map wizardData) {
                 return null;
             }

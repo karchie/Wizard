@@ -24,9 +24,10 @@ import java.awt.Container;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.util.Arrays;
-import java.util.EventObject;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.AbstractButton;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
@@ -37,24 +38,24 @@ import javax.swing.JSpinner;
 import javax.swing.JTable;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
-import javax.swing.colorchooser.DefaultColorSelectionModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.event.DocumentEvent;
-import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
-
 
 /**
  *
  * @author  tim
  */
 public class LotsOfComponentsPanel extends WizardPage {
-    private final GenericListener gl;
-    /** Creates new form LotsOfComponentsPanel */
+    private static final Logger logger =
+            Logger.getLogger(LotsOfComponentsPanel.class.getName());
+
+    private Map m;
+    private String[] names;
+
     public LotsOfComponentsPanel() {
-        super ("Page1", "Page 1", false);
-        gl = new GenericListener(this);
+        super("Page1", "Page 1");
+
         initComponents();
     }
     
@@ -72,24 +73,23 @@ public class LotsOfComponentsPanel extends WizardPage {
         return names;
     }
     
-    private Map m = null;
-    private String[] names = null;
     private void init() {
         m = new HashMap();
-        getComponentNames (this, m);
+        getComponentNames(this, m);
         names = new String[m.size()];
         names = (String[]) m.keySet().toArray(names);
     }
     
-    private void getComponentNames(Container con, Map m) {
-        Component[] c = con.getComponents();
+    private void getComponentNames(Container container, Map m) {
+        Component[] c = container.getComponents();
         for (int i=0; i < c.length; i++) {
             if (c[i].getName() != null) {
                 if (m.containsKey(c[i].getName()) && !"Spinner.formattedTextField".equals(c[i].getName())) { //UGH, shoot me now!
                     throw new IllegalStateException ("Two components named " + c[i].getName());
                 }
-                m.put (c[i].getName(), c[i]);
+                m.put(c[i].getName(), c[i]);
             }
+
             if (c[i] instanceof Container) {
                 getComponentNames((Container) c[i], m);
             }
@@ -98,24 +98,31 @@ public class LotsOfComponentsPanel extends WizardPage {
     
     public void tickleAll() {
         String[] names = getComponentNames();
-        System.err.println("COMPONENT NAMES: " + Arrays.asList(names));
+
+        logger.info("COMPONENT NAMES: " + Arrays.asList(names));
+
         for (int i=0; i < names.length; i++) {
-            tickle (getComponentByName(names[i]));
+            tickle(getComponentByName(names[i]));
         }
     }
     
-    private void tickle (final Component c) {
-        System.err.println("Tickle " + c.getClass());
+    private void tickle(final Component c) {
+        logger.info("Tickle " + c.getClass());
+
         try {
-            Thread.currentThread().sleep (500); //XXX for testing
-        } catch (Exception exc) {}
+            Thread.sleep(500); //XXX for testing
+        } catch (InterruptedException e) {
+            logger.log(Level.WARNING, "Unexpected thread interruption", e);
+        }
+
+        c.requestFocus();
+
         final boolean[] done = new boolean[] { false };
         final RuntimeException[] e = new RuntimeException[] { null };
-        c.requestFocus();
         Runnable r = new Runnable() {
             public void run() {
                 try {
-                    doTickle (c);
+                    doTickle(c);
                 } catch (RuntimeException re) {
                     e[0] = re;
                 } finally {
@@ -123,18 +130,20 @@ public class LotsOfComponentsPanel extends WizardPage {
                 }
             }
         };
+
         if (!SwingUtilities.isEventDispatchThread()) {
-            SwingUtilities.invokeLater (r);
+            SwingUtilities.invokeLater(r);
             while (!done[0]) {
                 try {
-                    Thread.currentThread().sleep(100);
-                } catch (Exception ex) {
-                    
+                    Thread.sleep(100);
+                } catch (InterruptedException ex) {
+                    logger.log(Level.WARNING, "Unexpected thread interruption", ex);
                 }
             }
         } else {
             r.run();
         }
+
         if (e[0] != null) {
             throw e[0];
         } else {
@@ -142,10 +151,12 @@ public class LotsOfComponentsPanel extends WizardPage {
         }
     }
     
-    private void doTickle (Component c) {
+    private void doTickle(Component c) {
         assert c != null;
         assert c.getName() != null;
-        System.err.println("NOW TICKLING " + c.getName());
+
+        logger.info("NOW TICKLING " + c.getName());
+
         if (c instanceof JTextComponent) {
             KeyEvent[] ke = createKeyEvents (c);
             for (int i=0; i < ke.length; i++) {
@@ -192,15 +203,14 @@ public class LotsOfComponentsPanel extends WizardPage {
                 comp.dispatchEvent(ke[i]);
             }
         } else if (c instanceof JSlider) {
-            JSlider slid = (JSlider) c;
-            slid.setValue(slid.getValue() + 5);
+            JSlider slider = (JSlider) c;
+            slider.setValue(slider.getValue() + 5);
             //Ugh, no other way to really do this
-            ChangeListener[] l = slid.getChangeListeners();
+            ChangeListener[] l = slider.getChangeListeners();
             for (int i=0; i < l.length; i++) {
                 l[i].stateChanged(new ChangeEvent(c));
             }
         } else if (c instanceof JList) {
-            JList jl = (JList) c;
             KeyEvent[] ke = createArrowKeyEvents(c);
             for (int i=0; i < ke.length; i++) {
                 c.dispatchEvent(ke[i]);
@@ -209,20 +219,19 @@ public class LotsOfComponentsPanel extends WizardPage {
             JColorChooser ch = (JColorChooser) c;
             //Hmm, will this work
             ch.getSelectionModel().setSelectedColor(Color.BLUE);
-            
         } else if (c instanceof JTree) {
-            JTree jt = (JTree) c;
-            MouseEvent[] me = createMouseEvents (c, 20, 60);
+            MouseEvent[] me = createMouseEvents(c, 20, 60);
             for (int i=0; i < me.length; i++) {
-                c.dispatchEvent (me[i]);
+                c.dispatchEvent(me[i]);
             }
         }
     }
     
-    Object evt = null;
-    Component comp = null;
+    private Object evt = null;
+    private Component comp = null;
+
     protected String validateContents(Component component, Object event) {
-        System.out.println("Got event " + event);
+        logger.info("ValidateContents got event " + event);
         evt = event;
         comp = component;
         return null;
@@ -233,13 +242,13 @@ public class LotsOfComponentsPanel extends WizardPage {
         Component comp = this.comp;
         this.comp = null;
         evt = null;
-        if (comp == null && evt == null) {
+        if (comp == null && e == null) {
 //            throw new Error ("ValidateContents was not called after an event on " + c.getClass());
-            System.err.println("No event, no component");
+            logger.warning("No event, no component");
         }
         if (comp != c && comp != null) {
 //            throw new Error ("ValidateContents was called for " + comp + " not " + c);
-            System.err.println("ValidateContents called for wrong component " + comp + " expected " + c);
+            logger.warning("ValidateContents called for wrong component " + comp + " expected " + c);
         }
 //        if (e instanceof EventObject) {
 //            if (((EventObject) e).getSource() != c) {
@@ -260,11 +269,14 @@ public class LotsOfComponentsPanel extends WizardPage {
 //        }
     }
     
-    private MouseEvent[] createMouseEvents (Component c, int x, int y) {
+    private MouseEvent[] createMouseEvents(Component c, int x, int y) {
         MouseEvent[] result = new MouseEvent[3];
-        result[0] = new MouseEvent (c, MouseEvent.MOUSE_PRESSED, System.currentTimeMillis(), 0, x, y, 2, false, MouseEvent.BUTTON1);
-        result[1] = new MouseEvent (c, MouseEvent.MOUSE_RELEASED, System.currentTimeMillis(), 0, x, y, 2, false, MouseEvent.BUTTON1);
-        result[2] = new MouseEvent (c, MouseEvent.MOUSE_CLICKED, System.currentTimeMillis(), 0, x, y, 2, false, MouseEvent.BUTTON1);
+
+        long now = System.currentTimeMillis();
+        result[0] = new MouseEvent(c, MouseEvent.MOUSE_PRESSED, now, 0, x, y, 2, false, MouseEvent.BUTTON1);
+        result[1] = new MouseEvent(c, MouseEvent.MOUSE_RELEASED, now, 0, x, y, 2, false, MouseEvent.BUTTON1);
+        result[2] = new MouseEvent(c, MouseEvent.MOUSE_CLICKED, now, 0, x, y, 2, false, MouseEvent.BUTTON1);
+
         return result;
     }
 //    
@@ -274,46 +286,62 @@ public class LotsOfComponentsPanel extends WizardPage {
     
     private KeyEvent[] createKeyEvents(Component c) {
         KeyEvent[] result = new KeyEvent[6];
-        result[0] = new KeyEvent(c, KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, KeyEvent.VK_H, 'H', KeyEvent.KEY_LOCATION_STANDARD);
-        result[1] = new KeyEvent(c, KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, KeyEvent.VK_H, 'H', KeyEvent.KEY_LOCATION_STANDARD);
-        result[2] = new KeyEvent(c, KeyEvent.KEY_TYPED, System.currentTimeMillis(), 0, KeyEvent.VK_UNDEFINED, 'H', KeyEvent.KEY_LOCATION_UNKNOWN);
+
+        long now = System.currentTimeMillis();
+        result[0] = new KeyEvent(c, KeyEvent.KEY_PRESSED, now, 0, KeyEvent.VK_H, 'H', KeyEvent.KEY_LOCATION_STANDARD);
+        result[1] = new KeyEvent(c, KeyEvent.KEY_RELEASED, now, 0, KeyEvent.VK_H, 'H', KeyEvent.KEY_LOCATION_STANDARD);
+        result[2] = new KeyEvent(c, KeyEvent.KEY_TYPED, now, 0, KeyEvent.VK_UNDEFINED, 'H', KeyEvent.KEY_LOCATION_UNKNOWN);
         
-        result[3] = new KeyEvent(c, KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, KeyEvent.VK_I, 'I', KeyEvent.KEY_LOCATION_STANDARD);
-        result[4] = new KeyEvent(c, KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, KeyEvent.VK_I, 'I', KeyEvent.KEY_LOCATION_STANDARD);
-        result[5] = new KeyEvent(c, KeyEvent.KEY_TYPED, System.currentTimeMillis(), 0, KeyEvent.VK_UNDEFINED, 'I', KeyEvent.KEY_LOCATION_UNKNOWN);
+        result[3] = new KeyEvent(c, KeyEvent.KEY_PRESSED, now, 0, KeyEvent.VK_I, 'I', KeyEvent.KEY_LOCATION_STANDARD);
+        result[4] = new KeyEvent(c, KeyEvent.KEY_RELEASED, now, 0, KeyEvent.VK_I, 'I', KeyEvent.KEY_LOCATION_STANDARD);
+        result[5] = new KeyEvent(c, KeyEvent.KEY_TYPED, now, 0, KeyEvent.VK_UNDEFINED, 'I', KeyEvent.KEY_LOCATION_UNKNOWN);
+
         return result;
     }
     
     private KeyEvent[] createArrowKeyEvents(Component c) {
         KeyEvent[] result = new KeyEvent[2];
-        result[0] = new KeyEvent(c, KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, KeyEvent.VK_DOWN, KeyEvent.CHAR_UNDEFINED, KeyEvent.KEY_LOCATION_STANDARD);
-        result[1] = new KeyEvent(c, KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, KeyEvent.VK_DOWN, KeyEvent.CHAR_UNDEFINED, KeyEvent.KEY_LOCATION_STANDARD);
+
+        long now = System.currentTimeMillis();
+        result[0] = new KeyEvent(c, KeyEvent.KEY_PRESSED, now, 0, KeyEvent.VK_DOWN, KeyEvent.CHAR_UNDEFINED, KeyEvent.KEY_LOCATION_STANDARD);
+        result[1] = new KeyEvent(c, KeyEvent.KEY_RELEASED, now, 0, KeyEvent.VK_DOWN, KeyEvent.CHAR_UNDEFINED, KeyEvent.KEY_LOCATION_STANDARD);
+
         return result;
     }
     
     private KeyEvent[] createSpaceKeyEvents(Component c) {
         KeyEvent[] result = new KeyEvent[3];
-        result[0] = new KeyEvent(c, KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, KeyEvent.VK_SPACE, ' ', KeyEvent.KEY_LOCATION_STANDARD);
-        result[1] = new KeyEvent(c, KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, KeyEvent.VK_SPACE, ' ', KeyEvent.KEY_LOCATION_STANDARD);
-        result[2] = new KeyEvent(c, KeyEvent.KEY_TYPED, System.currentTimeMillis(), 0, KeyEvent.VK_UNDEFINED, ' ', KeyEvent.KEY_LOCATION_UNKNOWN);
+
+        long now = System.currentTimeMillis();
+        result[0] = new KeyEvent(c, KeyEvent.KEY_PRESSED, now, 0, KeyEvent.VK_SPACE, ' ', KeyEvent.KEY_LOCATION_STANDARD);
+        result[1] = new KeyEvent(c, KeyEvent.KEY_RELEASED, now, 0, KeyEvent.VK_SPACE, ' ', KeyEvent.KEY_LOCATION_STANDARD);
+        result[2] = new KeyEvent(c, KeyEvent.KEY_TYPED, now, 0, KeyEvent.VK_UNDEFINED, ' ', KeyEvent.KEY_LOCATION_UNKNOWN);
+
         return result;
     }
     
     private KeyEvent[] createEnterKeyEvents(Component c) {
         KeyEvent[] result = new KeyEvent[3];
-        result[0] = new KeyEvent(c, KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, KeyEvent.VK_ENTER, '\n', KeyEvent.KEY_LOCATION_STANDARD);
-        result[1] = new KeyEvent(c, KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, KeyEvent.VK_ENTER, '\n', KeyEvent.KEY_LOCATION_STANDARD);
-        result[2] = new KeyEvent(c, KeyEvent.KEY_TYPED, System.currentTimeMillis(), 0, KeyEvent.VK_UNDEFINED, '\n', KeyEvent.KEY_LOCATION_UNKNOWN);
+
+        long now = System.currentTimeMillis();
+        result[0] = new KeyEvent(c, KeyEvent.KEY_PRESSED, now, 0, KeyEvent.VK_ENTER, '\n', KeyEvent.KEY_LOCATION_STANDARD);
+        result[1] = new KeyEvent(c, KeyEvent.KEY_RELEASED, now, 0, KeyEvent.VK_ENTER, '\n', KeyEvent.KEY_LOCATION_STANDARD);
+        result[2] = new KeyEvent(c, KeyEvent.KEY_TYPED, now, 0, KeyEvent.VK_UNDEFINED, '\n', KeyEvent.KEY_LOCATION_UNKNOWN);
+
         return result;
     }
     
     private KeyEvent[] createNumberKeyEvents(Component c) {
         KeyEvent[] result = new KeyEvent[3];
-        result[0] = new KeyEvent(c, KeyEvent.KEY_PRESSED, System.currentTimeMillis(), 0, KeyEvent.VK_5, '5', KeyEvent.KEY_LOCATION_STANDARD);
-        result[1] = new KeyEvent(c, KeyEvent.KEY_RELEASED, System.currentTimeMillis(), 0, KeyEvent.VK_5, '5', KeyEvent.KEY_LOCATION_STANDARD);
-        result[2] = new KeyEvent(c, KeyEvent.KEY_TYPED, System.currentTimeMillis(), 0, KeyEvent.VK_UNDEFINED, '5', KeyEvent.KEY_LOCATION_UNKNOWN);
+
+        long now = System.currentTimeMillis();
+        result[0] = new KeyEvent(c, KeyEvent.KEY_PRESSED, now, 0, KeyEvent.VK_5, '5', KeyEvent.KEY_LOCATION_STANDARD);
+        result[1] = new KeyEvent(c, KeyEvent.KEY_RELEASED, now, 0, KeyEvent.VK_5, '5', KeyEvent.KEY_LOCATION_STANDARD);
+        result[2] = new KeyEvent(c, KeyEvent.KEY_TYPED, now, 0, KeyEvent.VK_UNDEFINED, '5', KeyEvent.KEY_LOCATION_UNKNOWN);
+
         return result;
     }    
+
     /** This method is called from within the constructor to
      * initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is
@@ -463,5 +491,4 @@ public class LotsOfComponentsPanel extends WizardPage {
     private javax.swing.JToggleButton jToggleButton1;
     private javax.swing.JTree jTree1;
     // End of variables declaration//GEN-END:variables
-    
 }

@@ -20,16 +20,15 @@ package org.netbeans.spi.wizard;
 
 import java.awt.Component;
 import java.awt.Container;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ContainerEvent;
-import java.awt.event.ContainerListener;
+import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.EventObject;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 import javax.swing.AbstractButton;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
@@ -58,74 +57,88 @@ import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 import javax.swing.tree.TreeSelectionModel;
 
-
 /**
- * A listener that can listen to just about any standard swing component that
- * accepts user input, and notify the panel that it needs to validate its
- * contents
+ * A listener that can listen to just about any standard swing component
+ * that accepts user input and notify the panel that it needs to
+ * validate its contents.
  *
  * @author Tim Boudreau
  */
-final class GenericListener implements ActionListener, PropertyChangeListener, ContainerListener,DocumentListener, ChangeListener, ListSelectionListener, TreeSelectionListener, TableModelListener {
-    private final WizardPage pnl;
-    private static final boolean LOG = Boolean.getBoolean (
-            "WizardPage.listener.log"); //NOI18N
-    GenericListener (WizardPage pnl) {
-        this.pnl = pnl;
-        pnl.addContainerListener(this);
+final class GenericListener
+        implements ActionListener, PropertyChangeListener, ItemListener,
+        ContainerListener, DocumentListener, ChangeListener,
+        ListSelectionListener, TreeSelectionListener, TableModelListener {
+
+    private static final Logger logger =
+            Logger.getLogger(GenericListener.class.getName());
+
+    private final WizardPage wizardPage;
+
+    private boolean ignoreEvents;
+
+    /**
+     * Set of components that we're listening to models of, so we can look
+     * up the component from the model as needed
+     */
+    private Set listenedTo = new HashSet();
+
+    GenericListener(WizardPage wizardPage) {
+        assert wizardPage != null : "WizardPage may not be null"; // NOI18N
+
+        this.wizardPage = wizardPage;
+        wizardPage.addContainerListener(this);
     }
 
-    /** Set of components that we're listening to models of, so we can look
-     * up the component from the model as needed */
-    private Set listenedTo = new HashSet();
-    
-    void attachTo (Component jc) {
+    void attachTo(Component jc) {
         //XXX do mapping model -> component?
         if (jc instanceof JPanel || jc instanceof JScrollPane || jc instanceof JViewport) {
-            attachToHierarchyOf ((Container) jc);
+            attachToHierarchyOf((Container) jc);
         } else if (jc instanceof JList) {
-            listenedTo.add (jc);
+            listenedTo.add(jc);
             ((JList) jc).addListSelectionListener(this);
         } else if (jc instanceof JComboBox) {
             ((JComboBox) jc).addActionListener(this);
         } else if (jc instanceof JTree) {
-            listenedTo.add (jc);
+            listenedTo.add(jc);
             ((JTree) jc).getSelectionModel().addTreeSelectionListener(this);
         } else if (jc instanceof JToggleButton) {
-            ((AbstractButton) jc).addActionListener(this);
+            ((AbstractButton) jc).addItemListener(this);
         } else if (jc instanceof JTextComponent) {
-            listenedTo.add (jc);
+            listenedTo.add(jc);
             ((JTextComponent) jc).getDocument().addDocumentListener(this);
         } else if (jc instanceof JColorChooser) {
-            listenedTo.add (jc);
+            listenedTo.add(jc);
             ((JColorChooser) jc).getSelectionModel().addChangeListener(this);
         } else if (jc instanceof JSpinner) {
             ((JSpinner) jc).addChangeListener(this);
         } else if (jc instanceof JSlider) {
             ((JSlider) jc).addChangeListener(this);
         } else if (jc instanceof JTable) {
-            listenedTo.add (jc);
+            listenedTo.add(jc);
             ((JTable) jc).getSelectionModel().addListSelectionListener(this);
         } else {
             //XXX
-            if (LOG) log("Don't know how to listen to a " + //NOI18N
-                    jc.getClass().getName()); 
+            logger.warning("Don't know how to listen to a " + // NOI18N
+                    jc.getClass().getName());
         }
-        if (accept (jc) && !(jc instanceof JPanel)) {
-            jc.addPropertyChangeListener("name", this); //NOI18N
-            if (pnl.getMapKeyFor(jc) != null) {
-                pnl.maybeUpdateMap((JComponent) jc);
+
+        if (accept(jc) && !(jc instanceof JPanel)) {
+            jc.addPropertyChangeListener("name", this);
+            if (wizardPage.getMapKeyFor(jc) != null) {
+                wizardPage.maybeUpdateMap(jc);
             }
         }
-        if (LOG && accept(jc)) {
-            log ("Begin listening to " + jc);
+
+        if (logger.isLoggable(Level.FINE) && accept(jc)) {
+            logger.fine("Begin listening to " + jc); // NOI18N
         }
     }
-    
-    void detachFrom (Component jc) {
+
+    void detachFrom(Component jc) {
         listenedTo.remove(jc);
+
         if (jc instanceof JPanel || jc instanceof JScrollPane || jc instanceof JViewport) {
-            detachFromHierarchyOf ((Container) jc);
+            detachFromHierarchyOf((Container) jc);
         } else if (jc instanceof JList) {
             ((JList) jc).removeListSelectionListener(this);
         } else if (jc instanceof JComboBox) {
@@ -145,166 +158,156 @@ final class GenericListener implements ActionListener, PropertyChangeListener, C
         } else if (jc instanceof JTable) {
             ((JTable) jc).getSelectionModel().removeListSelectionListener(this);
         }
-        if (accept (jc) && !(jc instanceof JPanel)) {
-            jc.removePropertyChangeListener("name", this); //NOI18N
-            Object key = pnl.getMapKeyFor(jc);
+
+        if (accept(jc) && !(jc instanceof JPanel)) {
+            jc.removePropertyChangeListener("name", this);
+            Object key = wizardPage.getMapKeyFor(jc);
+
             if (key != null) {
-                if (LOG) log ("Named component removed from hierarchy: " + //NOI18N
-                        key + ".  Removing any corresponding " + //NOI18N
-                        "value from the wizard settings map."); //NOI18N
-                pnl.removeFromMap(key);
+                if (logger.isLoggable(Level.FINE)) {
+                    logger.fine("Named component removed from hierarchy: " + // NOI18N
+                            key + ".  Removing any corresponding " + // NOI18N
+                            "value from the wizard settings map."); // NOI18N
+                }
+
+                wizardPage.removeFromMap(key);
             }
         }
-        if (LOG && accept(jc)) {
-            log ("Stop listening to " + jc); //NOI18N
+
+        if (logger.isLoggable(Level.FINE) && accept(jc)) {
+            logger.fine("Stop listening to " + jc); // NOI18N
         }
     }
-    
-    private void detachFromHierarchyOf(Container pnl) {
-        pnl.removeContainerListener(this);
-        Component[] c = pnl.getComponents();
-        for (int i=0; i < c.length; i++) {
-            detachFrom (c[i]); //Will callback recursively any nested JPanels
-        }
-    }    
-    
-    private void attachToHierarchyOf(Container pnl) {
-        pnl.addContainerListener(this);
-        Component[] c = pnl.getComponents();
-        for (int i=0; i < c.length; i++) {
-            attachTo (c[i]); //Will recursively add any child components in
-                             //child panels
+
+    private void detachFromHierarchyOf(Container container) {
+        container.removeContainerListener(this);
+        Component[] components = container.getComponents();
+        for (int i = 0; i < components.length; i++) {
+            detachFrom(components[i]); // Will callback recursively any nested JPanels
         }
     }
-   
-    static boolean accept (Component jc) {
+
+    private void attachToHierarchyOf(Container container) {
+        container.addContainerListener(this);
+        Component[] components = container.getComponents();
+        for (int i = 0; i < components.length; i++) {
+            attachTo(components[i]); // Will recursively add any child components in
+        }
+    }
+
+    static boolean accept(Component jc) {
         if (!(jc instanceof JComponent)) {
             return false;
         }
         return jc instanceof JList ||
-               jc instanceof JComboBox ||
-               jc instanceof JTree ||
-               jc instanceof JToggleButton || //covers toggle, radio, checkbox
-               jc instanceof JTextComponent ||
-               jc instanceof JColorChooser ||
-               jc instanceof JSpinner ||
-               jc instanceof JSlider ||
-               jc instanceof JPanel ||
-               jc instanceof JScrollPane ||
-               jc instanceof JViewport;
+                jc instanceof JComboBox ||
+                jc instanceof JTree ||
+                jc instanceof JToggleButton || //covers toggle, radio, checkbox
+                jc instanceof JTextComponent ||
+                jc instanceof JColorChooser ||
+                jc instanceof JSpinner ||
+                jc instanceof JSlider ||
+                jc instanceof JPanel ||
+                jc instanceof JScrollPane ||
+                jc instanceof JViewport;
     }
-    
-    private boolean ignoreEvents = false;
-    void setIgnoreEvents (boolean val) {
+
+    void setIgnoreEvents(boolean val) {
         ignoreEvents = val;
     }
-    
+
     private void fire(Object e) {
         if (!ignoreEvents) {
             setIgnoreEvents(true);
             try {
                 //XXX this could be prettier...
-                if (LOG) log ("Event received: " + e); //NOI18N
-                if (e instanceof EventObject && ((EventObject) e).getSource() instanceof Component) { 
-                    pnl.userInputReceived((Component)((EventObject) e).getSource(), e);
+                if (logger.isLoggable(Level.FINE)) {
+                    logger.fine("Event received: " + e); // NOI18N
+                }
+                if (e instanceof EventObject && ((EventObject) e).getSource() instanceof Component) {
+                    wizardPage.userInputReceived((Component) ((EventObject) e).getSource(), e);
                 } else if (e instanceof TreeSelectionEvent) {
-                    if (LOG) log ("Looking for a tree for a tree selection event");
-                    TreeSelectionModel mdl = (TreeSelectionModel) ((TreeSelectionEvent)e).getSource();
-                    for (Iterator i=listenedTo.iterator(); i.hasNext();) {
+                    logger.fine("Looking for a tree for a tree selection event"); // NOI18N
+                    TreeSelectionModel mdl = (TreeSelectionModel) ((TreeSelectionEvent) e).getSource();
+                    for (Iterator i = listenedTo.iterator(); i.hasNext();) {
                         Object o = i.next();
                         if (o instanceof JTree && ((JTree) o).getSelectionModel() == mdl) {
-                            if (LOG) log ("  found it: " + o);
-                            pnl.userInputReceived ((Component)o, e);
-                            return;
+                            if (logger.isLoggable(Level.FINE)) {
+                                logger.fine("  found it: " + o); // NOI18N
+                            }
+                            wizardPage.userInputReceived((Component) o, e);
+                            break;
                         }
                     }
                 } else if (e instanceof DocumentEvent) {
-                    if (LOG) log ("Looking for a JTextComponent for a DocumentEvent");
-                    Document d = ((DocumentEvent) e).getDocument();
-                    for (Iterator i=listenedTo.iterator(); i.hasNext();) {
+                    logger.fine("Looking for a JTextComponent for a DocumentEvent"); // NOI18N
+                    Document document = ((DocumentEvent) e).getDocument();
+                    for (Iterator i = listenedTo.iterator(); i.hasNext();) {
                         Object o = i.next();
-                        if (o instanceof JTextComponent && ((JTextComponent) o).getDocument() == d) {
-                            if (LOG) log ("  found it: " + o);
-                            pnl.userInputReceived((Component)o, e);
-                            return;
+                        if (o instanceof JTextComponent && ((JTextComponent) o).getDocument() == document) {
+                            if (logger.isLoggable(Level.FINE)) {
+                                logger.fine("  found it: " + o); // NOI18N
+                            }
+                            wizardPage.userInputReceived((Component) o, e);
+                            break;
                         }
                     }
                 } else if (e instanceof ListSelectionEvent) {
-                    if (LOG) log ("Looking for a JList or JTable for a ListSelectionEvent ");
-                    ListSelectionModel mdl = (ListSelectionModel) ((ListSelectionEvent) e).getSource();
-                    for (Iterator i=listenedTo.iterator(); i.hasNext();) {
+                    logger.fine("Looking for a JList or JTable for a ListSelectionEvent"); // NOI18N
+                    ListSelectionModel model = (ListSelectionModel) ((ListSelectionEvent) e).getSource();
+                    for (Iterator i = listenedTo.iterator(); i.hasNext();) {
                         Object o = i.next();
-                        if (o instanceof JList && ((JList) o).getSelectionModel() == mdl) {
-                            if (LOG) log ("  found it: " + o);
-                            pnl.userInputReceived((Component)o, e);
-                            return;
-                        } else if (o instanceof JTable && ((JTable) o).getSelectionModel() == mdl) {
-                            if (LOG) log ("  found it: " + o);
-                            pnl.userInputReceived((Component)o, e);
-                            return;
+                        if (o instanceof JList && ((JList) o).getSelectionModel() == model) {
+                            if (logger.isLoggable(Level.FINE)) {
+                                logger.fine("  found it: " + o); // NOI18N
+                            }
+                            wizardPage.userInputReceived((Component) o, e);
+                            break;
+                        } else if (o instanceof JTable && ((JTable) o).getSelectionModel() == model) {
+                            if (logger.isLoggable(Level.FINE)) {
+                                logger.fine("  found it: " + o); // NOI18N
+                            }
+                            wizardPage.userInputReceived((Component) o, e);
+                            break;
                         }
                     }
                 } else {
-                    pnl.userInputReceived(null, e);
+                    wizardPage.userInputReceived(null, e);
                 }
             } finally {
                 setIgnoreEvents(false);
             }
         }
     }
-    
-    
-    
-    
-    public void insertUpdate (DocumentEvent e) {
-        fire(e);
-    }
-    
-    public void changedUpdate (DocumentEvent e) {
-        fire(e);
-    }
-    
-    public void removeUpdate (DocumentEvent e) {
-        fire(e);
-    }
-    
-    public void stateChanged (ChangeEvent e) {
-        fire(e);
-    }
-    
-    public void actionPerformed (ActionEvent e) {
-        fire(e);
-    }
-    
-    public void valueChanged (ListSelectionEvent e) {
-        fire(e);
-    }
-    
-    public void valueChanged (TreeSelectionEvent e) {
+
+    public void actionPerformed(ActionEvent e) {
         fire(e);
     }
 
-    public void tableChanged(TableModelEvent e) {
-        fire(e);
-    }
-
-    public void propertyChange(PropertyChangeEvent evt) {
-        if (evt.getSource() instanceof JComponent && "name".equals(evt.getPropertyName())) { //NOI18N
-            //Note - most components do NOT fire a property change on
-            //setName(), but it is possible for this to be done intentionally
-            if (evt.getOldValue() instanceof String) {
-                if (LOG) {
-                    log ("Name of component changed from " + evt.getOldValue() 
-                    + " to " + evt.getNewValue() + ". " + " removing any values" +
-                            " for " + evt.getOldValue() + " from the wizard " +
-                            "data map");
+    public void propertyChange(PropertyChangeEvent e) {
+        if (e.getSource() instanceof JComponent && "name".equals(e.getPropertyName())) {
+            // Note - most components do NOT fire a property change on
+            // setName(), but it is possible for this to be done intentionally
+            if (e.getOldValue() instanceof String) {
+                if (logger.isLoggable(Level.FINE)) {
+                    logger.fine("Name of component changed from " + e.getOldValue() + // NOI18N
+                            " to " + e.getNewValue() + ".  Removing any values for " +  // NOI18N
+                            e.getOldValue() + " from the wizard data map"); // NOI18N
                 }
-                pnl.removeFromMap((String) evt.getOldValue());
+                wizardPage.removeFromMap(e.getOldValue());
             }
-            if (LOG) log ("Possibly update map for renamed component " + 
-                    evt.getSource());
-            pnl.maybeUpdateMap((JComponent) evt.getSource());
+
+            if (logger.isLoggable(Level.FINE)) {
+                logger.fine("Possibly update map for renamed component " + // NOI18N
+                    e.getSource());
+            }
+
+            wizardPage.maybeUpdateMap((JComponent) e.getSource());
         }
+    }
+
+    public void itemStateChanged(ItemEvent e) {
+        fire(e);
     }
 
     public void componentAdded(ContainerEvent e) {
@@ -318,8 +321,32 @@ final class GenericListener implements ActionListener, PropertyChangeListener, C
             detachFrom(e.getChild());
         }
     }
-    
-    private static final void log (String s) {
-        System.out.println(s);
+
+    public void insertUpdate(DocumentEvent e) {
+        fire(e);
+    }
+
+    public void changedUpdate(DocumentEvent e) {
+        fire(e);
+    }
+
+    public void removeUpdate(DocumentEvent e) {
+        fire(e);
+    }
+
+    public void stateChanged(ChangeEvent e) {
+        fire(e);
+    }
+
+    public void valueChanged(ListSelectionEvent e) {
+        fire(e);
+    }
+
+    public void valueChanged(TreeSelectionEvent e) {
+        fire(e);
+    }
+
+    public void tableChanged(TableModelEvent e) {
+        fire(e);
     }
 }
