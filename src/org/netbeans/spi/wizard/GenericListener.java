@@ -118,8 +118,10 @@ final class GenericListener
             ((JTable) jc).getSelectionModel().addListSelectionListener(this);
         } else {
             //XXX
-            logger.warning("Don't know how to listen to a " + // NOI18N
-                    jc.getClass().getName());
+            if (logger.isLoggable(Level.FINE)) {
+                logger.fine("Don't know how to listen to a " + // NOI18N
+                        jc.getClass().getName());
+            }
         }
 
         if (accept(jc) && !(jc instanceof JPanel)) {
