@@ -25,6 +25,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -79,12 +80,17 @@ public class LotsOfComponentsPanel extends WizardPage {
         names = new String[m.size()];
         names = (String[]) m.keySet().toArray(names);
     }
-    
+
+    private static final List sigh = Arrays.asList (new String[] {
+        "Spinner.formattedTextField", "Spinner.nextButton",
+        "Spinner.previousButton"
+    });
     private void getComponentNames(Container container, Map m) {
         Component[] c = container.getComponents();
         for (int i=0; i < c.length; i++) {
             if (c[i].getName() != null) {
-                if (m.containsKey(c[i].getName()) && !"Spinner.formattedTextField".equals(c[i].getName())) { //UGH, shoot me now!
+                String nm = c[i].getName();
+                if (m.containsKey(nm) && !sigh.contains (nm)) { //UGH, shoot me now!
                     throw new IllegalStateException ("Two components named " + c[i].getName());
                 }
                 m.put(c[i].getName(), c[i]);
