@@ -101,7 +101,8 @@ public class WizardPage extends JPanel {
     private Map wizardData;
     //An initial wizardController that will dump its settings into the real
     //one the first time it's set
-    private WizardController wc = new WC();
+    private WizardControllerImplementation wc = new WC();
+    private WizardController controller = new WizardController(wc);
 
     //Flag to make sure we don't reenter userInputReceieved from maybeUpdateMap()
     private boolean inBeginUIChanged = false;
@@ -248,11 +249,11 @@ public class WizardPage extends JPanel {
      * component
      */
     void setController(WizardController controller) {
-        if (wc instanceof WC) {
-            ((WC) wc).configure(controller);
+        if (controller.getImpl() instanceof WC) {
+            ((WC) controller.getImpl()).configure(controller);
         }
 
-        wc = controller;
+        this.controller = controller;
     }
 
     /**
@@ -261,7 +262,7 @@ public class WizardPage extends JPanel {
      * Return value will never be null.
      */
     private WizardController getController() {
-        return wc;
+        return controller;
     }
 
 
@@ -648,7 +649,7 @@ public class WizardPage extends JPanel {
      * been put into use;  so state can be set during the constructor, etc.
      * Its state will be dumped into the real one once there is a real one.
      */
-    private static final class WC implements WizardController {
+    private static final class WC implements WizardControllerImplementation {
         private String problem = null;
         private int canFinish = -1;
         private Boolean busy = null;
@@ -659,9 +660,9 @@ public class WizardPage extends JPanel {
 
         public void setForwardNavigationMode(int value) {
             switch (value) {
-                case MODE_CAN_CONTINUE :
-                case MODE_CAN_FINISH :
-                case MODE_CAN_CONTINUE_OR_FINISH :
+                case WizardController.MODE_CAN_CONTINUE :
+                case WizardController.MODE_CAN_FINISH :
+                case WizardController.MODE_CAN_CONTINUE_OR_FINISH :
                     break;
                 default :
                     throw new IllegalArgumentException(Integer.toString(value));

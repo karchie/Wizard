@@ -75,7 +75,7 @@ public class InfoTest extends TestCase {
 
         //Okay, this tests nothing but our impl...
         String id = "a";
-        JComponent comp = impl.createPanel(info, id, new MergeMap("a"));
+        JComponent comp = impl.createPanel(info.controller, id, new MergeMap("a"));
         assertNotNull(comp);
         assertEquals(id, comp.getName());
     }

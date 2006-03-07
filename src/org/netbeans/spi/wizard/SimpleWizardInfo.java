@@ -36,7 +36,7 @@ import javax.swing.JTextArea;
  * SimpleWizard created for it, acting as the WizardController for
  * calls to WizardPanelProvider.createPanel().
  */
-final class SimpleWizardInfo implements WizardController {
+final class SimpleWizardInfo implements WizardControllerImplementation {
     private WeakReference wizard = null;
     private final String[] descriptions;
     private final String[] steps;
@@ -92,7 +92,9 @@ final class SimpleWizardInfo implements WizardController {
     final SimpleWizard createWizard() {
         return new SimpleWizard(this);
     }
-    
+   
+    //pkg private for unit tests
+    final WizardController controller = new WizardController(this);
     /**
      * Create a panel that represents a named step in the wizard.
      * This method will be called exactly <i>once</i> in the life of 
@@ -108,9 +110,9 @@ final class SimpleWizardInfo implements WizardController {
      */
     protected JComponent createPanel (String id, Map settings) {
         try {
-            JComponent result = provider.createPanel(this, id, settings);
+            JComponent result = provider.createPanel(controller, id, settings);
             if (result instanceof WizardPage) {
-                ((WizardPage) result).setController(this);
+                ((WizardPage) result).setController(controller);
                 ((WizardPage) result).setWizardDataMap(settings);
             }
             return result;
@@ -155,7 +157,7 @@ final class SimpleWizardInfo implements WizardController {
      * when the panel was created.
      */
     protected void recycleExistingPanel (String id, Map settings, JComponent panel) {
-        provider.recycle(id, this, settings, panel);
+        provider.recycle(id, controller, settings, panel);
     }
 
     private int index() {
@@ -186,7 +188,7 @@ final class SimpleWizardInfo implements WizardController {
         fire();
     }
 
-    private int currNavMode = MODE_CAN_CONTINUE;
+    private int currNavMode = WizardController.MODE_CAN_CONTINUE;
 
     /**
      * Set whether or not the Finish button should be enabled.  Neither 
@@ -207,9 +209,9 @@ final class SimpleWizardInfo implements WizardController {
      */
     public final void setForwardNavigationMode (int value) {
         switch (value) {
-            case MODE_CAN_CONTINUE :
-            case MODE_CAN_FINISH :
-            case MODE_CAN_CONTINUE_OR_FINISH :
+            case WizardController.MODE_CAN_CONTINUE :
+            case WizardController.MODE_CAN_FINISH :
+            case WizardController.MODE_CAN_CONTINUE_OR_FINISH :
                 break;
             default :
                 throw new IllegalArgumentException (Integer.toString(value));
@@ -251,11 +253,13 @@ final class SimpleWizardInfo implements WizardController {
     }
 
     final boolean canFinish() {
-        return isValid() && (currNavMode != -1 && (currNavMode & MODE_CAN_FINISH) != 0);
+        return isValid() && (currNavMode != -1 && (currNavMode & 
+                WizardController.MODE_CAN_FINISH) != 0);
     }
     
     final boolean canContinue() {
-        return isValid() && (currNavMode == -1 || (currNavMode & MODE_CAN_CONTINUE) != 0);
+        return isValid() && (currNavMode == -1 || (currNavMode & 
+                WizardController.MODE_CAN_CONTINUE) != 0);
     }
 
     String[] getDescriptions() {

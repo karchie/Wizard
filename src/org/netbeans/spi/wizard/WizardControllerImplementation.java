@@ -10,65 +10,18 @@
  * Code is Sun Microsystems, Inc. Portions Copyright 1997-2005 Sun
  * Microsystems, Inc. All Rights Reserved.
  */
-/*
- * WizardController.java
- *
- * Created on March 5, 2005, 7:24 PM
- */
 
 package org.netbeans.spi.wizard;
 
 /**
- * Controller which can be used to modify the UI state of a wizard.  Passed
- * as an argument to methods of <code>WizardPanelProvider</code>.  Use this 
- * interface
- * to determine whether the Next/Finish buttons should be enabled, and if some
- * problem explanation text should be displayed.
- * <p>
- * If you are using {@link WizardPage WizardPage}, methods equivalent to this
- * interface are available directly on instances of <code>WizardPage</code>.
- * <p>
- * If you are implementing this interface, you are probably doing something
- * wrong.  Use instances of this interface passed to 
- * {@link org.netbeans.spi.wizard.WizardPanelProvider#createPanel 
- * WizardPanelProvider.createPanel}.
+ * Internal, non-public SPI for wizard controller;  allows the actual WizardController
+ * class to be final, so it does not imply that the API user should implement
+ * it, and methods can be added safely to it if desired.
  *
- * @see WizardPanelProvider
+ * @see WizardController
  * @author Tim Boudreau
  */
-public final class WizardController {
-    /**
-     * Constant that can be passed to <code>setForwardNavigationMode</code> to indicate
-     * that the Next button can be enabled if the problem string is null.
-     * 
-     * @see Wizard.MODE_CAN_CONTINUE
-     */
-    public static final int MODE_CAN_CONTINUE = 1;
-    /**
-     * Constant that can be passed to <code>setForwardNavigationMode</code> to indicate
-     * that the Finish button can be enabled if the problem string is null.
-     * 
-     * @see Wizard.MODE_CAN_FINISH
-     */
-    public static final int MODE_CAN_FINISH = 2;
-    /**
-     * Constant that can be passed to <code>setForwardNavigationMode</code> to indicate
-     * that both the Finish and Next buttons can be enabled if the problem 
-     * string is null.  This value is a bitmask - i.e. 
-     * <code>MODE_CAN_CONTINUE_OR_FINISH == MODE_CAN_CONTINUE | 
-     * MODE_CAN_FINISH</code>
-     * 
-     * @see Wizard.MODE_CAN_CONTINUE_OR_FINISH
-     */
-    public static final int MODE_CAN_CONTINUE_OR_FINISH = 
-            MODE_CAN_CONTINUE | MODE_CAN_FINISH;
-
-    private final WizardControllerImplementation impl;
-    
-    WizardController (WizardControllerImplementation impl) {
-        this.impl = impl;
-    }
-    
+interface WizardControllerImplementation {
     /**
      * Indicate that there is a problem with what the user has (or has not)
      * input, such that the Next/Finish buttons should be disabled until the
@@ -82,9 +35,7 @@ public final class WizardController {
      * description that assists the user in correcting the situation.  It will
      * be displayed in the UI.
      */
-    public void setProblem (String value) {
-        impl.setProblem (value);
-    }
+    void setProblem (String value);
     
     /**
      * Set the forward navigation mode.  This method determines whether 
@@ -108,9 +59,7 @@ public final class WizardController {
      * @param navigationMode Legal values are MODE_CAN_CONTINUE, 
      *  MODE_CAN_FINISH or MODE_CAN_CONTINUE_OR_FINISH
      */
-    public void setForwardNavigationMode (int navigationMode) {
-        impl.setForwardNavigationMode(navigationMode);
-    }
+    void setForwardNavigationMode (int navigationMode);
     
     /**
      * Indicate that some sort of background process is happening (presumably
@@ -119,11 +68,5 @@ public final class WizardController {
      * the wizard dialog.  Use this option with caution and liberal use of
      * <code>finally</code> to reenable navigation.</i>
      */
-    public void setBusy (boolean busy) {
-        impl.setBusy (busy);
-    }
-    
-    WizardControllerImplementation getImpl() {
-        return impl;
-    }
+    void setBusy (boolean busy);
 }
