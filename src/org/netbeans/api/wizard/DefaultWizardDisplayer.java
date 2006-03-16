@@ -373,8 +373,8 @@ class DefaultWizardDisplayer extends WizardDisplayer {
         }
         Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
         //XXX get screen insets?
-        int x = (d.width / 2) - (dlg.getWidth() / 2);
-        int y = (d.height / 2) - (dlg.getWidth() / 2);
+        int x = (d.width - dlg.getWidth()) / 2;
+        int y = (d.height - dlg.getHeight()) / 2;
         dlg.setLocation(x, y);
         
         dlg.setModal (true);
