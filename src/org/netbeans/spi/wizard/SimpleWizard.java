@@ -31,7 +31,7 @@ import javax.swing.event.EventListenerList;
  * @see SimpleWizardInfo
  * @author Tim Boudreau
  */
-final class SimpleWizard implements Wizard {
+final class SimpleWizard implements WizardImplementation {
     private final EventListenerList listenerList = new EventListenerList();
     private final Map ids2panels = new HashMap();
 
@@ -57,12 +57,12 @@ final class SimpleWizard implements Wizard {
         info.setWizard (this);
     }    
 
-    public void addWizardListener(WizardListener listener) {
-        listenerList.add(WizardListener.class, listener);
+    public void addWizardListener(WizardObserver listener) {
+        listenerList.add(WizardObserver.class, listener);
     }
     
-    public void removeWizardListener(WizardListener listener) {
-        listenerList.remove(WizardListener.class, listener);
+    public void removeWizardListener(WizardObserver listener) {
+        listenerList.remove(WizardObserver.class, listener);
     }    
     
     public int getForwardNavigationMode() {
@@ -152,9 +152,9 @@ final class SimpleWizard implements Wizard {
         Object[] listeners = listenerList.getListenerList();
 
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
-            if (listeners[i] == WizardListener.class) {
-                WizardListener l = (WizardListener) listeners[i + 1];
-                l.navigabilityChanged(this);
+            if (listeners[i] == WizardObserver.class) {
+                WizardObserver l = (WizardObserver) listeners[i + 1];
+                l.navigabilityChanged(null);
             }
         }
     }
@@ -163,9 +163,9 @@ final class SimpleWizard implements Wizard {
         Object[] listeners = listenerList.getListenerList();
 
         for (int i = listeners.length - 2; i >= 0; i -= 2) {
-            if (listeners[i] == WizardListener.class) {
-                WizardListener l = (WizardListener) listeners[i + 1];
-                l.selectionChanged(this);
+            if (listeners[i] == WizardObserver.class) {
+                WizardObserver l = (WizardObserver) listeners[i + 1];
+                l.selectionChanged(null);
             }
         }
     }

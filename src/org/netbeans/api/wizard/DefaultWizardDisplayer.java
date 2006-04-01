@@ -51,8 +51,8 @@ import javax.swing.border.Border;
 import org.netbeans.modules.wizard.MergeMap;
 import org.netbeans.modules.wizard.InstructionsPanel;
 import org.netbeans.spi.wizard.Wizard;
-import org.netbeans.spi.wizard.Wizard.WizardListener;
 import org.netbeans.spi.wizard.WizardException;
+import org.netbeans.spi.wizard.WizardObserver;
 
 /**
  * Default implementation of WizardFactory.
@@ -314,7 +314,7 @@ class DefaultWizardDisplayer extends WizardDisplayer {
         finish.addActionListener(buttonListener);
         cancel.addActionListener(buttonListener);
         
-        final WizardListener l = new WizardListener() {
+        final WizardObserver l = new WizardObserver() {
             boolean wasBusy = false;
             public void stepsChanged(Wizard wizard) {
                 //do nothing

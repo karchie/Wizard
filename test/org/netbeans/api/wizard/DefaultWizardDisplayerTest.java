@@ -22,7 +22,6 @@ package org.netbeans.api.wizard;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-import org.netbeans.spi.wizard.Wizard;
 import org.netbeans.spi.wizard.WizardController;
 import org.netbeans.spi.wizard.WizardPanelProvider;
 
@@ -33,6 +32,7 @@ import java.awt.event.ActionListener;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Map;
+import org.netbeans.spi.wizard.Wizard;
 
 
 /**

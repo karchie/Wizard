@@ -68,7 +68,7 @@ final class SimpleWizardInfo implements WizardControllerImplementation {
             throw new IllegalArgumentException ("Duplicate ID: " + Arrays.asList(steps));
         }
         if (descriptions.length != steps.length) {
-            if (steps.length != descriptions.length + 1 && !Wizard.UNDETERMINED_STEP.equals(steps[steps.length-1])) {
+            if (steps.length != descriptions.length + 1 && !WizardImplementation.UNDETERMINED_STEP.equals(steps[steps.length-1])) {
                 throw new IllegalArgumentException ("Steps and descriptions " +
                         "array lengths not equal: " + Arrays.asList(steps) + ":"
                         + Arrays.asList(descriptions));
@@ -242,7 +242,7 @@ final class SimpleWizardInfo implements WizardControllerImplementation {
     }
     
     final void fire() {
-        Wizard wiz = getWizard();
+        WizardImplementation wiz = getWizard();
         if (wiz != null) {
             getWizard().fireNavigability();
         }

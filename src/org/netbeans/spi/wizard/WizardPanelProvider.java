@@ -243,7 +243,7 @@ public abstract class WizardPanelProvider {
      */
     public final Wizard createWizard() {
         if (wizard == null) {
-            wizard = new SimpleWizard (this);
+            wizard = new Wizard (new SimpleWizard (this));
         }
         return wizard;
     }

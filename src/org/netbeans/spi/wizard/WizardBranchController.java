@@ -129,7 +129,8 @@ public abstract class WizardBranchController {
         return base;
     }
 
-    private Wizard wizard = null;
+    private WizardImplementation wizard = null;
+    private Wizard real = null;
     /**
      * Create a Wizard to represent this branch controller.  The resulting
      * Wizard instance is cached; subsequent calls to this method will return
@@ -138,7 +139,8 @@ public abstract class WizardBranchController {
     public final Wizard createWizard() {
         if (wizard == null) {
             wizard = new BranchingWizard (this);
+            real = new Wizard (wizard);
         }
-        return wizard;
+        return real;
     }
 }

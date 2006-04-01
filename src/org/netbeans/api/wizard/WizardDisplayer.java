@@ -7,13 +7,8 @@
  * http://www.sun.com/
  * 
  * The Original Code is NetBeans. The Initial Developer of the Original
- * Code is Sun Microsystems, Inc. Portions Copyright 1997-2005 Sun
+ * Code is Sun Microsystems, Inc. Portions Copyright 1997-2006 Sun
  * Microsystems, Inc. All Rights Reserved.
- */
-/*
- * WizardFactory.java
- *
- * Created on February 22, 2005, 4:39 PM
  */
 
 package org.netbeans.api.wizard;
@@ -57,7 +52,6 @@ public abstract class WizardDisplayer {
                 System.err.println("Could not instantiate " + wdProp);
                 System.setProperty (SYSPROP_KEY, null);
             }
-                
         }
         
         if (factory == null) {

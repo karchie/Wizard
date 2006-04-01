@@ -48,11 +48,12 @@ public class BranchingWizardTest extends TestCase {
     
     public void testSettingsAffectNavigation() {
         BranchControllerImpl bci = new BranchControllerImpl();
-        BranchingWizard wiz = (BranchingWizard) bci.createWizard();
+        Wizard w = bci.createWizard();
+        BranchingWizard wiz = (BranchingWizard) w.impl;
         SimpleWizard base = (SimpleWizard) wiz.initialSteps;
         SimpleWizardInfo info = base.info;
         
-        WL wl = new WL(wiz);
+        WL wl = new WL(w);
         
         assertNull ("Problem should be null, but it is " + wiz.getProblem(), wiz.getProblem());
         
@@ -108,7 +109,7 @@ public class BranchingWizardTest extends TestCase {
 
 
     
-    private static class WL implements Wizard.WizardListener {
+    private static class WL implements WizardObserver {
         private Wizard wiz;
         public WL (Wizard wiz) {
             this.wiz = wiz;
@@ -229,9 +230,9 @@ public class BranchingWizardTest extends TestCase {
             if (which == null) {
                 return null;
             } else if (VALUE_AESTHETIC.equals(which)) {
-                return getBranchWizard();
+                return new Wizard (getBranchWizard());
             } else if (VALUE_PRACTICAL.equals(which)) {
-                return getSimpleWizard();
+                return new Wizard (getSimpleWizard());
             } else {
                 throw new IllegalArgumentException (which);
             }

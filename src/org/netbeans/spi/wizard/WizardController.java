@@ -27,11 +27,6 @@ package org.netbeans.spi.wizard;
  * <p>
  * If you are using {@link WizardPage WizardPage}, methods equivalent to this
  * interface are available directly on instances of <code>WizardPage</code>.
- * <p>
- * If you are implementing this interface, you are probably doing something
- * wrong.  Use instances of this interface passed to 
- * {@link org.netbeans.spi.wizard.WizardPanelProvider#createPanel 
- * WizardPanelProvider.createPanel}.
  *
  * @see WizardPanelProvider
  * @author Tim Boudreau

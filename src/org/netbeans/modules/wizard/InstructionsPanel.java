@@ -31,7 +31,7 @@ import javax.imageio.ImageIO;
 import javax.swing.JComponent;
 import javax.swing.UIManager;
 import org.netbeans.spi.wizard.Wizard;
-import org.netbeans.spi.wizard.Wizard.WizardListener;
+import org.netbeans.spi.wizard.WizardObserver;
 
 /**
  * A panel that displays a background image and optionally instructions
@@ -44,7 +44,7 @@ import org.netbeans.spi.wizard.Wizard.WizardListener;
  *
  * @author Tim Boudreau
  */
-public class InstructionsPanel extends JComponent implements WizardListener {
+public class InstructionsPanel extends JComponent implements WizardObserver {
     private final BufferedImage img;
     private final Wizard wizard;
     private static final int MARGIN = 12;
@@ -103,7 +103,7 @@ public class InstructionsPanel extends JComponent implements WizardListener {
         if (img == null) {
             try {
                 img = ImageIO.read(InstructionsPanel.class.getResourceAsStream(
-                        "defaultWizard.gif")); //NOI18N
+                        "defaultWizard.png")); //NOI18N
             } catch (IOException ioe) {
                 ioe.printStackTrace();
             }
