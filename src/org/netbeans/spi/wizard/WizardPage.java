@@ -82,6 +82,7 @@ import java.util.logging.Logger;
  * </ul>
  * </li>
  * </ul>
+ * </ul>
  * <p/>
  * Note that during development of a wizard, it is worthwhile to test/run with
  * assertions enabled, as there is quite a bit of validity checking via assertions
@@ -598,6 +599,10 @@ public class WizardPage extends JPanel {
         protected Object finish(Map settings) throws WizardException {
             return finish.finish(settings);
         }
+
+        public boolean cancel(Map settings) {
+            return finish.cancel (settings);
+        }
     }
 
     /**
@@ -816,11 +821,21 @@ public class WizardPage extends JPanel {
         Object finish(Map wizardData) throws WizardException;
 
         /**
+         * Called when the user presses the cancel button.  Almost all
+         * implementations will want to return true.
+         */
+        boolean cancel(Map settings);
+
+        /**
          * A no-op WizardResultProducer that returns null.
          */
         WizardResultProducer NO_OP = new WizardResultProducer() {
             public Object finish(Map wizardData) {
                 return null;
+            }
+
+            public boolean cancel (Map settings) {
+                return true;
             }
         };
     }

@@ -7,7 +7,7 @@
  * http://www.sun.com/
  * 
  * The Original Code is NetBeans. The Initial Developer of the Original
- * Code is Sun Microsystems, Inc. Portions Copyright 1997-2005 Sun
+ * Code is Sun Microsystems, Inc. Portions Copyright 1997-2006 Sun
  * Microsystems, Inc. All Rights Reserved.
  */
 /*
@@ -265,5 +265,15 @@ public abstract class WizardPanelProvider {
     String getKnownProblem(int idx) {
         return knownProblems[idx];
     }
-    
+
+    /**
+     * Called if the user invokes cancel.  The default impl returns
+     * true.
+     * @return false to abort cancellation (almost all implementations will
+     *  want to return true - this is really only applicable in cases such
+     *  as an OS installer or such).
+     */
+    public boolean cancel(Map settings) {
+        return true;
+    }
 }

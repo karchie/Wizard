@@ -151,6 +151,10 @@ public final class Wizard {
         return impl.finish(settings);
     }
 
+    public boolean cancel (Map settings) {
+        return impl.cancel(settings);
+    }
+
     public String getTitle() {
         return impl.getTitle();
     }

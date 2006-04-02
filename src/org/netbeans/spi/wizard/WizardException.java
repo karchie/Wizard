@@ -38,6 +38,10 @@ public final class WizardException extends Exception {
         this.localizedMessage = localizedMessage;
         this.step = stepToReturnTo;
     }
+
+    public WizardException (String localizedMessage) {
+        this (localizedMessage, Wizard.UNDETERMINED_STEP);
+    }
     
     public String getLocalizedMessage() {
         return localizedMessage;
@@ -46,4 +50,5 @@ public final class WizardException extends Exception {
     public String getStepToReturnTo() {
         return step;
     }
+
 }

@@ -26,6 +26,8 @@ import java.awt.Dialog;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Frame;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
 import java.awt.Insets;
 import java.awt.KeyboardFocusManager;
 import java.awt.Rectangle;
@@ -33,6 +35,9 @@ import java.awt.Toolkit;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -47,6 +52,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JRootPane;
 import javax.swing.UIManager;
+import javax.swing.WindowConstants;
 import javax.swing.border.Border;
 import org.netbeans.modules.wizard.MergeMap;
 import org.netbeans.modules.wizard.InstructionsPanel;
@@ -278,11 +284,13 @@ class DefaultWizardDisplayer extends WizardDisplayer {
                         //Note no break
                         
                     case 3 : //cancel
-                        Dialog dlg = (Dialog) 
-                            ((JComponent) ae.getSource()).getTopLevelAncestor();
-                        dlg.setVisible(false);
-                        dlg.dispose();
-                        break;
+                        if (wizard.cancel(settings)) {
+                            Dialog dlg = (Dialog) 
+                                ((JComponent) ae.getSource()).getTopLevelAncestor();
+                            dlg.setVisible(false);
+                            dlg.dispose();
+                            break;
+                        }
                     default : assert false;
                     
                     
@@ -371,6 +379,19 @@ class DefaultWizardDisplayer extends WizardDisplayer {
         } else {
             dlg.pack();
         }
+        dlg.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        dlg.addWindowListener (new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                JDialog dlg = (JDialog) e.getWindow();
+                if (!wizard.isBusy()) {
+                    if (wizard.cancel(settings)) {
+                        dlg.setVisible (false);
+                        dlg.dispose();
+                    }
+                }
+            }
+        });
+
         Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
         //XXX get screen insets?
         int x = (d.width - dlg.getWidth()) / 2;

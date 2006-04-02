@@ -280,6 +280,10 @@ final class BranchingWizard implements WizardImplementation {
         }
     }
 
+    public boolean cancel(Map settings) {
+        return activeWizard == null ? true : activeWizard.cancel(settings);
+    }
+
     private class WL implements WizardObserver {
         public void stepsChanged(Wizard wizard) {
             fireStepsChanged();

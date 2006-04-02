@@ -19,6 +19,7 @@
 
 package org.netbeans.api.wizard;
 
+import java.lang.reflect.InvocationTargetException;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -224,6 +225,104 @@ public class DefaultWizardDisplayerTest extends TestCase {
 //        Thread.sleep (40000);
 //    }
 
+    public void testCancelCalledWhenCancelButtonPressed() throws Exception {
+        System.out.println("testCancelCalledWhenCancelButtonPressed");
+
+        PanelProviderImpl impl = new PanelProviderImpl();
+        Wizard wiz = impl.createWizard();
+
+        show(wiz);
+
+        while (!impl.active) {
+            Thread.sleep(200);
+        }
+
+        JButton next = DefaultWizardDisplayer.buttons[0];
+        JButton prev = DefaultWizardDisplayer.buttons[1];
+        JButton finish = DefaultWizardDisplayer.buttons[2];
+        JButton cancel = DefaultWizardDisplayer.buttons[3];
+
+        impl.assertNotCancelled();
+        click (next);
+        impl.assertNotCancelled();
+        click(cancel);
+        impl.assertCancelled();
+
+        Thread.currentThread().sleep (1000);
+        assertFalse (impl.dlg.isVisible());
+    }
+
+    public void testDialogNotHiddenIfCancelReturnsFalse() throws Exception {
+        System.out.println("testDialogNotHiddenIfCancelReturnsFalse");
+
+        PanelProviderImpl impl = new PanelProviderImpl();
+        Wizard wiz = impl.createWizard();
+
+        show(wiz);
+
+        while (!impl.active) {
+            Thread.sleep(200);
+        }
+
+        JButton next = DefaultWizardDisplayer.buttons[0];
+        JButton prev = DefaultWizardDisplayer.buttons[1];
+        JButton finish = DefaultWizardDisplayer.buttons[2];
+        JButton cancel = DefaultWizardDisplayer.buttons[3];
+
+        impl.assertNotCancelled();
+        impl.shouldCancel = false;
+        click(cancel);
+        impl.assertCancelled();
+
+        Thread.currentThread().sleep (1000);
+        assertTrue (impl.dlg.isVisible());
+    }
+
+    public void testDialogNotHiddenIfBusyTrue() throws Exception {
+        System.out.println("testDialogNotHiddenIfBusyTrue");
+
+        PanelProviderImpl impl = new PanelProviderImpl();
+        Wizard wiz = impl.createWizard();
+
+        show(wiz);
+
+        while (!impl.active) {
+            Thread.sleep(200);
+        }
+
+        JButton next = DefaultWizardDisplayer.buttons[0];
+        JButton prev = DefaultWizardDisplayer.buttons[1];
+        JButton finish = DefaultWizardDisplayer.buttons[2];
+        JButton cancel = DefaultWizardDisplayer.buttons[3];
+
+        impl.assertNotCancelled();
+        impl.controller.setBusy(true);
+
+        click(cancel);
+        impl.assertNotCancelled();
+
+        Thread.currentThread().sleep (1000);
+        assertTrue (impl.dlg.isVisible());
+    }
+
+
+//
+//    private void click (final JButton button) {
+//        try {
+//            SwingUtilities.invokeAndWait(new Runnable() {
+//                public void run() {
+//                    button.doClick();
+//                }
+//            });
+//        } catch (InterruptedException ex) {
+//            ex.printStackTrace();
+//            throw new IllegalStateException ();
+//        } catch (InvocationTargetException ex) {
+//            ex.printStackTrace();
+//            throw new IllegalStateException ();
+//        }
+//    }
+
     public void testProblemDisappearsOnBackButton() throws Exception {
         System.out.println("testProblemDisappearsOnBackButton");
 
@@ -417,14 +516,22 @@ public class DefaultWizardDisplayerTest extends TestCase {
             super("Test Wizard", new String[]{"a", "b", "c"}, new String[]{"Step 1", "Step 2", "Step 3"});
         }
 
+
+
         boolean active = false;
         String currId = null;
         JCheckBox cb = null;
-
+        JDialog dlg = null;
         protected JComponent createPanel(final WizardController controller, final java.lang.String id, final java.util.Map settings) {
             step++;
             this.controller = controller;
-            JPanel result = new JPanel();
+            JPanel result = new JPanel() {
+                public void addNotify() {
+                    super.addNotify();
+                    dlg = (JDialog) SwingUtilities.getAncestorOfClass(JDialog.class, this);
+                    assertNotNull (dlg);
+                }
+            };
             result.setLayout(new BorderLayout());
             cb = new JCheckBox(id);
             cb.addActionListener(new ActionListener() {
@@ -510,6 +617,26 @@ public class DefaultWizardDisplayerTest extends TestCase {
 
         public void assertNotFinished(String msg) {
             assertFalse(msg, finished);
+        }
+
+        boolean shouldCancel = true;
+        private boolean cancelled = false;
+
+        public boolean cancel(Map settings) {
+            cancelled = true;
+            return shouldCancel;
+        }
+
+        public void assertCancelled () {
+            if (!cancelled) {
+                fail ("Cancel was not called");
+            }
+        }
+
+        public void assertNotCancelled() {
+            if (cancelled) {
+                fail ("Cancel was called");
+            }
         }
     }
 }

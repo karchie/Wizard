@@ -173,6 +173,10 @@ final class SimpleWizard implements WizardImplementation {
     public Object finish(Map settings) throws WizardException {
         return info.finish(settings);
     }
+
+    public boolean cancel(Map settings) {
+        return info.cancel(settings);
+    }
     
     public String getTitle() {
         return info.getTitle();

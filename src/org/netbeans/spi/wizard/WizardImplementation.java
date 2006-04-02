@@ -289,4 +289,8 @@ interface WizardImplementation {
      */
     public int getForwardNavigationMode();
 
+    /**
+     * Called when the user cancels the wizard.
+     */
+    public boolean cancel(Map settings);
 }

@@ -300,4 +300,8 @@ final class SimpleWizardInfo implements WizardControllerImplementation {
         }
         return result + title.hashCode();
     }    
+
+    boolean cancel(Map settings) {
+        return provider.cancel(settings);
+    }
 }
