@@ -253,5 +253,19 @@ public class MergeMap implements Map {
             throw new UnsupportedOperationException();
         }
     }
+
+    public String toString() {
+        StringBuffer sb = new StringBuffer();
+        for (Iterator i = keySet().iterator(); i.hasNext();) {
+            Object key = (Object) i.next();
+            sb.append ('[');
+            sb.append (key);
+            sb.append('=');
+            sb.append(get(key));
+            sb.append(']');
+            if (i.hasNext()) sb.append (',');
+        }
+        return sb.toString();
+    }
     
 }

@@ -51,7 +51,7 @@ import java.util.Map;
  */
 public abstract class WizardBranchController {
     private final SimpleWizardInfo base;
-    
+
     /**
      * Create a new WizardBranchController.  The <code>base</code> argument
      * provides the initial step(s) of the wizard up; when the user comes to
@@ -64,7 +64,14 @@ public abstract class WizardBranchController {
     protected WizardBranchController (WizardPanelProvider base) {
         this (new SimpleWizardInfo (base));
     }
-    
+
+    protected WizardBranchController (WizardPage[] pages) {
+        this (WizardPage.createWizardPanelProvider(pages));
+    }
+
+    protected WizardBranchController (WizardPage onlyPage) {
+        this (WizardPage.createWizardPanelProvider(onlyPage));
+    }
     /**
      * Create a new BranchIterator, using the passed <code>SimpleWizardInfo</code>
      * for the initial panes of the wizard.

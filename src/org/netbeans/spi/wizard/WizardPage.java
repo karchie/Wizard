@@ -169,8 +169,15 @@ public class WizardPage extends JPanel {
         super.addNotify();
 
         renderingPage();
-        setProblem(validateContents(null, null));
+        inValidateContents = true;
+        try {
+            setProblem(validateContents(null, null));
+        } finally {
+            inValidateContents = false;
+        }
     }
+
+    private boolean inValidateContents = false;
 
     /**
      * Called whenever the page is rendered.
@@ -303,8 +310,13 @@ public class WizardPage extends JPanel {
     protected final void putWizardData(Object key, Object value) {
         logger.fine("putWizardData " + key + "=" + value); //NOI18N
         getWizardDataMap().put(key, value);
-        if (!inBeginUIChanged) {
-            setProblem(validateContents(null, null));
+        if (!inBeginUIChanged && !inValidateContents) {
+            inValidateContents = true;
+            try {
+                setProblem(validateContents(null, null));
+            } finally {
+                inValidateContents = false;
+            }
         }
     }
 
@@ -373,11 +385,12 @@ public class WizardPage extends JPanel {
         }
 
         inUiChanged = true;
-
+        inValidateContents = true;
         try {
             setProblem(validateContents(source, event));
         } finally {
             inUiChanged = false;
+            inValidateContents = false;
         }
     }
 
@@ -535,10 +548,19 @@ public class WizardPage extends JPanel {
         return wizardData;
     }
 
+    static WizardPanelProvider createWizardPanelProvider (WizardPage page) {
+        return new WPP (new WizardPage[] { page }, WizardResultProducer.NO_OP);
+    }
+
+    static WizardPanelProvider createWizardPanelProvider (WizardPage[] page) {
+        return new WPP (page, WizardResultProducer.NO_OP);
+    }
+
+
     /**
      * WizardPanelProvider that takes an array of already created WizardPages
      */
-    private static final class WPP extends WizardPanelProvider {
+    static final class WPP extends WizardPanelProvider {
         private final WizardPage[] pages;
         private final WizardResultProducer finish;
 
@@ -707,6 +729,9 @@ public class WizardPage extends JPanel {
 
         for (int i = 0; i < pages.length; i++) {
             result[i] = pages[i].getID();
+            if (result[i] == null) {
+                result[i] = getIDFromStaticMethod(pages[i].getClass());
+            }
         }
 
         return result;
@@ -720,8 +745,36 @@ public class WizardPage extends JPanel {
 
         for (int i = 0; i < pages.length; i++) {
             result[i] = pages[i].getDescription();
+            if (result[i] == null) {
+                result[i] = getDescriptionFromStaticMethod (pages[i].getClass());
+            }
         }
 
+        return result;
+    }
+
+    private static String getIDFromStaticMethod (Class clazz) {
+        System.err.println("GetID by method for " + clazz);
+        String result = null;
+        try {
+            Method m = clazz.getDeclaredMethod("getStep");
+            assert m.getReturnType() == String.class;
+            result = (String) m.invoke(clazz, (Object[]) null);
+            if (result == null) {
+                throw new NullPointerException ("getStep may not return null");
+            }
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalStateException (ex);
+        } catch (IllegalAccessException ex) {
+            throw new IllegalStateException (ex);
+        } catch (InvocationTargetException ex) {
+            throw new IllegalStateException (ex);
+        } catch (SecurityException ex) {
+            throw new IllegalStateException (ex);
+        } catch (NoSuchMethodException ex) {
+            System.err.println("METHOD NOT FOUND");
+            //do nothing
+        }
         return result;
     }
 
@@ -746,9 +799,12 @@ public class WizardPage extends JPanel {
                 throw new IllegalArgumentException(pages[i].getName() +
                         " is not a subclass of WizardPage"); //NOI18N
             }
-
-            result[i] = pages[i].getName();
+            result[i] = getIDFromStaticMethod (pages[i]);
+            if (result[i] == null) {
+                result[i] = pages[i].getName();
+            }
         }
+        System.err.println("Returning " + Arrays.asList(result));
         return result;
     }
 
@@ -770,40 +826,45 @@ public class WizardPage extends JPanel {
         String[] result = new String[pages.length];
 
         for (int i = 0; i < pages.length; i++) {
-            Method m;
-
-            try {
-                m = pages[i].getDeclaredMethod("getDescription", (Class[]) null); //NOI18N
-            } catch (Exception e) {
-                throw new IllegalArgumentException("Could not find or access " + //NOI18N
-                        "public static String " + pages[i].getName() +  //NOI18N
-                        ".getStep() - make sure it exists"); //NOI18N
-            }
-
-            if (m.getReturnType() != String.class) {
-                throw new IllegalArgumentException("getStep has wrong " //NOI18N
-                        + " return type: " + m.getReturnType() + " on " + //NOI18N
-                        pages[i]);
-            }
-
-            if (!Modifier.isStatic(m.getModifiers())) {
-                throw new IllegalArgumentException("getStep is not " + //NOI18N
-                        "static on " + pages[i]); //NOI18N
-            }
-
-            try {
-                result[i] = (String) m.invoke(null, (Object[]) null);
-            } catch (InvocationTargetException ite) {
-                throw new IllegalArgumentException("Could not invoke " + //NOI18N
-                        "public static String " + pages[i].getName() +  //NOI18N
-                        ".getStep() - make sure it exists."); //NOI18N
-            } catch (IllegalAccessException iae) {
-                throw new IllegalArgumentException("Could not invoke " + //NOI18N
-                        "public static String " + pages[i].getName() +  //NOI18N
-                        ".getStep() - make sure it exists."); //NOI18N
-            }
+            result[i] = getDescriptionFromStaticMethod(pages[i]);
         }
 
+        return result;
+    }
+
+    private static String getDescriptionFromStaticMethod(Class clazz) {
+        String result = null;
+        Method m;
+        try {
+            m = clazz.getDeclaredMethod("getDescription", (Class[]) null); //NOI18N
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Could not find or access " + //NOI18N
+                    "public static String " + clazz.getName() +  //NOI18N
+                    ".getStep() - make sure it exists"); //NOI18N
+        }
+
+        if (m.getReturnType() != String.class) {
+            throw new IllegalArgumentException("getStep has wrong " //NOI18N
+                    + " return type: " + m.getReturnType() + " on " + //NOI18N
+                    clazz);
+        }
+
+        if (!Modifier.isStatic(m.getModifiers())) {
+            throw new IllegalArgumentException("getStep is not " + //NOI18N
+                    "static on " + clazz); //NOI18N
+        }
+
+        try {
+            result= (String) m.invoke(null, (Object[]) null);
+        } catch (InvocationTargetException ite) {
+            throw new IllegalArgumentException("Could not invoke " + //NOI18N
+                    "public static String " + clazz.getName() +  //NOI18N
+                    ".getStep() - make sure it exists."); //NOI18N
+        } catch (IllegalAccessException iae) {
+            throw new IllegalArgumentException("Could not invoke " + //NOI18N
+                    "public static String " + clazz.getName() +  //NOI18N
+                    ".getStep() - make sure it exists."); //NOI18N
+        }
         return result;
     }
 
