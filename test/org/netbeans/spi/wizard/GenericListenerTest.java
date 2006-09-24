@@ -21,6 +21,12 @@ package org.netbeans.spi.wizard;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.EventQueue;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.Arrays;
 import junit.framework.*;
 import java.util.EventObject;
 import java.util.Map;
@@ -37,6 +43,8 @@ import javax.swing.*;
 public class GenericListenerTest extends TestCase {
     private GenericListener gl;
     private WP wp;
+    private WPwithAdHocComponents adhoc;
+    private GenericListener adHocListener;
 
     public GenericListenerTest(String testName) {
         super(testName);
@@ -52,6 +60,9 @@ public class GenericListenerTest extends TestCase {
         Logger.getLogger(GenericListener.class.getName()).setLevel(Level.ALL);
         wp = new WP();
         gl = new GenericListener(wp);
+        adhoc = new WPwithAdHocComponents(false);
+        adHocListener = new GenericListener (adhoc);
+        adhoc.init();
     }
 
     public void testVisualComponentsWork() throws Exception {
@@ -62,14 +73,68 @@ public class GenericListenerTest extends TestCase {
         LotsOfComponentsPanel componentsPanel = new LotsOfComponentsPanel();
         frame.getContentPane().add(componentsPanel);
         frame.setBounds(20, 20, 800, 600);
-        frame.setVisible(true);
-
-        //Wait for the frame to be shown
-        Thread.sleep(1000);
+        new WaitWindow (frame);
 
         componentsPanel.tickleAll();
     }
+    
+    private static class WaitWindow extends WindowAdapter implements Runnable {
+        private JFrame frm;
+        WaitWindow (JFrame frm) {
+            this.frm = frm;
+            frm.addWindowListener(this);
+            EventQueue.invokeLater(this);
+            try {
+            synchronized (this) {
+                wait(10000);
+            }
+            } catch (Exception e) {
+                fail ("Huh?");
+            }
+        }
+        
+        public void run() {
+            frm.setVisible(true);
+        }
+        
+        public void windowOpened(WindowEvent e) {
+            synchronized (this) {
+                notifyAll();
+            }
+            frm.removeWindowListener(this);
+        }
+    }
+    
+    public void testNestedPanels() throws Exception {
+        Logger.getLogger(WizardPage.class.getName()).setLevel(Level.ALL);
+        Wizard wizard = WizardPage.createWizard(new WizardPage[] { adhoc });
+        Map wizardData = new HashMap();
+        JComponent component = wizard.navigatingTo("group", wizardData);
 
+        JFrame frame = new JFrame("Nested Panels Test");
+        frame.getContentPane().setLayout(new BorderLayout());
+        frame.getContentPane().add(adhoc);
+        frame.setBounds (20, 20, 200, 200);
+        adhoc.assertNotValidated();
+        new WaitWindow (frame);
+        System.err.println("now clicking");
+        adhoc.box.doClick();
+        System.err.println("clicked");
+        adhoc.assertPair("box", Boolean.TRUE); //NOI18N
+        adhoc.button.doClick();
+        adhoc.assertPair("button", Boolean.TRUE); //NOI18N
+        adhoc.box.doClick();
+        adhoc.assertPair ("box", Boolean.FALSE); //NOI18N
+        adhoc.assertValidated();
+    }
+    public void testDoublyNestedPanels() throws Exception {
+        Logger.getLogger(WizardPage.class.getName()).setLevel(Level.ALL);
+        adhoc = new WPwithAdHocComponents(true);
+        adHocListener = new GenericListener (adhoc);
+        adhoc.init();
+        testNestedPanels();
+    }
+    
     public void testRadioButtonGroup() throws Exception {
         ButtonGroupPage page = new ButtonGroupPage();
         Wizard wizard = WizardPage.createWizard(new WizardPage[] { page });
@@ -205,12 +270,11 @@ public class GenericListenerTest extends TestCase {
             }
         }
     }
-
-/*
+    
     private void assertListenedTo(JPanel pnl) {
         assertTrue (Arrays.asList(pnl.getContainerListeners()).contains(gl));
     }
-
+/*
     public void testImmediateChildrenListenedTo() {
         System.out.println("testImmediateChildrenListenedTo");
 
@@ -411,6 +475,7 @@ public class GenericListenerTest extends TestCase {
         //XXX send some keystrokes, check validation
         
     }
+ */
 
     
     public void testRenamingComponentChangesMapKey() {
@@ -453,14 +518,43 @@ public class GenericListenerTest extends TestCase {
             wp.assertNotPresent("checkBox");
         }
     }
- */
+    
+    private class WPwithAdHocComponents extends WP {
+        JToggleButton button = new JToggleButton();
+        JCheckBox box = new JCheckBox();
+        AdHocContainer adhocContainer = new AdHocContainer();
+        private final boolean nest;
+        public WPwithAdHocComponents(boolean nest) {
+            super("adhoc", "An adhoc panel");
+            this.nest = nest;
+            setLayout (new BorderLayout());
+        }
+        
+        private void init() {
+            if (nest) {
+                AdHocContainer outer = new AdHocContainer();
+                outer.add (adhocContainer);
+                add (outer, BorderLayout.CENTER);
+            } else {
+                add (adhocContainer, BorderLayout.CENTER);
+            }
+            button.setName ("button");
+            box.setName ("box");
+            adhocContainer.add(button);
+            adhocContainer.add (box);
+        }
+    }    
 
 
     private class WP extends WizardPage {
         private Object evt = null;
 
         public WP() {
-            super("step", "this is a step", false);
+            this("step", "this is a step");
+        }
+        
+        WP (String a, String b) {
+            super (a, b, false);
         }
 
         public Object get(Object key) {
@@ -492,7 +586,8 @@ public class GenericListenerTest extends TestCase {
         }
 
         public void assertNotPresent(Object key) {
-            assertNull(get(key));
+            Map m = super.getWizardDataMap();
+            assertNull(m + " does not contain " + key, get(key));
         }
 
         public void assertEventSource(Object o) {

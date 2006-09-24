@@ -1,11 +1,11 @@
 /*
  *                 Sun Public License Notice
- * 
+ *
  * The contents of this file are subject to the Sun Public License
  * Version 1.0 (the "License"). You may not use this file except in
  * compliance with the License. A copy of the License is available at
  * http://www.sun.com/
- * 
+ *
  * The Original Code is NetBeans. The Initial Developer of the Original
  * Code is Sun Microsystems, Inc. Portions Copyright 1997-2005 Sun
  * Microsystems, Inc. All Rights Reserved.
@@ -20,6 +20,9 @@ package org.netbeans.spi.wizard;
 
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.Dialog;
+import java.awt.Frame;
+import java.awt.Window;
 import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
@@ -33,13 +36,21 @@ import javax.swing.AbstractButton;
 import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JDesktopPane;
+import javax.swing.JFrame;
+import javax.swing.JInternalFrame;
+import javax.swing.JLayeredPane;
 import javax.swing.JList;
 import javax.swing.JPanel;
+import javax.swing.JRootPane;
 import javax.swing.JScrollPane;
 import javax.swing.JSlider;
 import javax.swing.JSpinner;
+import javax.swing.JSplitPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JToggleButton;
+import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.JViewport;
 import javax.swing.ListSelectionModel;
@@ -89,9 +100,25 @@ final class GenericListener
         wizardPage.addContainerListener(this);
     }
 
+    static boolean isProbablyAContainer (Component c) {
+        boolean result;
+        boolean isSwing = c.getClass().getPackage().getName().equals ("javax.swing"); //NOI18N
+        if (isSwing) {
+           result = c instanceof JPanel || c instanceof JSplitPane || c instanceof
+                   JToolBar || c instanceof JViewport || c instanceof JScrollPane ||
+                   c instanceof JFrame || c instanceof JRootPane || c instanceof
+                   Window || c instanceof Frame || c instanceof Dialog ||
+                   c instanceof JTabbedPane || c instanceof JInternalFrame ||
+                   c instanceof JDesktopPane || c instanceof JLayeredPane;
+        } else {
+            result = c instanceof Container;
+        }
+        return result;
+    }
+
     void attachTo(Component jc) {
         //XXX do mapping model -> component?
-        if (jc instanceof JPanel || jc instanceof JScrollPane || jc instanceof JViewport) {
+        if (isProbablyAContainer(jc)) {
             attachToHierarchyOf((Container) jc);
         } else if (jc instanceof JList) {
             listenedTo.add(jc);
@@ -201,17 +228,15 @@ final class GenericListener
         if (!(jc instanceof JComponent)) {
             return false;
         }
-        return jc instanceof JList ||
+        return isProbablyAContainer (jc) || 
+                jc instanceof JList ||
                 jc instanceof JComboBox ||
                 jc instanceof JTree ||
                 jc instanceof JToggleButton || //covers toggle, radio, checkbox
                 jc instanceof JTextComponent ||
                 jc instanceof JColorChooser ||
                 jc instanceof JSpinner ||
-                jc instanceof JSlider ||
-                jc instanceof JPanel ||
-                jc instanceof JScrollPane ||
-                jc instanceof JViewport;
+                jc instanceof JSlider;
     }
 
     void setIgnoreEvents(boolean val) {

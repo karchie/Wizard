@@ -259,7 +259,9 @@ public abstract class WizardPanelProvider {
     void setKnownProblem (String problem, int idx) {
         //Record a problem message so we can put it back if the user does
         //prev and then next
-        knownProblems[idx] = problem;
+        if (idx >= 0) { //setProblem() can be called during initialization
+            knownProblems[idx] = problem;
+        }
     }
     
     String getKnownProblem(int idx) {
