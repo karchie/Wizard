@@ -47,7 +47,7 @@ import org.netbeans.spi.wizard.WizardObserver;
 public class InstructionsPanel extends JComponent implements WizardObserver {
     private final BufferedImage img;
     private final Wizard wizard;
-    private static final int MARGIN = 12;
+    private static final int MARGIN = 5;
 
     public InstructionsPanel (Wizard wiz) {
         this (null, wiz);
@@ -139,8 +139,21 @@ public class InstructionsPanel extends JComponent implements WizardObserver {
         int y = fm.getMaxAscent() + ins.top + MARGIN;
         int x = ins.left + MARGIN;
         int h = fm.getMaxAscent() + fm.getMaxDescent() + 3;
-        g.setColor (getForeground());
         
+        Font boldFont = f.deriveFont (Font.BOLD);
+        
+        g.setFont (boldFont);
+        g.drawString (NbBridge.getString ("org/netbeans/modules/wizard/Bundle", //NOI18N
+                InstructionsPanel.class, "Steps"), x, y); //NOI18N
+        
+        int underlineY = ins.top + MARGIN + fm.getAscent() + 3;
+        g.drawLine (x, underlineY, x + (getWidth() - (x + ins.left + MARGIN)), 
+                underlineY);
+        
+        y += h + 10;
+        g.setFont (getFont());
+        
+        g.setColor (getForeground());
         for (int i=0; i < steps.length; i++) {
             boolean isUndetermined = Wizard.UNDETERMINED_STEP.equals(steps[i]);
             boolean canOnlyFinish = wizard.getForwardNavigationMode() ==
@@ -149,11 +162,13 @@ public class InstructionsPanel extends JComponent implements WizardObserver {
                 break;
             }
             String curr = (i + 1) + ". " + (isUndetermined ?
-                NbBridge.getString("org/netbeans/modules/wizard/Bundle", InstructionsPanel.class, "elipsis") : wizard.getStepDescription(steps[i])); //NOI18N
+                NbBridge.getString("org/netbeans/modules/wizard/Bundle",  //NOI18N
+                InstructionsPanel.class, "elipsis") :  //NOI18N
+                wizard.getStepDescription(steps[i])); //NOI18N
             if (curr != null) {
                 boolean selected = steps[i].equals (currentStep);
                 if (selected) {
-                    g.setFont (f.deriveFont (Font.BOLD));
+                    g.setFont (boldFont);
                 }
                 
                 int width = fm.stringWidth(curr);

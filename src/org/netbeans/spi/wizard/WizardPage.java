@@ -926,4 +926,5 @@ public class WizardPage extends JPanel {
             }
         };
     }
+
 }

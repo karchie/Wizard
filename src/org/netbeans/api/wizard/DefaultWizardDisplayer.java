@@ -76,15 +76,18 @@ class DefaultWizardDisplayer extends WizardDisplayer {
     //for unit tests
     static volatile JButton[] buttons;
     
+    private static final class JP extends JPanel {
+        //XXX get rid of this
+        public Dimension getPreferredSize() {
+            Dimension d = super.getPreferredSize();
+            d.width = Math.max (600, d.width);
+            d.height = Math.max (400, d.height);
+            return d;
+        }
+    }
+    
     protected Object show(final Wizard wizard, Rectangle bounds, Action helpAction) {
-        final JPanel panel = new JPanel() {
-            public Dimension getPreferredSize() {
-                Dimension d = super.getPreferredSize();
-                d.width = Math.max (600, d.width);
-                d.height = Math.max (400, d.height);
-                return d;
-            }
-        };
+        final JPanel panel = new JP();
         if (wizard.getAllSteps().length == 0) {
             throw new IllegalArgumentException ("Wizard has no steps"); //NOI18N
         }
@@ -97,9 +100,9 @@ class DefaultWizardDisplayer extends WizardDisplayer {
             public void doLayout() {
                 Dimension d = ttlLabel.getPreferredSize();
                 if (ttlLabel.getComponentOrientation() == ComponentOrientation.RIGHT_TO_LEFT) {
-                    ttlLabel.setBounds (getWidth() - d.width, 0, d.width, d.height);
+                    ttlLabel.setBounds (getWidth() - d.width, 0, getWidth(), d.height);
                 } else {
-                    ttlLabel.setBounds (0, 0, d.width, d.height);
+                    ttlLabel.setBounds (0, 0, getWidth(), d.height);
                 }
             }
             
