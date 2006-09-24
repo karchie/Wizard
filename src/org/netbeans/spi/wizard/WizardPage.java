@@ -222,6 +222,22 @@ public class WizardPage extends JPanel {
     }
 
     /**
+     * Create simple Wizard from an array of classes, each of which is a
+     * unique subclass of WizardPage.
+     */
+    public static Wizard createWizard(String title, Class[] wizardPageClasses, WizardResultProducer finisher) {
+        return new CWPP(wizardPageClasses, finisher).createWizard();
+    }
+
+    /**
+     * Create simple Wizard from an array of classes, each of which is a
+     * unique subclass of WizardPage.
+     */
+    public static Wizard createWizard(String title, Class[] wizardPageClasses) {
+        return new CWPP(wizardPageClasses, 
+                WizardResultProducer.NO_OP).createWizard();
+    }
+    /**
      * Create a simple Wizard from an array of classes, each of which is a
      * unique subclass of WizardPage, with a
      * no-op WizardResultProducer.
@@ -635,6 +651,16 @@ public class WizardPage extends JPanel {
         private final Class[] classes;
         private final WizardResultProducer finish;
 
+        CWPP(String title, Class[] classes, WizardResultProducer finish) {
+            super(title, getSteps(classes), getDescriptions(classes));
+            assert classes != null : "Class array may not be null";
+            assert new HashSet(Arrays.asList(classes)).size() == classes.length :
+                    "Duplicate entries in class array";
+            assert finish != null : "WizardResultProducer may not be null";
+            this.finish = finish;
+            this.classes = classes;
+        }
+        
         CWPP(Class[] classes, WizardResultProducer finish) {
             super(getSteps(classes), getDescriptions(classes));
 
