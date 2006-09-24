@@ -50,6 +50,11 @@ set of steps, do the following:
     </li>
 </ol>
 
+<p><b>Why pass Class objects for this stuff?</b><br>
+User interfaces need to be responsive.  A Wizard is often invoked from a menu 
+item;  most UI guidelines suggest that something should appear on screen within
+100 milliseconds.  So we don't want to construct any panels we don't know we
+need until we need them.
 
 <p>
 <b>Where are the examples?</b>
