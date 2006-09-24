@@ -39,7 +39,7 @@ import java.util.logging.Logger;
  * <p/>
  * <b>Automatic listening to child components</b><br>
  * If you add an editable component (all standard Swing controls are supported)
- * to a WizardPanel or a child JPanel inside it,
+ * to a WizardPage or a child JPanel inside it,
  * a listener is automatically attached to it.  If user input occurs, the
  * following things happen, in order:
  * <ul>
