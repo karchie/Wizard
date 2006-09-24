@@ -17,6 +17,7 @@ import java.awt.Rectangle;
 import java.util.Arrays;
 import java.util.HashSet;
 import javax.swing.Action;
+import org.netbeans.modules.wizard.NbBridge;
 import org.netbeans.spi.wizard.Wizard;
 
 
@@ -39,18 +40,19 @@ public abstract class WizardDisplayer {
      */
     public static Object showWizard (Wizard wizard, Rectangle r, Action help) {
         assert nonBuggyWizard (wizard);
-        
-//        WizardFactory factory = (WizardFactory) Lookup.getDefault().lookup(
-//                WizardFactory.class);
-        WizardDisplayer factory = null;
-        String wdProp = System.getProperty (SYSPROP_KEY);
-        if (wdProp != null) {
-            try {
-                //XXX use this for now
-                factory = (WizardDisplayer) Class.forName (wdProp).newInstance();
-            } catch (Exception e) {
-                System.err.println("Could not instantiate " + wdProp);
-                System.setProperty (SYSPROP_KEY, null);
+
+        WizardDisplayer factory = NbBridge.getFactoryViaLookup();
+        if (factory == null) {
+            String wdProp = System.getProperty (SYSPROP_KEY);
+            if (wdProp != null) {
+                try {
+                    factory = (WizardDisplayer) 
+                            Class.forName (wdProp).newInstance();
+                } catch (Exception e) {
+                    System.err.println("Could not instantiate " + wdProp);
+                    System.setProperty (SYSPROP_KEY, null);
+                    e.printStackTrace();
+                }
             }
         }
         
@@ -110,4 +112,6 @@ public abstract class WizardDisplayer {
         }
         return true;
     }
+
+    
 }

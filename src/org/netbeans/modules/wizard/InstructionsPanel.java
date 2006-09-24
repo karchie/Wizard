@@ -149,7 +149,7 @@ public class InstructionsPanel extends JComponent implements WizardObserver {
                 break;
             }
             String curr = (i + 1) + ". " + (isUndetermined ?
-                "..." : wizard.getStepDescription(steps[i]));
+                NbBridge.getString("org/netbeans/modules/wizard/Bundle", InstructionsPanel.class, "elipsis") : wizard.getStepDescription(steps[i])); //NOI18N
             if (curr != null) {
                 boolean selected = steps[i].equals (currentStep);
                 if (selected) {
@@ -158,7 +158,10 @@ public class InstructionsPanel extends JComponent implements WizardObserver {
                 
                 int width = fm.stringWidth(curr);
                 while (width > getWidth() - (ins.left + ins.right) && curr.length() > 5) {
-                    curr = curr.substring(0, curr.length() - 5) + "...";
+                    curr = curr.substring(0, curr.length() - 5) + 
+                            NbBridge.getString(
+                                "org/netbeans/modules/wizard/Bundle", //NOI18N
+                                InstructionsPanel.class, "elipsis"); //NOI18N
                 }
                 
                 g.drawString (curr, x, y);
@@ -172,7 +175,9 @@ public class InstructionsPanel extends JComponent implements WizardObserver {
     
     private int historicWidth = Integer.MIN_VALUE;
     public Dimension getPreferredSize() {
-        Font f = getFont() != null ? getFont() : UIManager.getFont("controlFont");
+        Font f = getFont() != null ? getFont() : 
+            UIManager.getFont("controlFont"); //NOI18N
+        
         Graphics g = getGraphics();
         if (g == null) {
             g = new BufferedImage (1, 1, BufferedImage.TYPE_INT_ARGB).getGraphics();
@@ -186,7 +191,9 @@ public class InstructionsPanel extends JComponent implements WizardObserver {
         int w = Integer.MIN_VALUE;
         for (int i=0; i < steps.length; i++) {
             String desc = i + ". " + (Wizard.UNDETERMINED_STEP.equals(steps[i]) ?
-                "..." : wizard.getStepDescription(steps[i]));
+                NbBridge.getString ("org/netbeans/modules/wizard/Bundle",  //NOI18N
+                InstructionsPanel.class, "elipsis") :  //NOI18N
+                wizard.getStepDescription(steps[i]));
             if (desc != null) {
                 w = Math.max (w, fm.stringWidth(desc) + MARGIN);
             }
@@ -196,7 +203,6 @@ public class InstructionsPanel extends JComponent implements WizardObserver {
         }
         if (img != null) {
             w = Math.max (w, img.getWidth());
-//            h = Math.max (h, img.getHeight());
         }
         //Make sure we can grow but not shrink
         w = Math.max (w, historicWidth);

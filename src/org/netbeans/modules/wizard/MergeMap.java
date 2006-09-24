@@ -66,7 +66,7 @@ public class MergeMap implements Map {
      * calved off if necessary).
      */
     public Map push (String id) {
-        assert !order.contains(id) : id + " already present";
+        assert !order.contains(id) : id + " already present"; //NOI18N
 
         Map result = (Map) id2map.get(id);
         if (result == null) {
@@ -91,7 +91,8 @@ public class MergeMap implements Map {
      */
     public String popAndCalve() {
         if (order.size() == 1) {
-            throw new NoSuchElementException ("Cannot back out past first entry");
+            throw new NoSuchElementException ("Cannot back out past first " + //NOI18N
+                    "entry"); //NOI18N
         }
         //Get the current map
         String result = (String) order.peek();
