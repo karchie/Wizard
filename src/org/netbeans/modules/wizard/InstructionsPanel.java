@@ -83,7 +83,8 @@ public class InstructionsPanel extends JComponent implements WizardObserver {
         //image has not been loaded and user wishes to supply their own image
         if (img == null && imgStr != null) {
             //get an URL, works for jars
-            URL url = getClass().getResource(imgStr); //XXX this will not work under a classloader partitioning scheme without tweaks
+            ClassLoader cl = this.getClass().getClassLoader();
+            URL url = cl.getResource(imgStr);
             //successfully parsed the URL
             if(url != null){
                 try {
