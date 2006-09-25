@@ -29,8 +29,10 @@ import javax.swing.UIManager;
  * Object which may be returned from <code>WizardPage.WizardResultProducer.finish()</code>
  * or <code>WizardPanelProvider.finish()</code>, or passed to 
  * <code>DeferredWizardResult.ResultProgressHandle.finish()</code>.  If an 
- * instance of <code>Summary</code> is used, then the wizard should, rather 
- * than disappearing
+ * instance of <code>Summary</code> is used, then the UI should, rather 
+ * than disappearing, show the component provided by the <code>Summary</code> 
+ * object.  Convenience constructors are provided for plain text and list style
+ * views.
  *
  * @author Tim Boudreau
  */
