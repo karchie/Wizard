@@ -1,0 +1,169 @@
+<html><head><title>Wizard Quick Start Guide</title></head>
+<body>
+<img align="right" src="logo.png"/> 
+<h1>Wizard Quick Start Guide</h1>
+<font size="-2" color="gray">Tim Boudreau<br>
+24 September 2006<br></font>
+<p>
+A wizard is a thing with a series of panels;  each panel gathers some settings
+from the user, and puts them in a <code>java.util.Map</code>.  When the user clicks
+the <b>Finish</b> button, your code will be passed that <code>Map</code>, to create some
+object based on the user's input, or do whatever your wizard is supposed to do.
+<p>
+The simplest way to get started is to use 
+<a href="javadoc/org/netbeans/spi/wizard/WizardPage.html"></a><code>WizardPage</code></a>.
+This is a GUI panel with some clever behavior to make it easy to write things
+into the <code>Map</code>.  Simply add components to a <code>WizardPage</code>,
+setting the <i>name</i> property of each component.  For standard Swing 
+components, <code>WizardPage</code> will automatically listen to them, detect
+input, and store that data in the <code>Map</code>, using the component's name
+as the key.  So creating a page in a wizard is as simple as:
+<pre>
+    Container page = new WizardPage ("step1", "Do the first step");
+    JTextField input = new JTextField();
+    <font color="gray">//Be sure to set the name before you add it to the WizardPage</font>
+    input.setName (&quot;input&quot;);
+    page.add (input);
+</pre>
+When the types into <code>input</code>, whatever the text is will automatically
+be put into the settings map.  This will also work for components in sub-panels
+you put inside  <code>WizardPage</code> (but in all cases, the <i>name</i> property
+of each component must be set before it is added!).
+<p>
+To actually show a wizard in a dialog, just use one of the static methods on
+<code>WizardPage</code> to create an instance of <code>Wizard</code> which you
+can pass to the default <code>WizardDisplayer</code>, which is responsible for
+showing a wizard dialog.
+<pre>
+        Wizard wiz = 
+                WizardPage.createWizard(new Class[] { 
+                <font color="gray">//Both of these classes are subclasses of 
+                //WizardPage.  We could also pass instances of WizardPage.</font>
+                    FirstPage.class, SecondPage.class });
+        
+        Map gatheredSettings = (Map) WizardDisplayer.showWizard(wiz));
+</pre>
+<p>
+To compute some result at the end of the <code>Wizard</code>, simply implement
+<a href="javadoc/org/netbeans/spi/wizard/WizardPage.WizardResultProducer.html">
+<code>WizardPage.WizardResultProducer</code></a>. Implement it to 
+compute the resulting object that is the output of the wizard
+(or write files to disk or do whatever is supposed to be done at the conclusion
+of your wizard).  If you do not pass a <code>WizardResultProducer</code>, then
+the <code>Map</code> of all gathered settings is returned from
+<code>WizardDisplayer.showWizard()</code>:
+<pre>
+<font color="gray">//...</font>
+Wizard wiz = WizardPage.createWizard(
+        new Class[] { 
+            FirstPage.class, SecondPage.class }, 
+        <b>new MyResultProducer()</b>
+    );
+                    
+<font color="gray">//...</font>
+
+class MyResultProducer implements WizardResultProducer {
+    public Object finish(Map wizardData) throws WizardException {
+        String nameForThing = (String) wizardData.get ("name");
+        Color colorOfThing = (Color) wizardData.get ("color");
+        return new Thing (name, color);
+    }
+
+    public boolean cancel(Map settings) {
+        boolean dialogShouldClose = JOptionPane.showMessageDialog (
+            "Don't you want to create a thing?!!") == JOptionPane.OK_OPTION;
+        return dialogShouldClose;
+    }
+}
+</pre>
+
+<h2>Input Validation</h2>
+Often wizards will want to restrict input to certain things, or ensure some 
+selection has been made.  To do that, simply subclass <code>WizardPage</code>
+and override <code>validateContents()</code>.  Just return <code>null</code> if
+everything is fine and the Next or Finish buttons should be enabled.  If the
+user needs to enter some more or different data, return a String describing 
+what the user should do.
+<pre>
+    protected String validateContents(Component component, Object event) {
+        if ((component == input || component == null) && input.getText().trim().length() == 0) {
+           return "Enter some text";
+        }
+        return null;
+    }
+</pre>
+<p>
+<h2>Showing a Summary Page</h2>
+If you want to show a &quot;summary page&quot; that tells what has been done,
+after the user has clicked the <b>Finish</b> button, simply return an instance
+of <a href="javadoc/org/netbeans/spi/wizard/Summary.html">
+<code>Summary</code></a> object from your <code>WizardResultProducer</code>'s 
+<code>finish()</code> method.  You can pass it a some text to display in a 
+text control, or an array of strings to show in a JList, or a component you 
+create.  When the user clicks Finish, all of the wizard buttons will become 
+disabled except the <b>Cancel</b> button (which now says &quot;Close&quot;),
+and the summary will be displayed.
+
+<p>
+<h2>Doing Work in the Background</h2>
+Sometimes constructing the result of a wizard is expensive - it can involve
+doing something with files on disk, or fetching something over the internet or
+some other time-consuming task.
+<p>
+There is a simple way to do this:  Implement 
+<a href="javadoc/org/netbeans/spi/wizard/DeferredWizardResult.html">
+<code>DeferredWizardResult</code></a> and return it from
+from <code>WizardResultProducer.finish()</code>.  That class has a 
+<code>start()</code> method which will be called on a background thread;  you
+can do the computation of the result there:
+<pre>
+    static class BackgroundResultCreator extends DeferredWizardResult {
+        public void start(Map wizardData, DeferredWizardResult.ResultProgressHandle progress) {
+            assert !EventQueue.isDispatchThread();
+            try {
+               progress.setProgress ("Doing something", 0, 3);
+               doSomethingExpensive (wizardData);
+               
+               progress.setProgress ("Doing something", 1, 3);
+               doSomethingElseExpensive (wizardData);
+               
+               progress.setProgress ("Doing something", 2, 3);
+               Object finalResult = doAnotherExpensiveThing (wizardData);
+               
+               progress.finish (finalResult);
+            } catch (SomeException e) {
+               progress.fail (e.getMessage(), false);
+            }
+        }
+</pre>
+<p>
+If it should be possible for the user to close the dialog while your operation 
+is running, pass true to your <code>DeferredWizardResult</code>'s superclass
+constructor and implement the <code>abort()</code> method (typically you set
+a flag and <code>start()</code> checks that flag periodically and exits 
+immediately if it has become <code>true</code>).
+<p>
+If you want to show a summary page at the end of the wizard, simply call
+<code>progress.finish()</code> and pass an instance of <code>Summary</code>
+instead of the object (if any) that you computed as a result of the wizard.
+You will pass the created object to the <code>Summary</code> constructor, so
+that it can be returned from <code>WizardDisplayer.showWizard()</code>.
+
+<h2>Wizards That Change Based On User Input</h2>
+While describing the details is out of scope for the quick start guide, if you
+want to have, for example, a wizard where the user makes some selection on the
+first panel, and depending on that selection, the subsequent steps of the wizard
+will change, that is easy to do.  Basically you will implement
+<a href="javadoc/org/netbeans/spi/wizard/WizardBranchController.html">WizardBranchController</a>.
+That class has a method which is passed the <code>Map</code> of user input, and 
+returns a different <code>Wizard</code> depending on what is in the <code>Map</code>.
+Basically branching is nesting wizards within wizards - at each choice point, you
+provide a <code>Wizard</code> which defines the subsequent steps.
+<p>
+<h3>See also:</h3>
+<ul>
+<li><a href="faq.html">The Wizard FAQ</a></li>
+<li><a href="javadoc/index.html">The Wizard Javadoc</a></li>
+</ul>
+</body>
+</html>

@@ -16,8 +16,9 @@ for writing Wizards.  The UI for Wizards is pluggable;  the default
 implementation conforms to the JLF usability guidelines for
 Wizards.
 <p>
-This library was designed as a 
-replacement for NetBeans' Wizards API, and takes into account the long history 
+This library was originally designed as a 
+replacement for NetBeans' Wizards API (in fact it was designed to settle an
+argument), and takes into account the long history 
 of that API and problems encountered with it over the years. It provides a 
 simple, easy-to-use solution that enables any Swing application to provide 
 Wizards with a minimum of code and effort.
@@ -26,6 +27,7 @@ Wizards with a minimum of code and effort.
     <tr valign="top"><td width="50%">
 <h3>Downloads and Documents</h3>
 <ul>
+    <li><a href="quickStart.html">Quick Start Guide</a></li>
     <li><a href="faq.html">Frequently Asked Questions</a></li>
     <li><a href="WizardAPI.zip">Download the Javadoc (zip file)</a></li>
     <li><a href="http://wizard.dev.java.net/nonav/javadoc/index.html">Javadoc (online)</a></li>
@@ -38,6 +40,12 @@ Wizards with a minimum of code and effort.
     <td>
 <h3>News</h3>
 <ul>
+<li><i>9/24/06</i>&mdash;Support for asynchronously computed results w/ progress
+bar, and support for JLF-style summary panels added.  Just return an instance of
+<code>Summary</code> or an instance of <code>DeferredWizardResult</code> from
+the appropriate <code>finish()</code> methods, or return pass a <code>Summary</code>
+object to <code>DeferredWizardResult.ResultProgressHandle.finished()</code>;
+new <a href="quickstart.html">Quick Start Guide</a></li>
 <li><i>9/23/06</i>&mdash;WizardPage now listens to nested 
 containers so any named component can participate in the wizard settings map with
 no code needed.</li>
@@ -71,9 +79,7 @@ encounter a problem, please file bugs;  bugs with unit tests attached are
 much appreciated.
 <h3>To Do:</h3>
 <ul>
-<li>Add support for post-finish summary panels per the JLF spec</li>
 <li>Repackage to net.java namespace?</li>
-<li>Localize <code>DefaultWizardDisplayer</code></li>
 <li>Merge/include concepts/classes from EZ-Branch</li>
 <li>
 </ul>
