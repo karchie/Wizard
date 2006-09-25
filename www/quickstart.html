@@ -11,7 +11,7 @@ the <b>Finish</b> button, your code will be passed that <code>Map</code>, to cre
 object based on the user's input, or do whatever your wizard is supposed to do.
 <p>
 The simplest way to get started is to use 
-<a href="javadoc/org/netbeans/spi/wizard/WizardPage.html"></a><code>WizardPage</code></a>.
+<a href="nonav/javadoc/org/netbeans/spi/wizard/WizardPage.html"></a><code>WizardPage</code></a>.
 This is a GUI panel with some clever behavior to make it easy to write things
 into the <code>Map</code>.  Simply add components to a <code>WizardPage</code>,
 setting the <i>name</i> property of each component.  For standard Swing 
@@ -45,7 +45,7 @@ showing a wizard dialog.
 </pre>
 <p>
 To compute some result at the end of the <code>Wizard</code>, simply implement
-<a href="javadoc/org/netbeans/spi/wizard/WizardPage.WizardResultProducer.html">
+<a href="nonav/javadoc/org/netbeans/spi/wizard/WizardPage.WizardResultProducer.html">
 <code>WizardPage.WizardResultProducer</code></a>. Implement it to 
 compute the resulting object that is the output of the wizard
 (or write files to disk or do whatever is supposed to be done at the conclusion
@@ -96,7 +96,7 @@ what the user should do.
 <h2>Showing a Summary Page</h2>
 If you want to show a &quot;summary page&quot; that tells what has been done,
 after the user has clicked the <b>Finish</b> button, simply return an instance
-of <a href="javadoc/org/netbeans/spi/wizard/Summary.html">
+of <a href="nonav/javadoc/org/netbeans/spi/wizard/Summary.html">
 <code>Summary</code></a> object from your <code>WizardResultProducer</code>'s 
 <code>finish()</code> method.  You can pass it a some text to display in a 
 text control, or an array of strings to show in a JList, or a component you 
@@ -111,7 +111,7 @@ doing something with files on disk, or fetching something over the internet or
 some other time-consuming task.
 <p>
 There is a simple way to do this:  Implement 
-<a href="javadoc/org/netbeans/spi/wizard/DeferredWizardResult.html">
+<a href="nonav/javadoc/org/netbeans/spi/wizard/DeferredWizardResult.html">
 <code>DeferredWizardResult</code></a> and return it from
 from <code>WizardResultProducer.finish()</code>.  That class has a 
 <code>start()</code> method which will be called on a background thread;  you
@@ -154,7 +154,7 @@ While describing the details is out of scope for the quick start guide, if you
 want to have, for example, a wizard where the user makes some selection on the
 first panel, and depending on that selection, the subsequent steps of the wizard
 will change, that is easy to do.  Basically you will implement
-<a href="javadoc/org/netbeans/spi/wizard/WizardBranchController.html">WizardBranchController</a>.
+<a href="nonav/javadoc/org/netbeans/spi/wizard/WizardBranchController.html">WizardBranchController</a>.
 That class has a method which is passed the <code>Map</code> of user input, and 
 returns a different <code>Wizard</code> depending on what is in the <code>Map</code>.
 Basically branching is nesting wizards within wizards - at each choice point, you
@@ -163,7 +163,7 @@ provide a <code>Wizard</code> which defines the subsequent steps.
 <h3>See also:</h3>
 <ul>
 <li><a href="faq.html">The Wizard FAQ</a></li>
-<li><a href="javadoc/index.html">The Wizard Javadoc</a></li>
+<li><a href="nonav/javadoc/index.html">The Wizard Javadoc</a></li>
 </ul>
 </body>
 </html>
