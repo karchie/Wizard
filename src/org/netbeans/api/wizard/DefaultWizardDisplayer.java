@@ -364,13 +364,17 @@ class DefaultWizardDisplayer extends WizardDisplayer {
                     Runnable r = new Runnable() {
                         public void run() {
                             //cheap word wrap
-                            JLabel comp = new JLabel ("<html><body>" + message);
+                            JLabel comp = new JLabel ("<html><body>" + message); //NOI18N
                             comp.setBorder (new EmptyBorder (5,5,5,5));
                             setInnerComponent (comp);
                             prev.setEnabled (canGoBack);
                             if (!canGoBack) {
                                 cancel.setText(closeString);
                             }
+                            ttlLabel.setText (NbBridge.getString(
+                                "org/netbeans/api/wizard/Bundle",  //NOI18N
+                                DefaultWizardDisplayer.class, "Failed")); //NOI18N
+
                             next.setEnabled(false);
                             cancel.setEnabled(true);
                             finish.setEnabled(false);
