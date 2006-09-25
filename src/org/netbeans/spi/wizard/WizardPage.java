@@ -699,6 +699,10 @@ public class WizardPage extends JPanel {
         public boolean cancel(Map settings) {
             return finish.cancel(settings);
         }
+        
+        public String toString() {
+            return super.toString() + " for " + finish;
+        }
     }
 
     /**
@@ -943,6 +947,10 @@ public class WizardPage extends JPanel {
 
             public boolean cancel (Map settings) {
                 return true;
+            }
+            
+            public String toString() {
+                return "NO_OP WizardResultProducer";
             }
         };
     }

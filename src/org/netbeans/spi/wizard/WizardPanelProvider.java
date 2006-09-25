@@ -294,4 +294,8 @@ public abstract class WizardPanelProvider {
     public boolean cancel(Map settings) {
         return true;
     }
+    
+    public String toString() {
+        return super.toString() + " with wizard " + wizard;
+    }
 }

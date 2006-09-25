@@ -133,7 +133,8 @@ final class SimpleWizardInfo implements WizardControllerImplementation {
      * gathered data.
      */
     protected Object finish (Map settings) throws WizardException {
-        assert canFinish();
+        //XXX fixme
+//        assert canFinish();
         return provider.finish (settings);
     }
 
@@ -298,10 +299,15 @@ final class SimpleWizardInfo implements WizardControllerImplementation {
         for (int i=0; i < steps.length; i++) {
             result += (steps[i].hashCode() * (i+1)) ^ 31;
         }
-        return result + title.hashCode();
+        return result + (title == null ? 0 : title.hashCode());
     }    
 
     boolean cancel(Map settings) {
         return provider.cancel(settings);
+    }
+    
+    public String toString() {
+        return "SimpleWizardInfo@" + System.identityHashCode(this) + " for " +
+                provider;
     }
 }

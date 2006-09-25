@@ -269,10 +269,14 @@ class DefaultWizardDisplayer extends WizardDisplayer {
                 inner.revalidate();
                 inner.repaint();
                 comp.requestFocus();
-                update();
+                if (!inSummary) {
+                    update();
+                }
             }
             
+            boolean inSummary;
             private void handleSummary (Summary summary) {
+                inSummary = true;
                 JComponent summaryComp = (JComponent) summary.getSummaryComponent(); //XXX
                 if (summaryComp.getBorder() != null) {
                     CompoundBorder b = new CompoundBorder (new EmptyBorder (
@@ -445,18 +449,19 @@ class DefaultWizardDisplayer extends WizardDisplayer {
                         String nextId = wizard.getNextStep();
                         settings.push(nextId);
                         navigateTo (nextId);
-                        
+                        inSummary = false;
                         break;
                     case 1 : //prev
                         String prevId = wizard.getPreviousStep();
                         settings.popAndCalve();
                         deferredResult = null;
                         navigateTo(prevId);
-                        
+                        inSummary = false;
                         break;
                     case 2 : //finish
                         try {
                             Object o = wizard.finish(settings);
+                            System.err.println("WIZARD FINISH GOT ME A " + o);
                             if (o instanceof DeferredWizardResult) {
                                 final DeferredWizardResult r = (DeferredWizardResult) o;
                                 handleDeferredWizardResult (r);
