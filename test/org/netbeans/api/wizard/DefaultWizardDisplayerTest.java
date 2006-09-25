@@ -19,11 +19,11 @@
 
 package org.netbeans.api.wizard;
 
-import java.lang.reflect.InvocationTargetException;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
 import org.netbeans.spi.wizard.WizardController;
+import org.netbeans.spi.wizard.WizardException;
 import org.netbeans.spi.wizard.WizardPanelProvider;
 
 import javax.swing.*;
@@ -33,7 +33,11 @@ import java.awt.event.ActionListener;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Map;
+import org.netbeans.spi.wizard.DeferredWizardResult;
+import org.netbeans.spi.wizard.Summ;
 import org.netbeans.spi.wizard.Wizard;
+import org.netbeans.spi.wizard.WizardPage;
+import org.netbeans.spi.wizard.WizardPage.WizardResultProducer;
 
 
 /**
@@ -53,7 +57,7 @@ public class DefaultWizardDisplayerTest extends TestCase {
 
     protected void setUp() throws Exception {
         super.setUp();
-
+        wizardResult = null;
         System.setProperty("TrivialWizardFactory.test", "true");
     }
 
@@ -75,7 +79,7 @@ public class DefaultWizardDisplayerTest extends TestCase {
             assertNotNull(x);
         }
     }
-
+    
     public void testShow() throws Exception {
         System.out.println("testShow");
 
@@ -275,6 +279,9 @@ public class DefaultWizardDisplayerTest extends TestCase {
         impl.assertCancelled();
 
         Thread.currentThread().sleep (1000);
+        
+        Thread.currentThread().sleep (1000);
+        
         assertTrue (impl.dlg.isVisible());
     }
 
@@ -304,24 +311,6 @@ public class DefaultWizardDisplayerTest extends TestCase {
         Thread.currentThread().sleep (1000);
         assertTrue (impl.dlg.isVisible());
     }
-
-
-//
-//    private void click (final JButton button) {
-//        try {
-//            SwingUtilities.invokeAndWait(new Runnable() {
-//                public void run() {
-//                    button.doClick();
-//                }
-//            });
-//        } catch (InterruptedException ex) {
-//            ex.printStackTrace();
-//            throw new IllegalStateException ();
-//        } catch (InvocationTargetException ex) {
-//            ex.printStackTrace();
-//            throw new IllegalStateException ();
-//        }
-//    }
 
     public void testProblemDisappearsOnBackButton() throws Exception {
         System.out.println("testProblemDisappearsOnBackButton");
@@ -435,18 +424,135 @@ public class DefaultWizardDisplayerTest extends TestCase {
         assertFalse(prev.isEnabled());
         assertFalse(next.isEnabled());
         assertTrue(finish.isEnabled());
-
     }
 
     public void testReflectionHackWorks() {
+        System.out.println("testReflectionHackWorks");
         try {
             Field f = WizardPanelProvider.class.getDeclaredField("knownProblems");
         } catch (Exception e) {
             fail("The field 'knownProblems' on WizardPanelProvider has been " +
-                    "deleted.  Please update TrivialWizardFactoryTest to be" +
+                    "deleted.  Please update DefaultWizardDisplayerTestto be" +
                     " able to locate the array of known problems.");
         }
     }
+    
+    public void testWizardNotHiddenIfResultProviderSaysItCantBeCancelled() throws Exception {
+        System.out.println("testWizardNotHiddenIfResultProviderSaysItCantBeCancelled");
+        PageOne one = new PageOne ();
+        PageOne two = new PageOne ("two");
+        WRP wrp = new WRP(false);
+        Wizard w = WizardPage.createWizard(new WizardPage[] {one, two}, 
+                wrp);
+        show (w);
+        wrp.assertCancelNotCalled();
+        JButton next = DefaultWizardDisplayer.buttons[0];
+        JButton prev = DefaultWizardDisplayer.buttons[1];
+        JButton finish = DefaultWizardDisplayer.buttons[2];
+        JButton cancel = DefaultWizardDisplayer.buttons[3];
+        assertFalse (next.isEnabled());
+        assertFalse (prev.isEnabled());
+        assertFalse (finish.isEnabled());
+        assertTrue (cancel.isEnabled());
+        click (cancel);
+        wrp.assertCancelCalled();
+        assertTrue (next.isDisplayable()); //still on screen, we should not
+        //have hidden the dialog.
+        click (one.box);
+        assertTrue (next.isEnabled());
+        click (next);
+        assertFalse (one.isDisplayable());
+        assertTrue (two.isDisplayable());
+        assertFalse (next.isEnabled());
+        click (cancel);
+        wrp.assertCancelCalled();
+        assertTrue (next.isDisplayable());
+        click (two.box);
+        assertFalse (next.isEnabled());
+        assertTrue (finish.isEnabled());
+        assertTrue (cancel.isEnabled());
+        wrp.assertFinishNotCalled();
+        wrp.d.assertNotStarted();
+        wrp.d.assertNotAborted();
+        click (finish);
+        wrp.assertFinishCalled();
+        Thread.currentThread().sleep (1000);
+        wrp.d.assertStarted();
+        assertFalse (cancel.isEnabled());
+        synchronized (wrp.d) {
+            wrp.d.notify();
+        }
+        Thread.currentThread().sleep(200);
+        //should be showing the summary page
+        assertTrue (next.isDisplayable());
+        assertTrue (wrp.d.sum.summaryComponentWasCalled());
+        
+        click (cancel);
+        Thread.currentThread().sleep(200);
+        assertTrue (wrp.d.sum.getResultWasCalled());
+        
+        assertNotNull ("WizardDisplayer.show() should have returned a " +
+                "non-null result", wizardResult);
+    }
+    
+    public void testWizardIsHiddenIfResultProviderSaysItCanBeCancelled() throws Exception {
+        System.out.println("testWizardIsHiddenIfResultProviderSaysItCanBeCancelled");
+        PageOne one = new PageOne ();
+        PageOne two = new PageOne ("two");
+        WRP wrp = new WRP(true);
+        Wizard w = WizardPage.createWizard(new WizardPage[] {one, two}, 
+                wrp);
+        show (w);
+        wrp.assertCancelNotCalled();
+        JButton next = DefaultWizardDisplayer.buttons[0];
+        JButton prev = DefaultWizardDisplayer.buttons[1];
+        JButton finish = DefaultWizardDisplayer.buttons[2];
+        JButton cancel = DefaultWizardDisplayer.buttons[3];
+        click (cancel);
+        Thread.currentThread().sleep (2000);
+        assertFalse (next.isDisplayable());
+        wrp.assertCancelCalled();
+    }    
+    
+    public void testCanAbortComputingDeferredResultIfDeferredResultImplAllowsIt() throws Exception {
+        System.out.println("testCanAbortComputingDeferredResultIfDeferredResultImplAllowsIt");
+        PageOne one = new PageOne ();
+        PageOne two = new PageOne ("two");
+        WRP wrp = new WRP(true);
+        Wizard w = WizardPage.createWizard(new WizardPage[] {one, two}, 
+                wrp);
+        show (w);
+        wrp.assertCancelNotCalled();
+        JButton next = DefaultWizardDisplayer.buttons[0];
+        JButton prev = DefaultWizardDisplayer.buttons[1];
+        JButton finish = DefaultWizardDisplayer.buttons[2];
+        JButton cancel = DefaultWizardDisplayer.buttons[3];
+        click (one.box);
+        click (next);
+        click (two.box);
+        wrp.assertCancelNotCalled();
+        wrp.assertFinishNotCalled();
+        wrp.d.assertNotStarted();
+        wrp.d.assertNotAborted();
+        assertTrue (finish.isEnabled());
+        click (finish);
+        Thread.currentThread().sleep(1000);
+        wrp.assertFinishCalled();
+        wrp.d.assertStarted();
+        //Background thread should be stalled in wrp.d.wait().  Try to abort,
+        //and then see if it happens.
+        click (cancel);
+        wrp.d.assertAborted();
+        assertNull (wizardResult);
+        synchronized (wrp.d) {
+            wrp.d.notify();
+        }
+        Thread.currentThread().sleep (500);
+        assertNull ("WizardDisplayer.show() returned a result even though the" +
+                " wizard was aborted while running background object construction",
+                wizardResult);
+    }
+    
 
     private static String[] getKnownProblems(WizardPanelProvider prov) throws Exception {
         Field f = WizardPanelProvider.class.getDeclaredField("knownProblems");
@@ -474,11 +580,12 @@ public class DefaultWizardDisplayerTest extends TestCase {
         show(wiz, null);
     }
 
+    private static Object wizardResult;
     private static void show(final Wizard wiz, final Action helpAction) {
         try {
             SwingUtilities.invokeLater(new Runnable() {
                 public void run() {
-                    new DefaultWizardDisplayer().show(wiz, null, helpAction);
+                    wizardResult = new DefaultWizardDisplayer().show(wiz, null, helpAction);
                 }
             });
             Thread.sleep(1000);
@@ -501,7 +608,134 @@ public class DefaultWizardDisplayerTest extends TestCase {
             fail("interrupted");
         }
     }
+    
+    private static class PageOne extends WizardPage {
+        final JCheckBox box = new JCheckBox ("Check me tender, " +
+                "check me sweet, never let me go");
+        PageOne() {
+            this ("box");
+        }
+        
+        PageOne(String boxName) {
+            super (boxName,"First step");
+            box.setName (boxName);
+            add (box);
+        }
+        
+        public String validateContents (Component c, Object event) {
+            return box.isSelected() ? null : "No.";
+        }
+    }
+    
+    private class WRP implements WizardResultProducer {
+        boolean finishCalled;
+        boolean cancelCalled;
+        boolean canCancel;
+        final D d;
+        public WRP() {
+            this (true);
+        }
+        
+        public WRP (boolean canCancel) {
+            this.canCancel = canCancel;
+            d = new D (canCancel);
+        }
+        
+        public Object finish(Map wizardData) throws WizardException {
+            finishCalled = true;
+            return d;
+        }
 
+        public boolean cancel(Map settings) {
+            cancelCalled = true;
+            return canCancel;
+        }
+        
+        public void assertCancelCalled() {
+            boolean b = cancelCalled;
+            cancelCalled = false;
+            assertTrue ("Cancel was not called", b);
+        }
+        
+        public void assertFinishCalled() {
+            boolean b = finishCalled;
+            finishCalled = false;
+            assertTrue ("Finish was not called", b);
+        }
+        
+        public void assertFinishNotCalled() {
+            assertFalse("Finish not called", finishCalled);
+        }
+        
+        public void assertCancelNotCalled() {
+            assertFalse("Cancel not called", cancelCalled);
+        }
+    }
+    
+    private class D extends DeferredWizardResult {
+        final boolean canAbort;
+        final Summ sum = new Summ ("Done", "done");
+        D (boolean canAbort) {
+            this.canAbort = canAbort;
+        }
+        
+        D() {
+            this (true);
+        }
+        boolean navigateBack = false;
+        boolean started;
+        public void start(Map settings, DeferredWizardResult.ResultProgressHandle progress) {
+            if (EventQueue.isDispatchThread()) {
+                fail ("DeferredWizardResult.start() called from the event " +
+                        "thread.  This is illegal.");
+            }
+            started = true;
+            synchronized (this) {
+                System.err.println("D waiting");
+                try {
+                    wait();
+                } catch (InterruptedException ex) {
+                    ex.printStackTrace();
+                }
+                System.err.println("D continuing");
+                if (!aborted) {
+                    progress.finished (sum);
+                } else {
+                    progress.failed("Bad", navigateBack);
+                }
+            }
+        }
+        
+        
+        public void assertStarted() {
+            boolean b = started;
+            started = false;
+            assertTrue ("start was not called", b);
+        }
+        
+        public void assertNotStarted() {
+            assertFalse ("start was already called", started);
+        }
+        
+        public void assertNotAborted() {
+            assertFalse ("abort was already called", aborted);
+        }
+        
+        public boolean canAbort() {
+            return canAbort;
+        }
+        
+        private volatile boolean aborted;
+        public void abort() {
+            aborted = true;
+        }
+        
+        public void assertAborted() {
+            boolean b = aborted;
+            aborted = false;
+            assertTrue ("abort was not called", b);
+        }
+    }
 
     private static class PanelProviderImpl extends WizardPanelProvider {
         private boolean finished = false;

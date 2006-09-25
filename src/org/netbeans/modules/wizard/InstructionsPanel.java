@@ -18,6 +18,7 @@
 
 package org.netbeans.modules.wizard;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -167,7 +168,7 @@ public class InstructionsPanel extends JComponent implements WizardObserver {
                 wizard.getStepDescription(steps[i])); //NOI18N
             if (curr != null) {
                 boolean selected = steps[i].equals (currentStep);
-                if (selected) {
+                if (selected && !inSummaryPage) {
                     g.setFont (boldFont);
                 }
                 
@@ -225,6 +226,12 @@ public class InstructionsPanel extends JComponent implements WizardObserver {
         return new Dimension (w,  ins.top + ins.bottom + ((h + 3) * steps.length));
     }
     
+    private boolean inSummaryPage;
+    public void setInSummaryPage (boolean val) {
+        this.inSummaryPage = val;
+        repaint();
+    }
+    
     public Dimension getMinimumSize() {
         return getPreferredSize();
     }
@@ -239,5 +246,19 @@ public class InstructionsPanel extends JComponent implements WizardObserver {
 
     public void selectionChanged(Wizard wizard) {
         repaint();
+    }
+    
+    public void doLayout() {
+        Component[] c = getComponents();
+        Insets ins = getInsets();
+        int y = getHeight() - (MARGIN + ins.bottom);
+        int x = MARGIN + ins.left;
+        int w = getWidth() - ((MARGIN * 2) + ins.left + ins.right);
+        if (w < 0) w = 0;
+        for (int i=c.length-1; i >= 0; i--) {
+            Dimension d = c[i].getPreferredSize();
+            c[i].setBounds (x, y - d.height, w, d.height);
+            y -= d.height;
+        }
     }
 }

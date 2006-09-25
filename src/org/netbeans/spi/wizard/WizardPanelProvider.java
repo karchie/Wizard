@@ -185,15 +185,31 @@ public abstract class WizardPanelProvider {
      * Instantiate whatever object (if any) the wizard creates from its
      * gathered data.  The default implementation is a no-op that returns
      * null.
+     * <p>
+     * If an instance of <code>Summary</code> is returned from this method, the
+     * UI shall display it on a final page and disable all navigation buttons
+     * except the Close/Cancel button.
+     * <p>
+     * If an instance of <code>DeferredWizardResult</code> is returned from this
+     * method, the UI shall display some sort of progress bar while the result 
+     * is computed in the background.  If that <code>DeferredWizardResult</code>
+     * produces a <code>Summary</code> object, that summary shall be displayed
+     * as described above.
+     * <p>
+     * The default implementation returns the settings map it is passed.
      *
      * @param settings The settings map, now fully populated with all settings needed
      *  to complete the wizard (this method will only be called if 
      *  <code>setProblem(null)</code> and <code>setCanFinish(true)</code> have
      *  been called on the <code>WizardController</code> passed to 
      *  <code>createPanel()</code>.  
+     * @return an object composed based on what the user entered in the wizard - 
+     *  somethingmeaningful to whatever code invoked the wizard, or null.  Note
+     *  special handling if an instance of <code>DeferredWizardResult</code>
+     *  or <code>Summary</code> is returned from this method.
      */
     protected Object finish (Map settings) throws WizardException {
-        return null;
+        return settings;
     }
 
     /**

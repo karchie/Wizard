@@ -24,6 +24,7 @@ import java.awt.ComponentOrientation;
 import java.awt.Cursor;
 import java.awt.Dialog;
 import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.Frame;
 import java.awt.Insets;
@@ -35,6 +36,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -47,13 +49,18 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.JRootPane;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 import javax.swing.border.Border;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
 import org.netbeans.modules.wizard.MergeMap;
 import org.netbeans.modules.wizard.InstructionsPanel;
 import org.netbeans.modules.wizard.NbBridge;
+import org.netbeans.spi.wizard.DeferredWizardResult;
+import org.netbeans.spi.wizard.Summary;
 import org.netbeans.spi.wizard.Wizard;
 import org.netbeans.spi.wizard.WizardException;
 import org.netbeans.spi.wizard.WizardObserver;
@@ -245,11 +252,16 @@ class DefaultWizardDisplayer extends WizardDisplayer {
         finish.setEnabled ((fwdNavMode & Wizard.MODE_CAN_FINISH) != 0);
         
         final Object[] result = new Object[] { null };
+        final String[] failMessage = new String[] { null };
         
-        ActionListener buttonListener = new ActionListener() {
+        class ButtonListener implements ActionListener {
             private void navigateTo (String id) {
                 JComponent comp = wizard.navigatingTo (id, settings);
                 ttlLabel.setText(wizard.getStepDescription(id));
+                setInnerComponent (comp);
+            }
+            
+            private void setInnerComponent (JComponent comp) {
                 inner.add (comp, BorderLayout.CENTER);
                 inner.remove (centerPanel[0]);
                 centerPanel[0] = comp;
@@ -260,8 +272,170 @@ class DefaultWizardDisplayer extends WizardDisplayer {
                 update();
             }
             
+            private void handleSummary (Summary summary) {
+                JComponent summaryComp = (JComponent) summary.getSummaryComponent(); //XXX
+                if (summaryComp.getBorder() != null) {
+                    CompoundBorder b = new CompoundBorder (new EmptyBorder (
+                            5,5,5,5), summaryComp.getBorder());
+                    summaryComp.setBorder (b);
+                }
+                setInnerComponent ((JComponent) summaryComp); //XXX
+                next.setEnabled(false);
+                prev.setEnabled(false);
+                cancel.setEnabled(true);
+                finish.setEnabled(false);
+                ((JDialog) dlg).getRootPane().setDefaultButton(cancel);
+                instructions.setInSummaryPage(true);
+                cancel.setText(closeString); //NOI18N
+                ttlLabel.setText (NbBridge.getString("org/netbeans/api/wizard/Bundle",  //NOI18N
+                    DefaultWizardDisplayer.class, "Summary")); //NOI18N
+                summaryComp.requestFocus();
+            }
+            
+            class Progress extends DeferredWizardResult.ResultProgressHandle {
+                JProgressBar progressBar = new JProgressBar();
+                JLabel lbl = new JLabel();
+                
+                public void setProgress(final int currentStep, final int totalSteps) {
+                    Runnable r = new Runnable() {
+                        public void run() {
+                            if (currentStep > totalSteps || currentStep < 0) {
+                                if (currentStep == -1 && totalSteps == -1) {
+                                    return;
+                                }
+                                throw new IllegalArgumentException ("Bad step values: " //NOI18N
+                                        + currentStep + " out of " + totalSteps); //NOI18N
+                            }
+                            if (totalSteps == -1) {
+                                progressBar.setIndeterminate(true);
+                            } else {
+                                progressBar.setIndeterminate(false);
+                                progressBar.setMaximum(totalSteps);
+                                progressBar.setValue(currentStep);
+                            }
+                        }
+                    };
+                    invoke (r);
+                }
+                
+                private void invoke (Runnable r) {
+                    if (EventQueue.isDispatchThread()) {
+                        r.run();
+                    } else {
+                        try {
+                            EventQueue.invokeAndWait(r);
+                        } catch (InvocationTargetException ex) {
+                            ex.printStackTrace();
+                        } catch (InterruptedException ex) {
+                            ex.printStackTrace();
+                        }
+                    }
+                }
+
+                public void setProgress(final String description, final int currentStep, final int totalSteps) {
+                    Runnable r = new Runnable() {
+                       public void run() {
+                            lbl.setText(description == null ? " " : description); //NOI18N
+                            setProgress (currentStep, totalSteps);
+                       } 
+                    };
+                    invoke (r);
+                }
+
+                public void finished(final Object o) {
+                    Runnable r = new Runnable() {
+                        public void run() {
+                            if (o instanceof Summary) {
+                                Summary summary = (Summary) o;
+                                handleSummary (summary);
+                                result[0] = summary.getResult();
+                            } else if (deferredResult != null) {
+                                result[0] = o;
+                                dlg.setVisible(false);
+                                dlg.dispose();
+                            }
+                        }
+                    };
+                    invoke (r);
+                }
+
+                public void failed(final String message, final boolean canGoBack) {
+                    failMessage[0] = message;
+                    Runnable r = new Runnable() {
+                        public void run() {
+                            //cheap word wrap
+                            JLabel comp = new JLabel ("<html><body>" + message);
+                            comp.setBorder (new EmptyBorder (5,5,5,5));
+                            setInnerComponent (comp);
+                            prev.setEnabled (canGoBack);
+                            if (!canGoBack) {
+                                cancel.setText(closeString);
+                            }
+                            next.setEnabled(false);
+                            cancel.setEnabled(true);
+                            finish.setEnabled(false);
+                        }
+                    };
+                    invoke (r);
+                }
+            }
+
+            DeferredWizardResult deferredResult;
+            private void handleDeferredWizardResult (final DeferredWizardResult r) {
+                deferredResult = r;
+                centerPanel[0].setEnabled(false);
+                final Progress progress = new Progress();
+                instructions.add (progress.lbl);
+                instructions.add (progress.progressBar);
+                instructions.invalidate();
+                instructions.revalidate();
+                instructions.repaint();
+                Runnable run = new Runnable() {
+                    public void run() {
+                        if (!EventQueue.isDispatchThread()) {
+                            try {
+                                instructions.setInSummaryPage(true);
+                                dlg.setCursor (Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                                r.start(settings, progress);
+                            } finally {
+                                try {
+                                    EventQueue.invokeAndWait(this);
+                                } catch (InvocationTargetException ex) {
+                                    ex.printStackTrace();
+                                    return;
+                                } catch (InterruptedException ex) {
+                                    ex.printStackTrace();
+                                    return;
+                                } finally {
+                                    dlg.setCursor (Cursor.getDefaultCursor());
+                                }
+                            }
+                        } else {
+                            deferredResult = null;
+                            cancel.setEnabled(true);
+                            instructions.removeAll();
+                            instructions.invalidate();
+                            instructions.revalidate();
+                            instructions.repaint();
+                        }
+                    }
+                };
+                Thread runner = 
+                        new Thread(run, "Wizard Background Result Thread " + r); //NOI18N
+                finish.setEnabled(false);
+                cancel.setEnabled(r.canAbort());
+                prev.setEnabled(false);
+                next.setEnabled(false);
+                runner.start();
+            }
+            
+            final String closeString = NbBridge.getString("org/netbeans/api/wizard/Bundle",  //NOI18N
+                DefaultWizardDisplayer.class, "Close");             //NOI18N
             public void actionPerformed (ActionEvent ae) {
                 int action = buttonlist.indexOf (ae.getSource());
+                if (cancel.getText().equals(closeString)) {
+                    action = buttonlist.size();
+                }
                 switch (action) {
                     case 0 : //next
                         String nextId = wizard.getNextStep();
@@ -272,12 +446,23 @@ class DefaultWizardDisplayer extends WizardDisplayer {
                     case 1 : //prev
                         String prevId = wizard.getPreviousStep();
                         settings.popAndCalve();
+                        deferredResult = null;
                         navigateTo(prevId);
                         
                         break;
                     case 2 : //finish
                         try {
-                            result[0] = wizard.finish(settings);
+                            Object o = wizard.finish(settings);
+                            if (o instanceof DeferredWizardResult) {
+                                final DeferredWizardResult r = (DeferredWizardResult) o;
+                                handleDeferredWizardResult (r);
+                                break;
+                            } else if (o instanceof Summary) {
+                                handleSummary ((Summary) o);
+                                result[0] = ((Summary) o).getResult();
+                                break;
+                            }
+                            result[0] = o;
                         } catch (WizardException we) {
                             JOptionPane pane = new JOptionPane(we.getLocalizedMessage());
                             pane.setVisible(true);
@@ -291,25 +476,32 @@ class DefaultWizardDisplayer extends WizardDisplayer {
                                 navigateTo(id);
                                 return;
                             } catch (NoSuchElementException ex) {
-                                throw new IllegalStateException ("Exception " +
-                                    "said to return to " + id + " but no such " +
-                                    "step found");
+                                throw new IllegalStateException ("Exception " + //NOI18N
+                                    "said to return to " + id + " but no such " + //NOI18N
+                                    "step found"); //NOI18N
                             }
                         }
                         
                         //Note no break
                         
                     case 3 : //cancel
+                        if (action != 2 && deferredResult != null && deferredResult.canAbort()) {
+                            deferredResult.abort();
+                        }
                         if (wizard.cancel(settings)) {
                             Dialog dlg = (Dialog) 
                                 ((JComponent) ae.getSource()).getTopLevelAncestor();
                             dlg.setVisible(false);
                             dlg.dispose();
-                            break;
                         }
+                        break;
+                    case 4 : //finish button as Close button
+                        Dialog dlg = (Dialog) 
+                            ((JComponent) ae.getSource()).getTopLevelAncestor();
+                        dlg.setVisible(false);
+                        dlg.dispose();
+                        break;
                     default : assert false;
-                    
-                    
                 }
                 String prob = wizard.getProblem();
                 problem.setText (prob == null ? " " : prob); //NOI18N
@@ -332,7 +524,13 @@ class DefaultWizardDisplayer extends WizardDisplayer {
                     configureNavigationButtons(wizard, prev, next, finish);
                 }
             }
+            
+            private Dialog dlg;
+            void setDialog (Dialog dlg) {
+                this.dlg = dlg;
+            }
         };
+        final ButtonListener buttonListener = new ButtonListener();
         next.addActionListener(buttonListener);
         prev.addActionListener(buttonListener);
         finish.addActionListener(buttonListener);
@@ -383,10 +581,12 @@ class DefaultWizardDisplayer extends WizardDisplayer {
         if (o instanceof Frame) {
             dlg = new JDialog((Frame) o);
         } else if (o instanceof Dialog) {
-            dlg = new JDialog ((Dialog) o);
+            dlg = new JDialog((Dialog) o);
         } else {
             dlg = new JDialog();
         }
+        buttonListener.setDialog (dlg);
+        
         dlg.setTitle (wizard.getTitle());
         dlg.getContentPane().setLayout (new BorderLayout());
         dlg.getContentPane().add (panel, BorderLayout.CENTER);
@@ -399,10 +599,20 @@ class DefaultWizardDisplayer extends WizardDisplayer {
         dlg.addWindowListener (new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
                 JDialog dlg = (JDialog) e.getWindow();
+                boolean dontClose = false;
                 if (!wizard.isBusy()) {
-                    if (wizard.cancel(settings)) {
-                        dlg.setVisible (false);
-                        dlg.dispose();
+                    try {
+                        if (buttonListener.deferredResult != null && buttonListener.deferredResult.canAbort()) {
+                            buttonListener.deferredResult.abort();
+                        } else if (buttonListener.deferredResult != null && !buttonListener.deferredResult.canAbort()) {
+                            dontClose = true;
+                            return;
+                        }
+                    } finally {
+                        if (!dontClose && wizard.cancel(settings)) {
+                            dlg.setVisible (false);
+                            dlg.dispose();
+                        }
                     }
                 }
             }
@@ -436,6 +646,27 @@ class DefaultWizardDisplayer extends WizardDisplayer {
                         "navigation mode: " + i); //NOI18N
         }
     }
+    /*
+    private static final class LDlg extends JDialog {
+        public LDlg() {
+            
+        }
+        public LDlg (Frame frame) {
+            super (frame);
+        }
+        
+        public LDlg (Dialog dlg) {
+            super (dlg);
+        }
+        
+        public void setVisible (boolean val) {
+            if (!val) {
+                Thread.dumpStack();
+            }
+            super.setVisible (val);
+        }
+    }
+     */ 
     
     private static void configureNavigationButtons(final Wizard wizard, final JButton prev, final JButton next, final JButton finish) {
         final String nextStep = wizard.getNextStep();

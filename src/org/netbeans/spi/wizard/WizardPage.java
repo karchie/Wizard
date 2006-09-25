@@ -695,6 +695,10 @@ public class WizardPage extends JPanel {
         protected Object finish(Map settings) throws WizardException {
             return finish.finish(settings);
         }
+        
+        public boolean cancel(Map settings) {
+            return finish.cancel(settings);
+        }
     }
 
     /**
@@ -904,6 +908,22 @@ public class WizardPage extends JPanel {
         /**
          * Conclude a wizard, doing whatever the wizard does with the data
          * gathered into the map on the various panels.
+         * <p>
+         * If an instance of <code>Summary</code> is returned from this method, the
+         * UI shall display it on a final page and disable all navigation buttons
+         * except the Close/Cancel button.
+         * <p>
+         * If an instance of <code>DeferredWizardResult</code> is returned from this
+         * method, the UI shall display some sort of progress bar while the result 
+         * is computed in the background.  If that <code>DeferredWizardResult</code>
+         * produces a <code>Summary</code> object, that summary shall be displayed
+         * as described above.
+         * @param wizardData the map with key-value pairs which has been
+         *  populated by the UI as the user progressed through the wizard
+         * @return an object composed based on what the user entered in the wizard - 
+         *  somethingmeaningful to whatever code invoked the wizard, or null.  Note
+         *  special handling if an instance of <code>DeferredWizardResult</code>
+         *  or <code>Summary</code> is returned from this method.
          */
         Object finish(Map wizardData) throws WizardException;
 
