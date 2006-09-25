@@ -70,7 +70,7 @@ class MyResultProducer implements WizardResultProducer {
     }
 
     public boolean cancel(Map settings) {
-        boolean dialogShouldClose = JOptionPane.showMessageDialog (
+        boolean dialogShouldClose = JOptionPane.showConfirmDialog (null, 
             "Don't you want to create a thing?!!") == JOptionPane.OK_OPTION;
         return dialogShouldClose;
     }
