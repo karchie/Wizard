@@ -224,7 +224,7 @@ public class WizardPage extends JPanel {
      * unique subclass of WizardPage.
      */
     public static Wizard createWizard(String title, Class[] wizardPageClasses, WizardResultProducer finisher) {
-        return new CWPP(wizardPageClasses, finisher).createWizard();
+        return new CWPP(title, wizardPageClasses, finisher).createWizard();
     }
 
     /**
@@ -232,7 +232,7 @@ public class WizardPage extends JPanel {
      * unique subclass of WizardPage.
      */
     public static Wizard createWizard(String title, Class[] wizardPageClasses) {
-        return new CWPP(wizardPageClasses, 
+        return new CWPP(title, wizardPageClasses, 
                 WizardResultProducer.NO_OP).createWizard();
     }
     /**
