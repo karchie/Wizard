@@ -225,10 +225,18 @@ final class BranchingWizard implements WizardImplementation {
     }
 
     public final JComponent navigatingTo(String id, Map settings) {
+        if (id == null) {
+            throw new NullPointerException();
+        }
         currStep = id;
         wizardData = settings;
 
-        setCurrent(ownerOf(id));
+        WizardImplementation impl = ownerOf (id);
+        if (impl == null) {
+            throw new NullPointerException ("No owning WizardImplementation for" +
+                    " id " + id);
+        }
+        setCurrent(impl);
 
         return activeWizard.navigatingTo(id, settings);
     }
