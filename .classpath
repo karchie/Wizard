@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="DeferredResultDemo/src"/>
+	<classpathentry kind="src" path="loginWizardDemo/src"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="SummaryPageDemo/src"/>
+	<classpathentry kind="src" path="test"/>
+	<classpathentry kind="src" path="WizardDemo/src"/>
+	<classpathentry kind="src" path="wizardPageDemo/src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="/repo/junit/jars/junit-3.8.1.jar" sourcepath="/src/junit-3.8.1-src.jar"/>
+	<classpathentry kind="lib" path="/repo/ojdbc/jars/ojdbc14-10.2.0.1.0.jar"/>
+	<classpathentry kind="output" path="target/classes"/>
+</classpath>

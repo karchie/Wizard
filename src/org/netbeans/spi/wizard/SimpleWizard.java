@@ -95,7 +95,11 @@ final class SimpleWizard implements WizardImplementation {
     
     public JComponent navigatingTo(String id, Map settings) {
 //        assert SwingUtilities.isEventDispatchThread();
-        assert Arrays.asList (info.getSteps()).contains(id);
+        // assert Arrays.asList (info.getSteps()).contains(id);
+        if ( ! info.containsStep(id))
+        {
+            throw new RuntimeException ("There is no step " + id);
+        }
         JComponent result = (JComponent) ids2panels.get(id);
         currID = id;
         if (result == null) {

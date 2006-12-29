@@ -72,9 +72,14 @@ import javax.swing.tree.TreeSelectionModel;
  * that accepts user input and notify the panel that it needs to
  * validate its contents.
  *
+ * If you use subclasses of the swing components, you will also need to subclass
+ * this listener and override at least the methods isProbablyContainer, attachTo and detachFrom.
+ *
  * @author Tim Boudreau
  */
-final class GenericListener
+// SKNUTSON: was declared final and not public.  We need to subclass this
+// SKNUTSON: modify to eliminate assert so we can use the wizard library with JDK 1.4.2
+public class GenericListener
         implements ActionListener, PropertyChangeListener, ItemListener,
         ContainerListener, DocumentListener, ChangeListener,
         ListSelectionListener, TreeSelectionListener, TableModelListener {
@@ -92,16 +97,27 @@ final class GenericListener
      */
     private Set listenedTo = new HashSet();
 
-    GenericListener(WizardPage wizardPage) {
-        assert wizardPage != null : "WizardPage may not be null"; // NOI18N
-
+    public GenericListener(WizardPage wizardPage) {
+        // assert wizardPage != null : "WizardPage may not be null"; // NOI18N
+        if (wizardPage == null)
+        {
+            throw new IllegalArgumentException("WizardPage may not be null"); // NOI18N)
+        }
         this.wizardPage = wizardPage;
         wizardPage.addContainerListener(this);
     }
 
-    static boolean isProbablyAContainer (Component c) {
+    // PURISMA: was static
+    /**
+     * Return true if the given component is likely to be a container such the each
+     * component within the container should be be considered as a user input.
+     * 
+     * @param c
+     * @return true if the component children should have this listener added.
+     */
+    protected boolean isProbablyAContainer (Component c) {
         boolean result;
-        boolean isSwing = c.getClass().getPackage().getName().equals ("javax.swing"); //NOI18N
+        boolean isSwing = isSwingClass(c);
         if (isSwing) {
            result = c instanceof JPanel || c instanceof JSplitPane || c instanceof
                    JToolBar || c instanceof JViewport || c instanceof JScrollPane ||
@@ -114,8 +130,25 @@ final class GenericListener
         }
         return result;
     }
+    
+    /**
+     * Return true if the given component is likely to be a swing primitive or a subclass.
+     * The default implmentation here just checks for the package of the component to be "javax.swing" 
+     * If you use subclasses of swing components, you will need to override this method
+     * to get proper behavior.
+     *
+     * @param c
+     * @return true if the component should be examined more closely (see isProbablyAContainer)
+     */
+    protected boolean isSwingClass (Component c)
+    {
+        String packageName = c.getClass().getPackage().getName();
+        boolean swing = packageName.equals ("javax.swing"); //NOI18N
+        return swing;
+    }
 
-    void attachTo(Component jc) {
+    // PURISMA: was default (package private)
+    protected void attachTo(Component jc) {
         //XXX do mapping model -> component?
         if (isProbablyAContainer(jc)) {
             attachToHierarchyOf((Container) jc);
@@ -162,7 +195,8 @@ final class GenericListener
         }
     }
 
-    void detachFrom(Component jc) {
+    // PURISMA: was default (package private)
+    protected void detachFrom(Component jc) {
         listenedTo.remove(jc);
 
         if (jc instanceof JPanel || jc instanceof JScrollPane || jc instanceof JViewport) {
@@ -223,7 +257,8 @@ final class GenericListener
         }
     }
 
-    static boolean accept(Component jc) {
+    /** PURISMA: was static */
+    protected boolean accept(Component jc) {
         if (!(jc instanceof JComponent)) {
             return false;
         }

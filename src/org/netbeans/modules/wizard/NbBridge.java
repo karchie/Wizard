@@ -39,14 +39,16 @@ public final class NbBridge {
 
     private static Method lkpMethod;
     public static WizardDisplayer getFactoryViaLookup() {
+        
+        // Sknutson: make compatible with JDK 1.4.2
         if (inNetBeans()) {
             try {
                 if (lkpMethod == null) {
                     Class clazz = Class.forName("org.openide.util.Lookup"); //NOI18N
-                    lkpMethod = clazz.getMethod("lookup", Class.class); //NOI18N
+                    lkpMethod = clazz.getMethod("lookup", new Class[] { Class.class}); //NOI18N
                 }
                 return (WizardDisplayer)
-                        lkpMethod.invoke(null, WizardDisplayer.class);
+                        lkpMethod.invoke(null, new Class[] { WizardDisplayer.class});
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -56,11 +58,13 @@ public final class NbBridge {
 
     private static Method bundleMethod;
     private static String getStringViaNbBundle(Class clazz, String key) {
+        
+        // ensure jdk 1.4.2 compatible
         if (inNetBeans()) {
             try {
                 if (bundleMethod == null) {
                     Class c = Class.forName("org.openide.util.NbBundle"); //NOI18N
-                    bundleMethod = c.getMethod("getMessage", Class.class, String.class); //NOI18N
+                    bundleMethod = c.getMethod("getMessage", new Class[] {Class.class, String.class}); //NOI18N
                 }
                 return (String) bundleMethod.invoke (null, new Object[] {
                     clazz, key

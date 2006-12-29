@@ -17,6 +17,9 @@ enclosed by brackets [] replaced by your own identifying information:
 package deferredresultdemo;
 
 import java.awt.Component;
+
+import javax.swing.JCheckBox;
+
 import org.netbeans.spi.wizard.WizardPage;
 
 /**
@@ -117,6 +120,15 @@ public class SecondPage extends WizardPage {
         gridBagConstraints.insets = new java.awt.Insets(0, 17, 5, 5);
         add(jRadioButton4, gridBagConstraints);
 
+        jCheckBox5 = new JCheckBox ("Check this to have deferred result do nothing");
+        jCheckBox5.setName("do_nothing");
+        gridBagConstraints = new java.awt.GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 5;
+        gridBagConstraints.fill = java.awt.GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.insets = new java.awt.Insets(0, 17, 5, 5);
+        add(jCheckBox5, gridBagConstraints);
+        
     }// </editor-fold>//GEN-END:initComponents
     
     
@@ -127,6 +139,7 @@ public class SecondPage extends WizardPage {
     private javax.swing.JRadioButton jRadioButton2;
     private javax.swing.JRadioButton jRadioButton3;
     private javax.swing.JRadioButton jRadioButton4;
+    private javax.swing.JCheckBox jCheckBox5;
     // End of variables declaration//GEN-END:variables
     
 }

@@ -19,6 +19,8 @@ package org.netbeans.spi.wizard;
 import javax.swing.*;
 import javax.swing.text.JTextComponent;
 import javax.swing.tree.TreePath;
+
+import java.awt.Color;
 import java.awt.Component;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -26,6 +28,7 @@ import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -88,7 +91,8 @@ import java.util.logging.Logger;
  *
  * @author Tim Boudreau
  */
-public class WizardPage extends JPanel {
+public class WizardPage extends JPanel implements WizardPanel {
+
     private static final Logger logger =
             Logger.getLogger(WizardPage.class.getName());
 
@@ -175,6 +179,21 @@ public class WizardPage extends JPanel {
         }
     }
 
+    public WizardPanelNavResult allowBack(String stepName, Map settings, Wizard wizard)
+    {
+        return WizardPanelNavResult.PROCEED;
+    }
+
+    public WizardPanelNavResult allowFinish(String stepName, Map settings, Wizard wizard)
+    {
+        return WizardPanelNavResult.PROCEED;
+    }
+
+    public WizardPanelNavResult allowNext(String stepName, Map settings, Wizard wizard)
+    {
+        return WizardPanelNavResult.PROCEED;
+    }
+
     private boolean inValidateContents = false;
 
     /**
@@ -249,15 +268,28 @@ public class WizardPage extends JPanel {
      * current impl this is always the same Map, but that is not guaranteed.
      * If any content was added by calls to putWizardData() during the
      * constructor, etc., such data is copied to the settings map the first
-     * time this method is called
+     * time this method is called.
+     *
+     *  Subclasses do NOT need to override this method,
+     *  they can override renderPage which is always called AFTER the map has been made valid.
      */
     void setWizardDataMap(Map m) {
         if (m == null) {
             wizardData = new HashMap();
         } else {
             if (wizardData instanceof HashMap) {
-                //We're using our initial dummy map
-                m.putAll(wizardData);
+                // our initial map has keys for all of our components
+                // but with dummy empty values
+                // So make sure we don't override data that was put in as part of the initialProperties
+                for (Iterator iter = wizardData.entrySet().iterator(); iter.hasNext();)
+                {
+                    Map.Entry entry = (Map.Entry) iter.next();
+                    Object key = entry.getKey();
+                    if ( ! m.containsKey(key))
+                    {
+                        m.put(key, entry.getValue());
+                    }
+                }
             }
             wizardData = m;
         }
@@ -480,6 +512,46 @@ public class WizardPage extends JPanel {
     }
 
     /**
+     * Given an ad-hoc swing component, set the value as the property 
+     * from the settings.  The default implementation handles most common swing components.
+     * If you are using custom components and have assigned them names, override
+     * this method to handle getting an appropriate value out of your
+     * custom component and call super for the others.
+     */
+    protected void valueTo(Map settings, Component comp) {
+        String name = comp.getName();
+        Object value = settings.get(name);
+        if (comp instanceof JRadioButton || comp instanceof JCheckBox || comp instanceof JToggleButton) {
+            if (value instanceof Boolean)
+            {
+                ((AbstractButton) comp).getModel().setSelected(((Boolean) value).booleanValue());   
+            }
+// TOFIX: JTree
+//      }  else if (comp instanceof JTree) {
+//            TreePath path = ((JTree) comp).getSelectionPath();
+//            if (path != null) {
+//                return path.getLastPathComponent();
+//            }
+        } else if (comp instanceof JList) {
+            if (value instanceof Object[])
+            {
+                throw new IllegalArgumentException ("can't handle multi-select lists");
+            }
+            ((JList) comp).setSelectedValue(value, true);
+        } else if (comp instanceof JTextComponent) {
+            ((JTextComponent) comp).setText((String) value);
+        } else if (comp instanceof JComboBox) {
+            ((JComboBox) comp).setSelectedItem(value);
+        } else if (comp instanceof JColorChooser) {
+            ((JColorChooser) comp).getSelectionModel().setSelectedColor((Color)value);
+        } else if (comp instanceof JSpinner) {
+            ((JSpinner) comp).setValue(value);
+        } else if (comp instanceof JSlider) {
+            ((JSlider) comp).setValue(((Integer)value).intValue());
+        }
+    }
+
+    /**
      * Get the map key that should be used to automatically put the value
      * represented by this component into the wizard data map.
      * <p/>
@@ -555,7 +627,8 @@ public class WizardPage extends JPanel {
      * Get the settings map into which the wizard gathers settings.
      * Return value will never be null.
      */
-    final Map getWizardDataMap() {
+    // the map is empty during construction, then later set to the map from the containing WizardController
+    protected Map getWizardDataMap() {
         if (wizardData == null) {
             wizardData = new HashMap();
         }
@@ -583,9 +656,18 @@ public class WizardPage extends JPanel {
 
             //Fail-fast validation - don't wait until something goes wrong
             //if the data are bad
-            assert valid(pages) == null : valid(pages);
-            assert finish != null;
-
+            // assert valid(pages) == null : valid(pages);
+            // assert finish != null;
+            String v = valid(pages);
+            if (v != null)
+            {
+                throw new RuntimeException (v);
+            }
+            if (finish == null)
+            {
+                throw new RuntimeException ("finish must not be null");
+            }
+            
             this.pages = pages;
             this.finish = finish;
         }
@@ -595,8 +677,18 @@ public class WizardPage extends JPanel {
 
             //Fail-fast validation - don't wait until something goes wrong
             //if the data are bad
-            assert valid(pages) == null : valid(pages);
-            assert finish != null;
+            // assert valid(pages) == null : valid(pages);
+            // assert finish != null;
+            String v = valid(pages);
+            if (v != null)
+            {
+                throw new RuntimeException (v);
+            }
+            if (finish == null)
+            {
+                throw new RuntimeException ("finish must not be null");
+            }
+
 
             this.pages = pages;
             this.finish = finish;
@@ -606,8 +698,11 @@ public class WizardPage extends JPanel {
                                          Map wizardData) {
             int idx = indexOfStep(id);
 
-            assert idx != -1 : "Bad ID passed to createPanel: " + id; //NOI18N
-
+            // assert idx != -1 : "Bad ID passed to createPanel: " + id; //NOI18N
+            if (idx == -1)
+            {
+                throw new RuntimeException ("Bad ID passed to createPanel: " + id); //NOI18N
+            }
             pages[idx].setController(controller);
             pages[idx].setWizardDataMap(wizardData);
 
@@ -651,21 +746,46 @@ public class WizardPage extends JPanel {
 
         CWPP(String title, Class[] classes, WizardResultProducer finish) {
             super(title, getSteps(classes), getDescriptions(classes));
-            assert classes != null : "Class array may not be null";
-            assert new HashSet(Arrays.asList(classes)).size() == classes.length :
-                    "Duplicate entries in class array";
-            assert finish != null : "WizardResultProducer may not be null";
+//            assert classes != null : "Class array may not be null";
+//            assert new HashSet(Arrays.asList(classes)).size() == classes.length :
+//                    "Duplicate entries in class array";
+//            assert finish != null : "WizardResultProducer may not be null";
+            
+            _validateArgs (classes, finish);
             this.finish = finish;
             this.classes = classes;
+        }
+
+        private void _validateArgs (Class [] classes, WizardResultProducer finish)
+        {
+//            assert classes != null : "Class array may not be null";
+//            assert new HashSet(Arrays.asList(classes)).size() == classes.length :
+//                    "Duplicate entries in class array";
+//            assert finish != null : "WizardResultProducer may not be null";
+
+            if (classes == null)
+            {
+                throw new RuntimeException ("Class array may not be null");
+            }
+            if ( new HashSet(Arrays.asList(classes)).size() != classes.length)
+            {
+                throw new RuntimeException ("Duplicate entries in class array");
+            }
+            if (finish == null)
+            {
+                throw new RuntimeException ("WizardResultProducer may not be null");
+            }
         }
         
         CWPP(Class[] classes, WizardResultProducer finish) {
             super(getSteps(classes), getDescriptions(classes));
 
-            assert classes != null : "Class array may not be null";
-            assert new HashSet(Arrays.asList(classes)).size() == classes.length :
-                    "Duplicate entries in class array";
-            assert finish != null : "WizardResultProducer may not be null";
+//            assert classes != null : "Class array may not be null";
+//            assert new HashSet(Arrays.asList(classes)).size() == classes.length :
+//                    "Duplicate entries in class array";
+//            assert finish != null : "WizardResultProducer may not be null";
+
+            _validateArgs (classes, finish);
 
             this.classes = classes;
             this.finish = finish;
@@ -674,8 +794,11 @@ public class WizardPage extends JPanel {
         protected JComponent createPanel(WizardController controller, String id, Map wizardData) {
             int idx = indexOfStep(id);
 
-            assert idx != -1 : "Bad ID passed to createPanel: " + id; //NOI18N
-
+            // assert idx != -1 : "Bad ID passed to createPanel: " + id; //NOI18N
+            if (idx == -1)
+            {
+                throw new RuntimeException ( "Bad ID passed to createPanel: " + id); //NOI18N
+            }
             try {
                 WizardPage result = (WizardPage) classes[idx].newInstance();
 
@@ -685,8 +808,9 @@ public class WizardPage extends JPanel {
                 return result;
             } catch (Exception e) {
                 logger.log(Level.WARNING, "Could not instantiate " + classes[idx], e);
-                throw new IllegalArgumentException("Could not instantiate " + //NOI18N
-                        classes[idx]);
+                // really IllegalArgumentException, but we need to have the "cause" get shown in stack trace
+                throw new RuntimeException("Could not instantiate " + //NOI18N
+                        classes[idx], e);
             }
         }
 
@@ -786,26 +910,33 @@ public class WizardPage extends JPanel {
     }
 
     private static String getIDFromStaticMethod (Class clazz) {
-        System.err.println("GetID by method for " + clazz);
+        // System.err.println("GetID by method for " + clazz);
         String result = null;
         try {
-            Method m = clazz.getDeclaredMethod("getStep");
-            assert m.getReturnType() == String.class;
+            Method m = clazz.getDeclaredMethod("getStep", new Class[] {});
+            // assert m.getReturnType() == String.class;
             result = (String) m.invoke(clazz, (Object[]) null);
             if (result == null) {
                 throw new NullPointerException ("getStep may not return null");
             }
         } catch (IllegalArgumentException ex) {
-            throw new IllegalStateException (ex);
+            // throw new IllegalStateException (ex);
+            throw new RuntimeException ("error getting id for " + clazz, ex);
         } catch (IllegalAccessException ex) {
-            throw new IllegalStateException (ex);
+            throw new RuntimeException ("error getting id for " + clazz, ex);
+            // throw new IllegalStateException (ex);
         } catch (InvocationTargetException ex) {
-            throw new IllegalStateException (ex);
+            throw new RuntimeException ("error getting id for " + clazz, ex);
+            // throw new IllegalStateException (ex);
         } catch (SecurityException ex) {
-            throw new IllegalStateException (ex);
+            throw new RuntimeException ("error getting id for " + clazz, ex);
+//             throw new IllegalStateException (ex);
         } catch (NoSuchMethodException ex) {
-            System.err.println("METHOD NOT FOUND");
-            //do nothing
+            // we don't log the missing method, but it is really an error
+            // System.err.println("METHOD getStep NOT FOUND in class " + clazz.getName());
+            // really an error, but the 0.9 version allowed it
+            // want a non-null value, return something
+            result = clazz.getName();
         }
         return result;
     }
@@ -836,7 +967,7 @@ public class WizardPage extends JPanel {
                 result[i] = pages[i].getName();
             }
         }
-        System.err.println("Returning " + Arrays.asList(result));
+        // System.err.println("Returning " + Arrays.asList(result));
         return result;
     }
 

@@ -25,6 +25,8 @@ import org.netbeans.spi.wizard.WizardPage;
  */
 public class FirstPage extends WizardPage {
     
+    public static String USE_BUSY = "useBusy";
+    
     /** Creates new form FirstPage */
     public FirstPage() {
         super ("one", "First step");
@@ -52,8 +54,9 @@ public class FirstPage extends WizardPage {
     private void initComponents() {
         jCheckBox2 = new javax.swing.JCheckBox();
         jCheckBox1 = new javax.swing.JCheckBox();
+        jCheckBox3 = new javax.swing.JCheckBox();
 
-        setLayout(new java.awt.GridLayout(2, 0));
+        setLayout(new java.awt.GridLayout(3, 0));
 
         jCheckBox2.setText("If checked, computing the result will fail, showing an error message");
         jCheckBox2.setBorder(jCheckBox1.getBorder());
@@ -67,12 +70,19 @@ public class FirstPage extends WizardPage {
         jCheckBox1.setName("checkbox");
         add(jCheckBox1);
 
+        jCheckBox3.setText("Click to use 'busy' display");
+        jCheckBox3.setBorder(javax.swing.BorderFactory.createEmptyBorder(12, 12, 12, 12));
+        jCheckBox3.setMargin(new java.awt.Insets(0, 0, 0, 0));
+        jCheckBox3.setName(USE_BUSY);
+        add(jCheckBox3);
+
     }// </editor-fold>//GEN-END:initComponents
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JCheckBox jCheckBox1;
     private javax.swing.JCheckBox jCheckBox2;
+    private javax.swing.JCheckBox jCheckBox3;
     // End of variables declaration//GEN-END:variables
     
 }

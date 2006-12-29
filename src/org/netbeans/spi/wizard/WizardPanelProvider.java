@@ -122,7 +122,12 @@ public abstract class WizardPanelProvider {
             throw new IllegalArgumentException ("Length of steps and" +
                     " descriptions arrays do not match");
         }
-        assert validData (steps, descriptions) == null : validData (steps, descriptions);
+        // assert validData (steps, descriptions) == null : validData (steps, descriptions);
+        String v = validData (steps, descriptions);
+        if (v != null)
+        {
+            throw new RuntimeException (v);
+        }
     }
     
     

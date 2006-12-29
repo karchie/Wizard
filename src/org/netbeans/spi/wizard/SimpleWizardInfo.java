@@ -134,6 +134,14 @@ final class SimpleWizardInfo implements WizardControllerImplementation {
     protected Object finish (Map settings) throws WizardException {
         //XXX fixme
 //        assert canFinish();
+        
+        // SKNUTSON: the "canFinish" behavior is not working
+        // instead, panels must implement the WizardPanel interface
+        // and have allowFinish return false
+//        if ( ! canFinish())
+//        {
+//            throw new RuntimeException ("Can't finish right now");
+//        }
         return provider.finish (settings);
     }
 
@@ -269,6 +277,20 @@ final class SimpleWizardInfo implements WizardControllerImplementation {
     String[] getSteps() {
         return steps;
     }
+    
+    // lookup the step by name
+    boolean containsStep (String name)
+    {
+        for (int i = 0; i < steps.length; i++)
+        {
+            String step = steps[i];
+            if (name.equals(step))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 
     final String getProblem() {
         return problem;
@@ -282,8 +304,12 @@ final class SimpleWizardInfo implements WizardControllerImplementation {
         if (o != null && o.getClass() == getClass()) {
             SimpleWizardInfo info = (SimpleWizardInfo) o;
             
-            assert info.descriptions != null : "Info.descriptions == null";
-            assert info.steps != null : "Info.steps == null";
+            // assert info.descriptions != null : "Info.descriptions == null";
+            // assert info.steps != null : "Info.steps == null";
+            if (info.descriptions == null || info.steps == null)
+            {
+                throw new RuntimeException ("Invalid info object");
+            }
 
             return Arrays.equals(info.descriptions, descriptions) &&
                    Arrays.equals(info.steps, steps) &&

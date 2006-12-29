@@ -21,7 +21,7 @@ import org.netbeans.spi.wizard.WizardPage.WizardResultProducer;
  *
  * @author Tim Boudreau
  */
-public class Main {
+public class WizardPageDemoMain {
     public static void main(String[] ignored) {
         //All we do here is assemble the list of WizardPage subclasses we
         //want to show:

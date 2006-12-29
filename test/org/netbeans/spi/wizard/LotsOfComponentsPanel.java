@@ -156,8 +156,8 @@ public class LotsOfComponentsPanel extends WizardPage {
     }
     
     private void doTickle(Component c) {
-        assert c != null;
-        assert c.getName() != null;
+        // assert c != null;
+        // assert c.getName() != null;
 
         logger.info("NOW TICKLING " + c.getName());
 
@@ -447,6 +447,10 @@ public class LotsOfComponentsPanel extends WizardPage {
         add(jSlider1);
         jSlider1.setBounds(400, 360, 190, 29);
 
+        final Class[] types = new Class [] {
+            java.lang.String.class
+        };
+
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {"A"},
@@ -458,9 +462,6 @@ public class LotsOfComponentsPanel extends WizardPage {
                 "Title 1"
             }
         ) {
-            Class[] types = new Class [] {
-                java.lang.String.class
-            };
 
             public Class getColumnClass(int columnIndex) {
                 return types [columnIndex];

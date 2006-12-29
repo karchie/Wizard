@@ -29,16 +29,7 @@ public class NewPetWizard extends WizardBranchController {
     NewPetWizard(  ) {
         super( new InitialSteps(  ) );
     }
-    
-    public static void main (String[] ignored) throws Exception {
-        //Use native L&F
-        UIManager.setLookAndFeel (UIManager.getSystemLookAndFeelClassName());
-        
-        WizardDisplayer.showWizard (new NewPetWizard().createWizard(), 
-                new Rectangle (20, 20, 500, 400));
-        System.exit(0);
-    }
-
+   
     protected WizardPanelProvider getPanelProviderForStep(String step, Map collectedData) {
         //There's only one branch point, so we don't need to test the
         //value of step

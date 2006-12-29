@@ -7,7 +7,13 @@
 package backgroundprocessingdemo;
 
 import java.awt.Component;
+import java.util.Map;
+
+import javax.swing.JOptionPane;
+
+import org.netbeans.spi.wizard.Wizard;
 import org.netbeans.spi.wizard.WizardPage;
+import org.netbeans.spi.wizard.WizardPanelNavResult;
 
 /**
  *
@@ -29,7 +35,18 @@ public class FirstPage extends WizardPage {
         if (!jCheckBox1.isSelected()) {
             return "Checkbox must be checked";
         }
+        // checkbox2 is tested in the allowNext
         return null;
+    }
+    
+    public WizardPanelNavResult allowNext (String stepName, Map settings, Wizard wizard)
+    {
+        if (jCheckBox2.isSelected())
+        {
+            JOptionPane.showMessageDialog(this, "Checkbox2 was checked, so next is not allowed");
+            return WizardPanelNavResult.REMAIN_ON_PAGE;
+        }
+        return WizardPanelNavResult.PROCEED;
     }
     
     
@@ -41,20 +58,31 @@ public class FirstPage extends WizardPage {
     // <editor-fold defaultstate="collapsed" desc=" Generated Code ">//GEN-BEGIN:initComponents
     private void initComponents() {
         jCheckBox1 = new javax.swing.JCheckBox();
+        jCheckBox2 = new javax.swing.JCheckBox();
 
-        setLayout(new java.awt.GridLayout());
+        setLayout(new java.awt.GridLayout(2,1));
 
         jCheckBox1.setText("Click to enable the Next button");
         jCheckBox1.setBorder(javax.swing.BorderFactory.createEmptyBorder(12, 12, 12, 12));
         jCheckBox1.setMargin(new java.awt.Insets(0, 0, 0, 0));
         jCheckBox1.setName("checkbox");
         add(jCheckBox1);
+        
+    
+    	// CAUTION: this checkbox was added without editing the related form file
+    
+        jCheckBox2.setText("Check this to have Next button give error");
+        jCheckBox2.setBorder(javax.swing.BorderFactory.createEmptyBorder(12, 12, 12, 12));
+        jCheckBox2.setMargin(new java.awt.Insets(0, 0, 0, 0));
+        jCheckBox2.setName("checkbox2");
+        add(jCheckBox2);        
 
     }// </editor-fold>//GEN-END:initComponents
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JCheckBox jCheckBox1;
+    private javax.swing.JCheckBox jCheckBox2;
     // End of variables declaration//GEN-END:variables
     
 }

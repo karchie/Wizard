@@ -241,6 +241,6 @@ public final class Wizard {
     }
 
     public Object show (Wizard wizard, Rectangle r, Action help) {
-        return WizardDisplayer.showWizard (wizard, r, help);
+        return WizardDisplayer.showWizard (wizard, r, help, null);
     }
 }

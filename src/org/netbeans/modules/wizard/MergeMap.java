@@ -64,8 +64,11 @@ public class MergeMap implements Map {
      * calved off if necessary).
      */
     public Map push (String id) {
-        assert !order.contains(id) : id + " already present"; //NOI18N
-
+        // assert !order.contains(id) : id + " already present"; //NOI18N
+        if (order.contains(id) ) 
+        {
+            throw new RuntimeException (id + " already present"); //NOI18N
+        }
         Map result = (Map) id2map.get(id);
         if (result == null) {
             result = new HashMap();
