@@ -472,6 +472,7 @@ public class WizardDisplayerImplTest extends TestCase {
         wrp.assertCancelCalled();
         assertTrue (next.isDisplayable()); //still on screen, we should not
         //have hidden the dialog.
+        
         click (one.box);
         assertTrue (next.isEnabled());
         click (next);
@@ -488,14 +489,17 @@ public class WizardDisplayerImplTest extends TestCase {
         wrp.assertFinishNotCalled();
         wrp.d.assertNotStarted();
         wrp.d.assertNotAborted();
+        
         click (finish);
         wrp.assertFinishCalled();
         Thread.currentThread().sleep (1000);
+        
         wrp.d.assertStarted();
         assertFalse (cancel.isEnabled());
         synchronized (wrp.d) {
             wrp.d.notify();
         }
+        
         Thread.currentThread().sleep(200);
         //should be showing the summary page
         assertTrue (next.isDisplayable());
