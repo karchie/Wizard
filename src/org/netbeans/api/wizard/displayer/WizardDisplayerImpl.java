@@ -391,7 +391,9 @@ public class WizardDisplayerImpl extends WizardDisplayer
         instructions.setInSummaryPage(true);
         ttlLabel.setText(NbBridge.getString("org/netbeans/api/wizard/Bundle", // NOI18N
                                             WizardDisplayerImpl.class, "Summary")); // NOI18N
+        getButtonManager().setSummaryShowingMode();
         summaryComp.requestFocus();
+        
     }
 
     ResultProgressHandle createProgressDisplay (boolean isUseBusy)

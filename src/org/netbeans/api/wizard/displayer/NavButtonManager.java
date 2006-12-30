@@ -238,7 +238,7 @@ public class NavButtonManager implements ActionListener
         // probably an error status
         if (deferredStatus != null)
         {
-            deferredResultFinished(null);
+            deferredResultFinished(event);
             return;
         }
         
@@ -312,6 +312,10 @@ public class NavButtonManager implements ActionListener
         else if (NAME_PREV.equals(name))
         {
             processPrevProceed(o);
+        }
+        else if (NAME_CANCEL.equals(name))
+        {
+            processCancel((ActionEvent)o);
         }
         else if (NAME_FINISH.equals(name))
         {
@@ -459,25 +463,19 @@ public class NavButtonManager implements ActionListener
                 prev.setEnabled(false);
                 next.setEnabled(false);
 
-                deferredStatus = NAME_CLOSE;
+                // the button still says "cancel"
+                deferredStatus = NAME_CANCEL;
+                // deferredStatus = NAME_CLOSE;
                 parent.handleDeferredWizardResult(r);
 
                 closeWindow = false;
             }
             else if (o instanceof Summary)
             {
-                next.setEnabled(false);
-                prev.setEnabled(false);
-                cancel.setEnabled(true);
-                finish.setEnabled(false);
-                ((JDialog) window).getRootPane().setDefaultButton(cancel);
-
-                cancel.setText(closeString); // NOI18N
-                cancel.setName(NAME_CLOSE);
-
                 parent.handleSummary((Summary) o);
                 parent.setWizardResult(((Summary) o).getResult());
-
+                // setSummaryShowingMode will be called
+                // need to share code with NavProgress.finished code path
                 closeWindow = false;
             }
             else
@@ -552,6 +550,19 @@ public class NavButtonManager implements ActionListener
         }
     }
 
+    void setSummaryShowingMode ()
+    {
+        next.setEnabled(false);
+        prev.setEnabled(false);
+        cancel.setEnabled(true);
+        finish.setEnabled(false);
+        ((JDialog) window).getRootPane().setDefaultButton(cancel);
+
+        cancel.setText(closeString); // NOI18N
+        cancel.setName(NAME_CLOSE);
+
+    }
+    
     void setWindow(Window dlg)
     {
         this.window = dlg;
