@@ -1,12 +1,3 @@
-/*
- * FakeConnection.java       created on Dec 18, 2006
- * 
- * Copyright (c) 2003-2005 Purisma, Inc.  ALL RIGHTS RESERVED.
- * 
- * This file is a valuable trade secret (&quot;Confidential Information&quot;)
- * of Purisma, Inc.  Distribution and use of this file in source or
- * binary form is controlled by the applicable license agreements.
- */
  
 package loginWizardDemo;
 

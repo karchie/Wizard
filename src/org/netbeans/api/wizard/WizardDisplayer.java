@@ -111,7 +111,7 @@ public abstract class WizardDisplayer {
     private static boolean nonBuggyWizard (Wizard wizard) {
         String[] s = wizard.getAllSteps();
         // assert new HashSet(Arrays.asList(s)).size() == s.length;
-        // PURISMA:  replace assert with runtime exception
+        // for JDK 1.4.2: replace assert with runtime exception
         if (new HashSet(Arrays.asList(s)).size() != s.length)
         {
             throw new RuntimeException ("steps are duplicated");

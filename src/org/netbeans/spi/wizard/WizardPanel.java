@@ -1,13 +1,12 @@
-/*
- * WizardPanel.java       created on Oct 29, 2006
- * 
- * Copyright (c) 2003-2005 Purisma, Inc.  ALL RIGHTS RESERVED.
- * 
- * This file is a valuable trade secret (&quot;Confidential Information&quot;)
- * of Purisma, Inc.  Distribution and use of this file in source or
- * binary form is controlled by the applicable license agreements.
- */
- 
+/*  The contents of this file are subject to the terms of the Common Development
+and Distribution License (the License). You may not use this file except in
+compliance with the License.
+    You can obtain a copy of the License at http://www.netbeans.org/cddl.html
+or http://www.netbeans.org/cddl.txt.
+    When distributing Covered Code, include this CDDL Header Notice in each file
+and include the License file at http://www.netbeans.org/cddl.txt.
+*/
+
 package org.netbeans.spi.wizard;
 
 import java.util.Map;

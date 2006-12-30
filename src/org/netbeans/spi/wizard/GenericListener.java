@@ -107,7 +107,6 @@ public class GenericListener
         wizardPage.addContainerListener(this);
     }
 
-    // PURISMA: was static
     /**
      * Return true if the given component is likely to be a container such the each
      * component within the container should be be considered as a user input.
@@ -147,7 +146,6 @@ public class GenericListener
         return swing;
     }
 
-    // PURISMA: was default (package private)
     protected void attachTo(Component jc) {
         //XXX do mapping model -> component?
         if (isProbablyAContainer(jc)) {
@@ -195,7 +193,6 @@ public class GenericListener
         }
     }
 
-    // PURISMA: was default (package private)
     protected void detachFrom(Component jc) {
         listenedTo.remove(jc);
 
@@ -257,7 +254,6 @@ public class GenericListener
         }
     }
 
-    /** PURISMA: was static */
     protected boolean accept(Component jc) {
         if (!(jc instanceof JComponent)) {
             return false;
