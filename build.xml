@@ -50,6 +50,7 @@
               <include name="org/netbeans/api/**" />
               <include name="org/netbeans/spi/**" />
               <exclude name="org/netbeans/modules/**"/>
+              <exclude name="org/netbeans/api/wizard/displayer/**"/>
             </packageset>            
         </javadoc>
     </target>
