@@ -123,7 +123,7 @@ public class BranchingWizardTest extends TestCase {
         private Wizard wiz;
         public WL (Wizard wiz) {
             this.wiz = wiz;
-            wiz.addWizardListener (this);
+            wiz.addWizardObserver (this);
         }
         
         private boolean cpChanged = false;

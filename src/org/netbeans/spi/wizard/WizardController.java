@@ -33,15 +33,13 @@ public final class WizardController {
     /**
      * Constant that can be passed to <code>setForwardNavigationMode</code> to indicate
      * that the Next button can be enabled if the problem string is null.
-     * 
-     * @see Wizard.MODE_CAN_CONTINUE
+     * Value is identical to the similarly named constant on <code>Wizard</code>.
      */
     public static final int MODE_CAN_CONTINUE = 1;
     /**
      * Constant that can be passed to <code>setForwardNavigationMode</code> to indicate
      * that the Finish button can be enabled if the problem string is null.
-     * 
-     * @see Wizard.MODE_CAN_FINISH
+     * Value is identical to the similarly named constant on <code>Wizard</code>.
      */
     public static final int MODE_CAN_FINISH = 2;
     /**
@@ -49,9 +47,9 @@ public final class WizardController {
      * that both the Finish and Next buttons can be enabled if the problem 
      * string is null.  This value is a bitmask - i.e. 
      * <code>MODE_CAN_CONTINUE_OR_FINISH == MODE_CAN_CONTINUE | 
-     * MODE_CAN_FINISH</code>
-     * 
-     * @see Wizard.MODE_CAN_CONTINUE_OR_FINISH
+     * MODE_CAN_FINISH</code>.
+     * Value is identical to the similarly named constant on 
+     * <code>Wizard</code>.
      */
     public static final int MODE_CAN_CONTINUE_OR_FINISH = 
             MODE_CAN_CONTINUE | MODE_CAN_FINISH;

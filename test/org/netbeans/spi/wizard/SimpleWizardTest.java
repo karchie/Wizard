@@ -61,7 +61,7 @@ public class SimpleWizardTest extends TestCase {
         info.fire();
         wl.assertCanProceedChanged("Should have fired");
 
-        wiz.removeWizardListener(wl);
+        wiz.removeWizardObserver(wl);
 
         info.fire();
         wl.assertNoChange("Should no longer be listening, but got an event");
@@ -162,7 +162,7 @@ public class SimpleWizardTest extends TestCase {
 
         public WL(SimpleWizard wiz) {
             this.wiz = wiz;
-            wiz.addWizardListener(this);
+            wiz.addWizardObserver(this);
         }
 
         public void stepsChanged(Wizard wizard) {

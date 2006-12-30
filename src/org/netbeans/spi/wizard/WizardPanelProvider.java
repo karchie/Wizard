@@ -22,6 +22,11 @@ import java.util.Map;
 import javax.swing.JComponent;
 
 /**
+ * (Note:  <code>WizardPage</code> offers somewhat simpler functionality for
+ * creating a wizard than does WizardPanelProvider;  the only advantage of
+ * <code>WizardPanelProvider</code> is that it does not require one to
+ * subclass a panel component).
+ * <p>
  * A simple interface for providing a fixed set of panels for a wizard.
  * To use, simply implement <code>createPanel()</code> to create the 
  * appropriate UI component for a given step (a unique String ID - one of the ones passed 

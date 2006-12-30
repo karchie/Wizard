@@ -17,6 +17,7 @@ package org.netbeans.api.wizard.displayer;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.ComponentOrientation;
+import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Dialog;
 import java.awt.Dimension;
@@ -31,7 +32,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
-
 import javax.swing.Action;
 import javax.swing.BorderFactory;
 import javax.swing.JComponent;
@@ -43,8 +43,8 @@ import javax.swing.WindowConstants;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
-
 import org.netbeans.api.wizard.WizardDisplayer;
+import org.netbeans.api.wizard.WizardResultReceiver;
 import org.netbeans.modules.wizard.InstructionsPanel;
 import org.netbeans.modules.wizard.MergeMap;
 import org.netbeans.modules.wizard.NbBridge;
@@ -52,11 +52,18 @@ import org.netbeans.spi.wizard.DeferredWizardResult;
 import org.netbeans.spi.wizard.ResultProgressHandle;
 import org.netbeans.spi.wizard.Summary;
 import org.netbeans.spi.wizard.Wizard;
+import org.netbeans.spi.wizard.WizardException;
+import org.netbeans.spi.wizard.WizardPage.WizardResultProducer;
 import org.netbeans.spi.wizard.WizardPanel;
 
 /**
- * Default implementation of WizardFactory.
- * 
+ * Default implementation of WizardDisplayer.
+ * <b><i><font color="red">This class is NOT AN API CLASS.  There is no
+ * commitment that it will remain backward compatible or even exist in the
+ * future.  The API of this library is in the packages <code>org.netbeans.api.wizard</code>
+ * and <code>org.netbeans.spi.wizard</code></font></i></b>.  <p>Use 
+ * <code>WizardDisplayer.showWizard()</code> or its other static methods to
+ * display wizards in a way which will continue to work over time.
  * @author stanley@StanleyKnutson.com
  * @author Tim Boudreau
  */
@@ -85,6 +92,8 @@ public class WizardDisplayerImpl extends WizardDisplayer
     JLabel                    problem        = null;
 
     Object                    wizardResult   = null;
+    
+    WizardResultReceiver      receiver       = null;
 
     /**
      * WizardPanel is the panel returned as the panel to display. Often a
@@ -154,7 +163,7 @@ public class WizardDisplayerImpl extends WizardDisplayer
      * @return value of the 'finish' processing
      * @see org.netbeans.api.wizard.WizardDisplayer#show(org.netbeans.spi.wizard.Wizard, java.awt.Rectangle, javax.swing.Action, java.util.Map)
      */
-    public Object show(final Wizard awizard, Rectangle bounds, Action helpAction,
+    private JPanel createOuterPanel(final Wizard awizard, Rectangle bounds, Action helpAction,
                           Map initialProperties)
     {
 
@@ -217,7 +226,23 @@ public class WizardDisplayerImpl extends WizardDisplayer
         inner.add(wizardPanel, BorderLayout.CENTER);
 
         buttonManager.initializeNavigation();
-
+        return outerPanel;
+    }
+    
+    public void install (Container c, Object layoutConstraint, Wizard awizard,
+            Action helpAction, Map initialProperties, WizardResultReceiver receiver) {        
+        JPanel pnl = createOuterPanel (awizard, new Rectangle(), helpAction, initialProperties);
+        if (layoutConstraint != null) {
+            c.add (pnl, layoutConstraint);
+        } else {
+            c.add (pnl);
+        }
+        this.receiver = receiver;
+    }
+    
+    public Object show(final Wizard awizard, Rectangle bounds, Action helpAction,
+                          Map initialProperties) {
+        createOuterPanel (awizard, bounds, helpAction, initialProperties);
         Object result = showInDialog(bounds);
         return result;
     }
@@ -534,11 +559,27 @@ public class WizardDisplayerImpl extends WizardDisplayer
     public void setWizardResult(Object wizardResult)
     {
         this.wizardResult = wizardResult;
+        if (receiver != null) {
+            receiver.finished(wizardResult);
+        }
     }
 
     public void setDeferredResult(DeferredWizardResult deferredResult)
     {
         this.deferredResult = deferredResult;
+    }
+    
+    /**
+     * Will only be called if there is a WizardResultReceiver - i.e. if the
+     * wizard is being displayed in some kind of custom container.  Return
+     * true to indicate we should not try to close the parent window.
+     */ 
+    boolean cancel() {
+        boolean result = receiver != null;
+        if (result) {
+            receiver.cancelled(settings);
+        }
+        return result;
     }
 
     void updateProblem()

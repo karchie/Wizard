@@ -10,14 +10,12 @@ enclosed by brackets [] replaced by your own identifying information:
 "Portions Copyrighted [year] [name of copyright owner]" */
 package org.netbeans.spi.wizard;
 
-import java.util.EventListener;
-
-
 /**
- * Listener which can detect changes in the state of a wizard as the
- * user proceeds.
+ * Observer which can detect changes in the state of a wizard as the
+ * user proceeds.  Only likely to be used by implementations of
+ * <code>WizardDisplayer</code>.
  */
-public interface WizardObserver extends EventListener {
+public interface WizardObserver {
     /**
      * Called when the number or names of the steps of the
      * wizard changes (for example, the user made a choice in one pane which

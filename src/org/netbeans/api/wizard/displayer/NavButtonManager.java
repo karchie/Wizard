@@ -191,7 +191,7 @@ public class NavButtonManager implements ActionListener
         l.stepsChanged(wizard);
         l.navigabilityChanged(wizard);
         l.selectionChanged(wizard);
-        wizard.addWizardListener(l);
+        wizard.addWizardObserver(l);
     }
 
     private static void configureNavigationButtons(final Wizard wizard, final JButton prev,
@@ -259,7 +259,7 @@ public class NavButtonManager implements ActionListener
         }
         else if (NAME_CANCEL.equals(name))
         {
-            processCancel(event);
+            processCancel(event, true);
         }
         else if (NAME_CLOSE.equals(name))
         {
@@ -315,7 +315,7 @@ public class NavButtonManager implements ActionListener
         }
         else if (NAME_CANCEL.equals(name))
         {
-            processCancel((ActionEvent)o);
+            processCancel((ActionEvent)o, false);
         }
         else if (NAME_FINISH.equals(name))
         {
@@ -486,7 +486,7 @@ public class NavButtonManager implements ActionListener
             if (closeWindow)
             {
                 // do cancel processing as well
-                processCancel(null);
+                processCancel(null, false);
             }
         }
         catch (WizardException we)
@@ -514,7 +514,7 @@ public class NavButtonManager implements ActionListener
         }
     }
 
-    protected void processCancel(ActionEvent event)
+    protected void processCancel(ActionEvent event, boolean reallyCancel)
     {
         DeferredWizardResult deferredResult = parent.getDeferredResult();
         if (deferredResult != null && deferredResult.canAbort())
@@ -523,10 +523,21 @@ public class NavButtonManager implements ActionListener
         }
         Wizard wizard = parent.getWizard();
         MergeMap settings = parent.getSettings();
-
-        if (wizard.cancel(settings))
+        
+        System.err.println("ProcessCancel " + reallyCancel + " receiver " + parent.receiver);
+        boolean closeWindow = false;
+        
+        if (reallyCancel && parent.cancel()) 
         {
-            // if we have the event (allowFinish was not deferred) then be very sure to close the proper dialog
+            System.err.println("DO IT");
+            wizard.cancel (settings);
+            return;
+        }
+        
+        closeWindow = reallyCancel ? wizard.cancel(settings) : parent.receiver == null;
+
+        // if we have the event (allowFinish was not deferred) then be very sure to close the proper dialog
+        if (closeWindow) {
             Window win = event != null ? (Window) ((JComponent) event.getSource()).getTopLevelAncestor()
                 : getWindow();
             win.setVisible(false);

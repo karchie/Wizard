@@ -20,6 +20,9 @@ package org.netbeans.spi.wizard;
 import javax.swing.*;
 import javax.swing.event.EventListenerList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -36,7 +39,8 @@ import java.util.Map;
  * @author Tim Boudreau
  */
 final class BranchingWizard implements WizardImplementation {
-    private final EventListenerList listenerList = new EventListenerList();
+    private final List listenerList = Collections.synchronizedList (
+            new LinkedList());
 
     private final WizardBranchController brancher;
     final WizardImplementation initialSteps;
@@ -87,7 +91,7 @@ final class BranchingWizard implements WizardImplementation {
         }
 
         if ((activeWizard != null) && (wl != null)) {
-            activeWizard.removeWizardListener(wl);
+            activeWizard.removeWizardObserver(wl);
         }
 
         activeWizard = wizard;
@@ -96,7 +100,7 @@ final class BranchingWizard implements WizardImplementation {
             wl = new WL();
         }
 
-        activeWizard.addWizardListener(wl);
+        activeWizard.addWizardObserver(wl);
     }
 
     public final boolean isBusy() {
@@ -107,19 +111,19 @@ final class BranchingWizard implements WizardImplementation {
         WizardException exc = null;
         try {
             Object result = activeWizard.finish(settings);
-            initialSteps.removeWizardListener(wl);
+            initialSteps.removeWizardObserver(wl);
             //Can be null, we allow bail-out with finish mid-wizard now
             if (subsequentSteps != null) {
-                subsequentSteps.removeWizardListener(wl);
+                subsequentSteps.removeWizardObserver(wl);
             }
             return result;
         } catch (WizardException we) {
             exc = we;
             if (we.getStepToReturnTo() != null) {
-                initialSteps.addWizardListener(wl);
+                initialSteps.addWizardObserver(wl);
                 //Can be null, we allow bail-out with finish mid-wizard now
                 if (subsequentSteps != null) {
-                    subsequentSteps.addWizardListener(wl);
+                    subsequentSteps.addWizardObserver(wl);
                 }
             }
             throw we;
@@ -241,49 +245,43 @@ final class BranchingWizard implements WizardImplementation {
         return activeWizard.navigatingTo(id, settings);
     }
 
-    public final void removeWizardListener(WizardObserver listener) {
-        listenerList.remove(WizardObserver.class, listener);
+    public final void removeWizardObserver (WizardObserver observer) {
+        listenerList.remove(observer);
     }
 
-    public final void addWizardListener(WizardObserver listener) {
-        listenerList.add(WizardObserver.class, listener);
+    public final void addWizardObserver (WizardObserver observer) {
+        listenerList.add(observer);
     }
 
     private void fireStepsChanged() {
-        Object[] listeners = listenerList.getListenerList();
+        WizardObserver[] listeners = (WizardObserver[]) 
+                listenerList.toArray (new WizardObserver[0]);
 
-        for (int i = listeners.length - 2; i >= 0; i -= 2) {
-            if (listeners[i] == WizardObserver.class) {
-                WizardObserver l = (WizardObserver) listeners[i + 1];
-
-                l.stepsChanged(null);
-            }
+        for (int i = listeners.length - 1; i >= 0; i --) {
+            WizardObserver l = (WizardObserver) listeners[i];
+            l.stepsChanged(null);
         }
     }
 
     private void fireNavigabilityChanged() {
         checkForSecondary();
 
-        Object[] listeners = listenerList.getListenerList();
+        WizardObserver[] listeners = (WizardObserver[]) 
+                listenerList.toArray (new WizardObserver[0]);
 
-        for (int i = listeners.length - 2; i >= 0; i -= 2) {
-            if (listeners[i] == WizardObserver.class) {
-                WizardObserver l = (WizardObserver) listeners[i + 1];
-
-                l.navigabilityChanged(null);
-            }
+        for (int i = listeners.length - 1; i >= 0; i --) {
+            WizardObserver l = (WizardObserver) listeners[i];
+            l.navigabilityChanged(null);
         }
     }
 
     private void fireSelectionChanged() {
-        Object[] listeners = listenerList.getListenerList();
+        WizardObserver[] listeners = (WizardObserver[]) 
+                listenerList.toArray (new WizardObserver[0]);
 
-        for (int i = listeners.length - 2; i >= 0; i -= 2) {
-            if (listeners[i] == WizardObserver.class) {
-                WizardObserver l = (WizardObserver) listeners[i + 1];
-
-                l.selectionChanged(null);
-            }
+        for (int i = listeners.length - 1; i >= 0; i --) {
+            WizardObserver l = (WizardObserver) listeners[i];
+            l.selectionChanged(null);
         }
     }
 

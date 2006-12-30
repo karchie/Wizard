@@ -10,23 +10,77 @@ enclosed by brackets [] replaced by your own identifying information:
 "Portions Copyrighted [year] [name of copyright owner]" */
 package org.netbeans.api.wizard;
 
+import java.awt.Container;
 import java.awt.Rectangle;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
-
 import javax.swing.Action;
-
 import org.netbeans.api.wizard.displayer.WizardDisplayerImpl;
 import org.netbeans.modules.wizard.NbBridge;
 import org.netbeans.spi.wizard.Wizard;
 
 
 /**
- * API to show a Wizard in a dialog.
+ * <h2>Displaying Wizards</h2>
+ * Factory which can display a <code>Wizard</code> in a dialog onscreen or in an ad-hoc
+ * container.  Usage:
+ * <pre>
+ * Wizard wizard = WizardPage.createWizard (new Class[] {WizardPageSubclass1.class,
+ *     WizardPageSubclass2.class, WizardPageSubclass3.class}, 
+ *     new MyWizardResultProducer();
+ * WizardDisplayer.showWizard (wizard);
+ * </pre>
+ * Alternately you can implement <code>WizardPanelProvider</code> instead of
+ * <code>WizardPage</code> to provide the panels of the wizard.
+ * <p>
+ * To use a <code>Wizard</code> in a <code>JInternalFrame</code> or similar, use
+ * <code>WizardDisplayer.installInContainer()</code>.  You will need to implement
+ * <code>WizardResultReceiver</code> which will me notified when the wizard
+ * is finished or cancelled, to close the internal frame or whatever UI is
+ * showing the wizard.
+ * <p>
+ * <h2>Customizing the default implementation</h2>
+ * The image on the left panel of the default implementation can be customized
+ * in the following ways:
+ * <ul>
+ * <li>Put an instance of <code>java.awt.image.BufferedImage</code> into 
+ * UIManager with the key <code>wizard.sidebar.image</code>, i.e.
+ * <pre>
+ *    BufferedImage img = ImageIO.read (getClass().getResource ("MySideImage.png");
+ *    UIManager.put ("wizard.sidebar.image", img);
+ * </pre>
+ * </li>
+ * <li>Use the system property <code>wizard.sidebar.image</code> to set a path
+ *     within a JAR on the classpath to the image.  The image must be visible
+ *     to the classloader which loads <code>WizardDisplayer</code>, so this
+ *     may not work in environments which manage the classpath.  i.e.
+ * <pre>
+ *    System.setProperty ("wizard.sidebar.image", "com/foo/myapp/MySideImage.png");
+ * </pre>
+ * </li>
+ * </ul>
  * 
- * Alternative is to directly create a WizardDisplayerImpl and invoke its show method.
- *
+ * <h2>Providing a custom WizardDisplayer:</h2>
+ * The implementation of <code>WizardDisplayer</code> is pluggable.  While the
+ * default implementation should be adequate for most cases, it is possible
+ * that in some cases one might want to completely replace the UI, buttons,
+ * etc. with custom UI code.  To do that:
+ * <ul>
+ *     <li>If the NetBeans Lookup library (<code>org.openide.util.Lookup</code>
+ *     is on the classpath, the default implementation will be found in
+ *     the default lookup (i.e. META-INF/services, same as
+ *     JDK 6's ServiceLoader)</li>
+ *    <li>If Lookup is not available or not found, <code>WizardDisplayer</code>
+ *     will check the system
+ *     property <code>WizardDisplayer.default</code> for a fully qualified
+ *     class name of a subclass of <code>WizardDisplayer</code>.
+ *    </li>
+ *    <li>If no other implementation of <code>WizardDisplayer</code> is found
+ *     by the above methods, the default implementation contained in this
+ *     library will be used.</li>
+ * </ul>
+ * 
  * @author Tim Boudreau
  */
 public abstract class WizardDisplayer {
@@ -48,6 +102,12 @@ public abstract class WizardDisplayer {
         // validate it
         nonBuggyWizard (wizard);
 
+        WizardDisplayer defaultInstance = getDefault();
+        
+        return defaultInstance.show (wizard, rect, help, initialProperties);
+    }
+    
+    private static WizardDisplayer getDefault() {
         WizardDisplayer factory = NbBridge.getFactoryViaLookup();
         if (factory == null) {
             String wdProp = System.getProperty (SYSPROP_KEY);
@@ -67,8 +127,7 @@ public abstract class WizardDisplayer {
             factory = // new DefaultWizardDisplayer();
                 new WizardDisplayerImpl();
         }
-        
-        return factory.show (wizard, rect, help, initialProperties);
+        return factory;
     }
     
     /** Show a wizard with default window placement and no Help button */
@@ -107,6 +166,34 @@ public abstract class WizardDisplayer {
      */
     protected abstract Object show (Wizard wizard, Rectangle r, Action help, Map initialProperties);
     
+    /**
+     * Install a panel representing a Wizard in a user-supplied container
+     * with a user-supplied layout constraint.
+     * @param c The container the wizard panel should be added to.  May not
+     *   be null.
+     * @param layoutConstraint The argument to use when adding the wizard's
+     *   ui component to the container.  May be null.
+     * @param helpAction An action that should be invoked when the help button
+     *   is clicked (if null, no help button will be displayed)
+     * @param initialProperties A set of properties that should be pre-set upon
+     *   entering the wizard.  May be null.
+     * @param receiver An object which will be called when the Finish or 
+     *   Cancel buttons are pressed.  May not be null.
+     */ 
+    public static void installInContainer (Container c, Object layoutConstraint, 
+            Wizard awizard,
+            Action helpAction, Map initialProperties, 
+            WizardResultReceiver receiver) {
+        getDefault().install (c, layoutConstraint, awizard, helpAction, 
+                initialProperties, receiver);
+    }
+    
+    /**
+     * Instance implementation of installInContainer().
+     */ 
+    protected abstract void install (Container c, Object layoutConstraint,
+            Wizard awizard, Action helpAction, Map initialProperties,  
+            WizardResultReceiver receiver);
     
     private static boolean nonBuggyWizard (Wizard wizard) {
         String[] s = wizard.getAllSteps();

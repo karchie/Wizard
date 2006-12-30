@@ -227,6 +227,7 @@ public class WizardDisplayerImplTest extends TestCase {
         click(finish);
         assertFalse(impl.cb.isShowing());
         assertTrue(impl.finished);
+        impl.assertNotCancelled();
     }
 
 //    public void testManual() throws Exception {

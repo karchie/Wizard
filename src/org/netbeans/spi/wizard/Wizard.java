@@ -70,7 +70,7 @@ import org.netbeans.api.wizard.WizardDisplayer;
  * or the other of which will actually provide the steps/panels after the
  * decision point (the Wizards are created on demand, for efficiency, so if
  * the user never changes his or her mind at the decision point, only two
- * of the three Wizards is ever actually created).
+ * of the three Wizards are ever actually created).
  * </li></ul>
  *
  * @see org.netbeans.api.wizard.WizardDisplayer
@@ -81,6 +81,11 @@ import org.netbeans.api.wizard.WizardDisplayer;
  * @author Timothy Boudreau
  */
 public final class Wizard {
+    /**
+     * Constant that can be returned by <code>getForwardNavigationMode()</code>
+     * to indicate that the Next button can be enabled (or the Finish button
+     * if the current panel is the last one in the wizard).
+     */ 
     public static final int MODE_CAN_CONTINUE = 
             WizardController.MODE_CAN_CONTINUE;
 
@@ -117,50 +122,131 @@ public final class Wizard {
         }
     }
 
+    /**
+     * Notify the wizard that the user is navigating to a different panel,
+     * as identified by the passed <code>id</code>.
+     * @param id The id of the panel being navigated to
+     * @param wizardData The data gathered thus far as the user has progressed
+     *  through the wizard.  The contents of this map should not contain any
+     *  key/values that were assigned on future panels, if the user is 
+     *  navigating backward.
+     * @return The component that should be shown for step <code>id</code>
+     *  of the <code>Wizard</code>
+     */ 
     public JComponent navigatingTo(String id, Map wizardData) {
         return impl.navigatingTo(id, wizardData);
     }
 
+    /**
+     * Get the current step the wizard is on, as determined by the most recent
+     * call to <code>navigatingTo()</code>.
+     */ 
     public String getCurrentStep() {
         return impl.getCurrentStep();
     }
 
+    /**
+     * Get the id of the step that comes after current step returned by
+     * <code>getCurrentStep()</code>.
+     * @return Null if this is the last step of the wizard;  
+     * <code>UNDETERMINED_STEP</code> if this is a branch point and the
+     * user yet needs to do some interaction with the UI of the current
+     * panel to trigger computation of the id of the next step;  otherwise,
+     * the unique id of the next step.
+     */ 
     public String getNextStep() {
         return impl.getNextStep();
     }
 
+    /**
+     * Get the id of the preceding step to the current one as returned by
+     * <code>getCurrentStep()</code>, or null if the current step is the 
+     * first page of the wizard.
+     * @return the id of the previous step or null
+     */ 
     public String getPreviousStep() {
         return impl.getPreviousStep();
     }
 
+    /**
+     * Get the problem string that should be displayed to the user.
+     * @return A string describing what the user needs to do to enable
+     * the Next or Finish buttons, or null if the buttons may be enabled
+     */ 
     public String getProblem() {
         return impl.getProblem();
     }
 
+    /**
+     * Get the string IDs of all known steps in this wizard, terminating
+     * with <code>UNDETERMINED_STEP</code> if subsequent steps of the
+     * wizard depend on the user's interaction beyond that point.
+     * @return an array of strings which may individually be passed to
+     *   <code>navigatingTo</code> to change the current step of the wizard
+     */ 
     public String[] getAllSteps() {
         return impl.getAllSteps();
     }
 
+    /**
+     * Get a localized String description of the step for the passed id,
+     * which may be displayed in the UI of the wizard.
+     * @param id A step id among those returned by <code>getAllSteps()</code>
+     */ 
     public String getStepDescription(String id) {
         return impl.getStepDescription(id);
     }
 
+    /**
+     * Called when the user has clicked the finish button.  This method
+     * computes whatever the result of the wizard is.
+     * @param settings The complete set of key-value pairs gathered by the
+     *   various panels as the user proceeded through the wizard
+     * @return An implementation-dependent object that is the outcome of
+     *  the wizard.  May be null.  Special return values are instances of
+     *  DeferredWizardResult and Summary which will affect the behavior of
+     *  the UI.
+     */ 
     public Object finish(Map settings) throws WizardException {
         return impl.finish(settings);
     }
 
+    /**
+     * Called when the user has clicked the Cancel button in the wizard UI
+     * or otherwise closed the UI component without completing the wizard.
+     * @param settings The (possibly incomplete) set of key-value pairs gathered by the
+     *   various panels as the user proceeded through the wizard
+     * @return true if the UI may indeed be closed, false if closing should
+     *   not be permitted
+     */ 
     public boolean cancel (Map settings) {
         return impl.cancel(settings);
     }
 
+    /**
+     * Get the title of the Wizard that should be displayed in its dialog
+     * titlebar (if any).
+     * @return A localized string
+     */ 
     public String getTitle() {
         return impl.getTitle();
     }
 
+    /**
+     * Determine if the wizard is busy doing work in a background thread and
+     * all navigation controls should be disabled.
+     * @return whether or not the wizard is busy
+     */ 
     public boolean isBusy() {
         return impl.isBusy();
     }
 
+    /**
+     * Get the navigation mode, which determines the enablement state of
+     * the Next and Finish buttons.
+     * @return one of the constants <code>MODE_CAN_CONTINUE</code>,
+     * <code>MODE_CAN_FINISH</code>, or <code>MODE_CAN_CONTINUE_OR_FINISH</code>.
+     */ 
     public int getForwardNavigationMode() {
         return impl.getForwardNavigationMode();
     }
@@ -170,19 +256,28 @@ public final class Wizard {
             new LinkedList());
 
     private WizardObserver l = null;
-    public void addWizardListener(WizardObserver listener) {
-        listeners.add(listener);
+    /**
+     * Add a WizardObserver that will be notified of navigability and step
+     * changes.
+     * @param observer A WizardObserver
+     */ 
+    public void addWizardObserver(WizardObserver observer) {
+        listeners.add(observer);
         if (!listeningToImpl) {
             l = new ImplL();
-            impl.addWizardListener(l);
+            impl.addWizardObserver(l);
             listeningToImpl = true;
         }
     }
 
-    public void removeWizardListener(WizardObserver listener) {
-        listeners.remove(listener);
+    /**
+     * Remove a WizardObserver.
+     * @param observer A WizardObserver
+     */ 
+    public void removeWizardObserver(WizardObserver observer) {
+        listeners.remove(observer);
         if (listeningToImpl && listeners.size() == 0) {
-            impl.removeWizardListener(l);
+            impl.removeWizardObserver(l);
             l = null;
             listeningToImpl = false;
         }
@@ -228,18 +323,30 @@ public final class Wizard {
         }
     }
 
+    /**
+     * Delegates to WizardDisplayer.showWizard()
+     */ 
     public void show () {
         WizardDisplayer.showWizard(this);
     }
 
+    /**
+     * Delegates to WizardDisplayer.showWizard()
+     */ 
     public Object show (Wizard wizard, Action help) {
         return WizardDisplayer.showWizard (wizard, help);
     }
 
+    /**
+     * Delegates to WizardDisplayer.showWizard()
+     */ 
     public Object show (Wizard wizard, Rectangle r) {
         return WizardDisplayer.showWizard (wizard, r);
     }
 
+    /**
+     * Delegates to WizardDisplayer.showWizard()
+     */ 
     public Object show (Wizard wizard, Rectangle r, Action help) {
         return WizardDisplayer.showWizard (wizard, r, help, null);
     }

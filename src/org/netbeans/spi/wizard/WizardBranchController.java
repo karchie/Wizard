@@ -9,13 +9,12 @@ If applicable, add the following below the CDDL Header, with the fields
 enclosed by brackets [] replaced by your own identifying information:
 "Portions Copyrighted [year] [name of copyright owner]" */
 /*
- * BranchIterator.java
+ * WizardBranchController.java
  *
  * Created on March 5, 2005, 6:33 PM
  */
 
 package org.netbeans.spi.wizard;
-import java.util.IdentityHashMap;
 import java.util.Map;
 
 /**
@@ -63,15 +62,26 @@ public abstract class WizardBranchController {
         this (new SimpleWizardInfo (base));
     }
 
+    /**
+     * Create a new WizardBranchController using the passed WizardPage
+     * instances as the initial pages of the wizard.
+     * @param pages An array of WizardPage instances
+     */ 
     protected WizardBranchController (WizardPage[] pages) {
         this (WizardPage.createWizardPanelProvider(pages));
     }
 
+    /**
+     * Create a new WizardBranchController using the passed WizardPage
+     * as the initial page of the wizard.  The initial page should
+     * determine the subsequent steps of the wizard.
+     * @param onlyPage An instance of WizardPage
+     */ 
     protected WizardBranchController (WizardPage onlyPage) {
         this (WizardPage.createWizardPanelProvider(onlyPage));
-    }
+    }    
     /**
-     * Create a new BranchIterator, using the passed <code>SimpleWizardInfo</code>
+     * Create a new WizardBranchController, using the passed <code>SimpleWizardInfo</code>
      * for the initial panes of the wizard.
      */
     WizardBranchController (SimpleWizardInfo base) {
@@ -97,7 +107,10 @@ public abstract class WizardBranchController {
      * <p>
      * Note that the wizard for the subsequent steps will be instantiated
      * as soon as it is known what the user's choice is, so the list of 
-     * pending steps can be updated.
+     * pending steps can be updated (this does not mean that all subsequent
+     * panel UI components of the wizard will be instantiated, just the
+     * Wizard object itself, which will create panels on demand if they
+     * have not already been created).
      *
      * @param step The current step the user is on in the wizard
      * @param settings The settings map, which previous panes of the wizard

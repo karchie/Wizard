@@ -272,8 +272,9 @@ public class WizardPage extends JPanel implements WizardPanel {
         /**
          * Method which may be called when an event occurred on a custom component.
          * @param c the component
-         * @param key A key in the settings map
-         * @param value A value to be placed in the settings map mapped to the key
+         * @param eventObject the event object from the component, or null (with
+         *   the exception of <code>javax.swing.text.DocumentEvent</code>, it 
+         *   will likely be a subclass of <code>java.util.EventObject</code>).
          */ 
         public abstract void userInputReceived (Component c, Object eventObject);
     }

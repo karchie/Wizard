@@ -58,11 +58,11 @@ public class InstructionsPanel extends JComponent implements WizardObserver {
     
     public void addNotify() {
         super.addNotify();
-        wizard.addWizardListener (this);
+        wizard.addWizardObserver (this);
     }
     
     public void removeNotify() {
-        wizard.removeWizardListener (this);
+        wizard.removeWizardObserver (this);
         super.removeNotify();
     }
     

@@ -16,66 +16,16 @@ enclosed by brackets [] replaced by your own identifying information:
 
 package org.netbeans.spi.wizard;
 
-import java.util.EventListener;
 import java.util.Map;
 import javax.swing.JComponent;
 
 /**
- * <b>Note:</b>It is quite rare to need to directly implement this interface.
- * Typically you will deal with it if you are implementing a UI to <i>display</i>
- * wizards;  otherwise what you probably want to do is use one of the 
- * convenience classes that handles the navigation logic.
- * <p>
- * If you want to create a Wizard with a fixed set of steps, use
- * {@link org.netbeans.spi.wizard.WizardPage WizardPage} or 
- * implement
- * {@link org.netbeans.spi.wizard.WizardPanelProvider WizardPanelProvider}
- * and call {@link org.netbeans.spi.wizard.WizardPanelProvider#createWizard 
- * createWizard} on it.
- * <p>
- * If you have a wizard that has choice-points, where depending on what the
- * user chooses on one pane, the subsequent number or set of panes will change, implement
- * <code>{@link org.netbeans.spi.wizard.WizardBranchController WizardBranchController}</code> to supply different sub-wizards 
- * depending on the user's choices, and call {@link org.netbeans.spi.wizard.WizardBranchController#createWizard createWizard}
- * to get the result.  <code>{@link org.netbeans.spi.wizard.WizardBranchController WizardBranchController}</code>
- * will let you provide a choice of {@link org.netbeans.spi.wizard.WizardPanelProvider WizardPanelProvider}s
- * depending on what the user enters.  For most cases no more is needed.
- * <p>
- * To display any <code>Wizard</code> to the user, call 
- * {@link org.netbeans.api.wizard.WizardDisplayer#show WizardDisplayer.show 
- * (someWizard)}
- * <p>
- * The one case in which it may be necessary to implement this interface 
- * directly is if you have a Wizard that for some reason needs to disable
- * the <code>Prev</code> button (this is not a good idea from a usability
- * standpoint).  For all other cases, consider using one of <code>WizardPage</code>,
- * <code>WizardPanelProvider</code> and/or <code>WizardBranchController</code> - 
- * they are much simpler to work with.
- * <hr>
- * <p>
- * This class is the Wizard interface - a Wizard is a series of one or more steps represented
- * by panels in the user interface.  Each step is identified by a String ID.
- * For each ID, the <code>navigatedTo()</code> method supplies a component to
- * be displayed to the user.
- * <p>
- * Each panel may add wizardData to a Map, which is passed to <code>navigatedTo()</code>.
- * At the conclusion of a Wizard (if/when the user presses the <code>Finish</code>
- * button), the method <code>finish (Map wizardData)</code> is invoked, and the
- * Wizard may instantiate whatever it needs to and return that.  It is up to
- * the caller to do something with the return value.
- * <p>
- * Wizards should never make any changes to their environment except in the
- * <code>finish()</code> method - until that is called, they should simply
- * collect information.
- * <p>
- * The IDs of steps of the wizard should be returned by the method
- * <code>getAllIDs()</code>.  If a Wizard contains <i>branching</i>, such
- * that all of the steps cannot be determined, it should return an array
- * of Strings terminated with the special ID <code>UNDETERMINED_STEP</code>;
- * as the set of following steps becomes known, it should fire <code>
- * stepsChange()</code> to any registered WizardListeners.
+ * Non-public mirror interface to the final Wizard class.  A Wizard delegates to
+ * its WizardImplementation for all of its functions.  This interface is
+ * implemented by several internal classes.
  * 
  * @author Tim Boudreau
+ * @see Wizard
  * @see WizardPage
  * @see WizardPanelProvider
  * @see WizardBranchController
@@ -229,14 +179,14 @@ interface WizardImplementation {
      * wizard and for changes in Next/Previous/Finish button enablement.
      * @param listener A listener to add
      */
-    public void addWizardListener(WizardObserver listener);
+    public void addWizardObserver(WizardObserver listener);
     
     /**
      * Remove a listener for changes in the count or order of steps in this 
      * wizard and for changes in Next/Previous/Finish button enablement.
      * @param listener A listener to remove
      */
-    public void removeWizardListener(WizardObserver listener);
+    public void removeWizardObserver(WizardObserver listener);
     
     /**
      * Finish the wizard, (optionally) instantiating some Object and returning

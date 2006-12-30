@@ -168,7 +168,7 @@ public class InfoTest extends TestCase {
 
         public WL(SimpleWizard wiz) {
             this.wiz = wiz;
-            wiz.addWizardListener(this);
+            wiz.addWizardObserver(this);
         }
 
         public void stepsChanged(Wizard wizard) {

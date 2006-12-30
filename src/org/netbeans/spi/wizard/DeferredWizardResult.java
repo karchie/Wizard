@@ -31,6 +31,7 @@ import java.util.Map;
  * time consuming work needs to be performed to compute the result (such as
  * creating files on disk), and a progress bar should be shown until the work
  * is completed.
+ * @see org.netbeans.spi.wizard.ResultProgressHandle
  *
  * @author Tim Boudreau
  */
@@ -79,7 +80,9 @@ public abstract class DeferredWizardResult {
      * Abort computation of the result.  This method will usually be called on
      * the event thread, after <code>start()<code> has been called, and before
      * <code>finished()</code> has been called on the <code>ResultProgressHandler</code>
-     * that is passed to <code>start()</code>.
+     * that is passed to <code>start()</code>, for example, if the user clicks
+     * the close button on the dialog showing the wizard while the result is
+     * being computed.
      */ 
     public void abort() {
         //do nothing

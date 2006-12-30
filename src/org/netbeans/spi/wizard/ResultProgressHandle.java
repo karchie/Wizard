@@ -3,7 +3,11 @@ package org.netbeans.spi.wizard;
 import org.netbeans.modules.wizard.InstructionsPanel;
 
 /**
- * A controller for the progress bar shown in the user interface
+ * A controller for the progress bar shown in the user interface.  Used in
+ * conjunction with <code>DeferredWizardResult</code> for cases where at
+ * the conclusion of the wizard, the work to create the final wizard result
+ * will take a while and needs to happen on a background thread.
+ * @author Tim Boudreau
  */ 
 public interface ResultProgressHandle {
     
@@ -65,7 +69,7 @@ public interface ResultProgressHandle {
      * called).  If the <code>finished()</code> method is called after this
      * method has been called, a runtime exception may be thrown.
      * should exit immediately after calling this method.
-     * @param message A description of what went wrong, or null
+     * It is A description of what went wrong, or null.
      * @param canNavigateBack whether or not the Prev button should be 
      *  enabled.
      */ 
