@@ -148,7 +148,7 @@ public class WizardDisplayerImpl extends WizardDisplayer
      * Show a wizard
      * 
      * @param awizard is the wizard to be displayed
-     * @param bounds for display, may be null for default
+     * @param bounds for display, may be null for default of 0,0,400,600. 
      * @param helpAction
      * @param initialProperties - initial values for the map
      * @return value of the 'finish' processing
