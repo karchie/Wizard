@@ -560,7 +560,7 @@ public class NavButtonManager implements ActionListener
 
         cancel.setText(closeString); // NOI18N
         cancel.setName(NAME_CLOSE);
-
+        deferredStatus = null;  // ?? should summary be different
     }
     
     void setWindow(Window dlg)
