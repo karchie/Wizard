@@ -87,6 +87,13 @@ import java.util.logging.Logger;
  * Note that during development of a wizard, it is worthwhile to test/run with
  * assertions enabled, as there is quite a bit of validity checking via assertions
  * that can help find problems early.
+ * <h2>Using Custom Components</h2>
+ * If the <code>autoListen</code> constructor argument is true, a WizardPage
+ * will automatically listen to components which have a name, if they are
+ * standard Swing components it knows how to listen to.  If you are using
+ * custom components, implement WizardPage.CustomComponentListener and return
+ * it from <code>createCustomComponentListener()</code> to add supplementary
+ * listening code for custom components.
  *
  * @author Tim Boudreau
  */
@@ -171,6 +178,7 @@ public class WizardPage extends JPanel implements WizardPanel {
      * WizardPage will not know how to automatically listen to, you
      * may want to override this method, implement CustomComponentListener
      * and return an instance of it.  
+     * @return A CustomComponentListener implementation, or null (the default).
      */ 
     protected CustomComponentListener createCustomComponentListener() {
         return null;
@@ -190,6 +198,10 @@ public class WizardPage extends JPanel implements WizardPanel {
          * <p>
          * Note that this method may be called frequently and any test it
          * does should be fast.
+         * <p>
+         * <b>Important:</b> The return value from this method should always
+         * be the same for any given component, for the lifetime of the
+         * WizardPage.
          * 
          * @param c A component
          * @return Whether or not this CustomComponentListener will listen
@@ -222,7 +234,13 @@ public class WizardPage extends JPanel implements WizardPanel {
         }
         /**
          * Get the map key for this component's value.  By default, returns
-         * the component's name.
+         * the component's name.  Will only
+         * be passed components which the <code>accept()</code> method 
+         * returned true for.
+         * <p>
+         * <b>Important:</b> The return value from this method should always
+         * be the same for any given component, for the lifetime of the
+         * WizardPage.
          * @param c the component, which the accept method earlier returned
          *   true for
          * @return A string key that should be used in the Wizard's settings
@@ -233,7 +251,8 @@ public class WizardPage extends JPanel implements WizardPanel {
         }
         /**
          * Get the value currently set on the passed component.  Will only
-         * be passed component 
+         * be passed components which the <code>accept()</code> method 
+         * returned true for, and which <code>keyFor()</code> returned non-null.
          * @param c the component
          * @return An object representing the current value of this component.
          *   For example, if it were a <code>JTextComponent</code>, the value would likely
