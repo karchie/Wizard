@@ -59,15 +59,32 @@ public class MergeMap implements Map {
         push (currID);
     }
     
+    private static final String BASE = "__BASE"; //NOI18N
+    /**
+     * Creates a MergeMap with a set of key/value pairs that are
+     * always there (they came from a legacy wizard - used for bridging the
+     * old NetBeans wizards API and this one - some bridged wizards will
+     * have a first panel that gathered some settings using the old APIs
+     * framework, and we need to inject them here.
+     */
+    public MergeMap(String currId, Map everpresent) {
+        order.push(BASE);
+        id2map.put (BASE, everpresent);
+        push (currId);
+    }
+    
     /**
      * Move to a different ID (meaning add a new named map to proxy which can be
      * calved off if necessary).
      */
     public Map push (String id) {
         // assert !order.contains(id) : id + " already present"; //NOI18N
-        if (order.contains(id) ) 
-        {
+        if (order.contains(id)) {
             throw new RuntimeException (id + " already present"); //NOI18N
+        }
+//        assert !order.contains(id) : id + " already present"; //NOI18N
+        if (!order.isEmpty() && id.equals(order.peek())) {
+            return (Map) id2map.get(id);
         }
         Map result = (Map) id2map.get(id);
         if (result == null) {

@@ -19,7 +19,6 @@ package org.netbeans.spi.wizard;
 import javax.swing.*;
 import javax.swing.text.JTextComponent;
 import javax.swing.tree.TreePath;
-
 import java.awt.Color;
 import java.awt.Component;
 import java.lang.reflect.InvocationTargetException;
@@ -113,6 +112,7 @@ public class WizardPage extends JPanel implements WizardPanel {
     //implementation of validateContents changed a component's value, triggering
     //a new event on GenericListener
     private boolean inUiChanged = false;
+    private final CustomComponentListener ccl;
 
     /**
      * Construct a new WizardPage with the passed step id and description.
@@ -131,7 +131,14 @@ public class WizardPage extends JPanel implements WizardPanel {
 
         if (autoListen) {
             //It will attach itself
-            new GenericListener(this);
+            new GenericListener(this, ccl = createCustomComponentListener(),
+                    ccl == null ? null : new CustomComponentNotifierImpl(this));
+        } else {
+            if ((ccl = createCustomComponentListener()) != null) {
+                throw new IllegalStateException ("CustomComponentListener " +
+                        "will never be called if the autoListen parameter is " +
+                        "false");
+            }
         }
 //        if (getClass() == WizardPage.class && stepId == null ||
 //                description == null) {
@@ -158,6 +165,113 @@ public class WizardPage extends JPanel implements WizardPanel {
     protected WizardPage() {
         this(true);
     }
+    
+    /**
+     * If you are using custom Swing or AWT components which the 
+     * WizardPage will not know how to automatically listen to, you
+     * may want to override this method, implement CustomComponentListener
+     * and return an instance of it.  
+     */ 
+    protected CustomComponentListener createCustomComponentListener() {
+        return null;
+    }
+    
+    /**
+     * Implement this class if you are using custom Swing or AWT components,
+     * and return an instance of it from 
+     * <code>WizardPage.createCustomComponentListener()</code>.
+     */ 
+    public static abstract class CustomComponentListener {
+        /**
+         * Indicates that this CustomComponentListener will take responsibility
+         * for noticing events from the passed component, and that the 
+         * WizardPage should not try to automatically listen on it (which it
+         * can only do for standard Swing components and their children).
+         * <p>
+         * Note that this method may be called frequently and any test it
+         * does should be fast.
+         * 
+         * @param c A component
+         * @return Whether or not this CustomComponentListener will listen
+         *   on the passed component.  If true, the component will later be
+         *   passed to <code>startListeningTo()</code>
+         */ 
+        public abstract boolean accept (Component c);
+        /**
+         * Begin listening for events on the component.  When an event occurs,
+         * call the <code>eventOccurred()</code> method on the passed
+         * <code>CustomComponentNotifier</code>.
+         * @param c The component to start listening to
+         * @param n An object that can be called to update the settings map
+         *        when an interesting event occurs on the component
+         */ 
+        public abstract void startListeningTo (Component c, CustomComponentNotifier n);
+        /**
+         * Stop listening for events on a component.
+         * @param c The component to stop listening to
+         */ 
+        public abstract void stopListeningTo (Component c);
+        /**
+         * Determine if the passed component is a container whose children
+         * may need to be listened on.  Returns false by default.
+         * 
+         * @param c A component which might be a container
+         */ 
+        public boolean isContainer(Component c) {
+            return false;
+        }
+        /**
+         * Get the map key for this component's value.  By default, returns
+         * the component's name.
+         * @param c the component, which the accept method earlier returned
+         *   true for
+         * @return A string key that should be used in the Wizard's settings
+         *   map for the name of this component's value
+         */ 
+        public String keyFor (Component c) {
+            return c.getName();
+        }
+        /**
+         * Get the value currently set on the passed component.  Will only
+         * be passed component 
+         * @param c the component
+         * @return An object representing the current value of this component.
+         *   For example, if it were a <code>JTextComponent</code>, the value would likely
+         *   be the return value of <code>JTextComponent.getText()</code>
+         */ 
+        public abstract Object valueFor (Component c);
+    }
+    
+    /**
+     * Object which is passed to <code>CustomComponentListener.startListeningTo()</code>,
+     * which can be called when an event has occurred on a custom component the
+     * <code>CustomComponentListener</code> has claimed (by returning <code>true</code>
+     * from its <code>accept()</code> method).
+     */ 
+    public static abstract class CustomComponentNotifier {
+        private CustomComponentNotifier() {}
+        /**
+         * Method which may be called when an event occurred on a custom component.
+         * @param c the component
+         * @param key A key in the settings map
+         * @param value A value to be placed in the settings map mapped to the key
+         */ 
+        public abstract void userInputReceived (Component c, Object eventObject);
+    }
+    
+    private static final class CustomComponentNotifierImpl extends CustomComponentNotifier {
+        private final WizardPage page;
+        private CustomComponentNotifierImpl (WizardPage page) {
+            this.page = page; //Slightly smaller footprint a nested, not inner class
+        }
+        
+        public void userInputReceived(Component c, Object event) {
+            if (!page.ccl.accept(c)) {
+                return;
+            }
+            page.userInputReceived (c, event);
+        }
+    }
 
     private String getID() {
         return id;
@@ -179,18 +293,15 @@ public class WizardPage extends JPanel implements WizardPanel {
         }
     }
 
-    public WizardPanelNavResult allowBack(String stepName, Map settings, Wizard wizard)
-    {
+    public WizardPanelNavResult allowBack(String stepName, Map settings, Wizard wizard) {
         return WizardPanelNavResult.PROCEED;
     }
 
-    public WizardPanelNavResult allowFinish(String stepName, Map settings, Wizard wizard)
-    {
+    public WizardPanelNavResult allowFinish(String stepName, Map settings, Wizard wizard) {
         return WizardPanelNavResult.PROCEED;
     }
 
-    public WizardPanelNavResult allowNext(String stepName, Map settings, Wizard wizard)
-    {
+    public WizardPanelNavResult allowNext(String stepName, Map settings, Wizard wizard) {
         return WizardPanelNavResult.PROCEED;
     }
 
@@ -451,9 +562,8 @@ public class WizardPage extends JPanel implements WizardPanel {
         }
 
         Object mapKey = getMapKeyFor(comp);
-
+        System.err.println("MaybeUpdateMap " + mapKey + " from " + comp);
         if (mapKey != null) {
-            //XXX do it even if null?
             Object value = valueFrom(comp);
             if (logger.isLoggable(Level.FINE)) {
                 logger.fine("maybeUpdateMap putting " + mapKey + "," + value +
@@ -480,6 +590,9 @@ public class WizardPage extends JPanel implements WizardPanel {
      * custom component and call super for the others.
      */
     protected Object valueFrom(Component comp) {
+        if (ccl != null && ccl.accept(comp)) {
+            return ccl.valueFor(comp);
+        }
         if (comp instanceof JRadioButton || comp instanceof JCheckBox || comp instanceof JToggleButton) {
             return ((AbstractButton) comp).getModel().isSelected() ? Boolean.TRUE : Boolean.FALSE;
         } else if (comp instanceof JTree) {
@@ -565,7 +678,11 @@ public class WizardPage extends JPanel implements WizardPanel {
      *         component's name.
      */
     protected Object getMapKeyFor(Component c) {
-        return c.getName();
+        if (ccl != null && ccl.accept(c)) {
+            return ccl.keyFor(c);
+        } else {
+            return c.getName();
+        }
     }
 
     /**

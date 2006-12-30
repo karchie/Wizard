@@ -77,9 +77,7 @@ import javax.swing.tree.TreeSelectionModel;
  *
  * @author Tim Boudreau
  */
-// SKNUTSON: was declared final and not public.  We need to subclass this
-// SKNUTSON: modify to eliminate assert so we can use the wizard library with JDK 1.4.2
-public class GenericListener
+final class GenericListener
         implements ActionListener, PropertyChangeListener, ItemListener,
         ContainerListener, DocumentListener, ChangeListener,
         ListSelectionListener, TreeSelectionListener, TableModelListener {
@@ -97,14 +95,25 @@ public class GenericListener
      */
     private Set listenedTo = new HashSet();
 
-    public GenericListener(WizardPage wizardPage) {
+    private final WizardPage.CustomComponentListener extListener;
+    private final WizardPage.CustomComponentNotifier extNotifier;
+    public GenericListener(WizardPage wizardPage, WizardPage.CustomComponentListener l,
+            WizardPage.CustomComponentNotifier n) {
+        this.extListener = l;
+        this.extNotifier = n;
+        if ((extListener == null) != (extNotifier == null)) {
+            throw new RuntimeException();
+        }
         // assert wizardPage != null : "WizardPage may not be null"; // NOI18N
-        if (wizardPage == null)
-        {
+        if (wizardPage == null) {
             throw new IllegalArgumentException("WizardPage may not be null"); // NOI18N)
         }
         this.wizardPage = wizardPage;
         wizardPage.addContainerListener(this);
+    }
+    
+    public GenericListener (WizardPage page) {
+        this (page, null, null);
     }
 
     /**
@@ -115,17 +124,19 @@ public class GenericListener
      * @return true if the component children should have this listener added.
      */
     protected boolean isProbablyAContainer (Component c) {
-        boolean result;
-        boolean isSwing = isSwingClass(c);
-        if (isSwing) {
-           result = c instanceof JPanel || c instanceof JSplitPane || c instanceof
-                   JToolBar || c instanceof JViewport || c instanceof JScrollPane ||
-                   c instanceof JFrame || c instanceof JRootPane || c instanceof
-                   Window || c instanceof Frame || c instanceof Dialog ||
-                   c instanceof JTabbedPane || c instanceof JInternalFrame ||
-                   c instanceof JDesktopPane || c instanceof JLayeredPane;
-        } else {
-            result = c instanceof Container;
+        boolean result = extListener != null ? extListener.isContainer(c) : false;
+        if (!result) {
+            boolean isSwing = isSwingClass(c);
+            if (isSwing) {
+               result = c instanceof JPanel || c instanceof JSplitPane || c instanceof
+                       JToolBar || c instanceof JViewport || c instanceof JScrollPane ||
+                       c instanceof JFrame || c instanceof JRootPane || c instanceof
+                       Window || c instanceof Frame || c instanceof Dialog ||
+                       c instanceof JTabbedPane || c instanceof JInternalFrame ||
+                       c instanceof JDesktopPane || c instanceof JLayeredPane;
+            } else {
+                result = c instanceof Container;
+            }
         }
         return result;
     }
@@ -147,6 +158,14 @@ public class GenericListener
     }
 
     protected void attachTo(Component jc) {
+        if (extListener != null && extListener.accept (jc)) {
+            extListener.startListeningTo(jc, extNotifier);
+            listenedTo.add (jc);
+            if (wizardPage.getMapKeyFor(jc) != null) {
+                wizardPage.maybeUpdateMap(jc);
+            }
+            return;
+        }
         //XXX do mapping model -> component?
         if (isProbablyAContainer(jc)) {
             attachToHierarchyOf((Container) jc);
@@ -195,8 +214,10 @@ public class GenericListener
 
     protected void detachFrom(Component jc) {
         listenedTo.remove(jc);
-
-        if (jc instanceof JPanel || jc instanceof JScrollPane || jc instanceof JViewport) {
+        if (extListener != null && extListener.accept (jc)) {
+            extListener.stopListeningTo(jc);
+        }
+        if (isProbablyAContainer(jc)) {
             detachFromHierarchyOf((Container) jc);
         } else if (jc instanceof JList) {
             ((JList) jc).removeListSelectionListener(this);
@@ -255,6 +276,9 @@ public class GenericListener
     }
 
     protected boolean accept(Component jc) {
+        if (extListener != null && extListener.accept(jc)) {
+            return true;
+        }
         if (!(jc instanceof JComponent)) {
             return false;
         }
@@ -368,13 +392,20 @@ public class GenericListener
     }
 
     public void componentAdded(ContainerEvent e) {
-        if (accept(e.getChild())) {
+//        if (extListener != null && extListener.accept(e.getChild())) {
+//            extListener.startListeningTo(e.getChild(), extNotifier);
+//            listenedTo.add (e.getChild());
+//        } else if (accept(e.getChild())) {
+        if (accept (e.getChild())) {
             attachTo(e.getChild());
         }
     }
 
     public void componentRemoved(ContainerEvent e) {
-        if (accept(e.getChild())) {
+        if (extListener != null && extListener.accept (e.getChild())) {
+            extListener.stopListeningTo (e.getChild());
+            listenedTo.remove (e.getChild());
+        } else if (accept(e.getChild())) {
             detachFrom(e.getChild());
         }
     }

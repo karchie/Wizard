@@ -48,7 +48,8 @@ public final class NbBridge {
                     lkpMethod = clazz.getMethod("lookup", new Class[] { Class.class}); //NOI18N
                 }
                 return (WizardDisplayer)
-                        lkpMethod.invoke(null, new Class[] { WizardDisplayer.class});
+                        lkpMethod.invoke(null, (Object[]) 
+                            new Class[] { WizardDisplayer.class});
             } catch (Exception e) {
                 e.printStackTrace();
             }
