@@ -577,6 +577,29 @@ public class WizardDisplayerImplTest extends TestCase {
                 wizardResult);
     }
     
+    public void testLongDescriptionIsUsedIfPresent() {
+        System.out.println("testLongDescriptionIsUsedIfPresent");
+        PageOne one = new PageOne ();
+        PageTwo two = new PageTwo ();
+        WRP wrp = new WRP(true);
+        Wizard w = WizardPage.createWizard(new WizardPage[] {one, two}, 
+                wrp);
+        show (w);
+        wrp.assertCancelNotCalled();
+        
+        NavButtonManager mgr = displayer.getButtonManager();
+        JButton next = mgr.getNext();
+        JButton prev = mgr.getPrev();
+        JButton finish = mgr.getFinish();
+        JButton cancel = mgr.getCancel();
+        String txt = displayer.getTtlLabel().getText();
+        assertEquals (one.getLongDescription(), txt);
+        click (one.box);
+        click (next);
+        txt = displayer.getTtlLabel().getText();
+        assertEquals (two.getLongDescription(), txt);
+    }
+    
 
     private static String[] getKnownProblems(WizardPanelProvider prov) throws Exception {
         Field f = WizardPanelProvider.class.getDeclaredField("knownProblems");
@@ -638,6 +661,7 @@ public class WizardDisplayerImplTest extends TestCase {
                 "check me sweet, never let me go");
         PageOne() {
             this ("box");
+            setLongDescription ("long description");
         }
         
         PageOne(String boxName) {
@@ -650,6 +674,25 @@ public class WizardDisplayerImplTest extends TestCase {
             return box.isSelected() ? null : "No.";
         }
     }
+    
+    private static class PageTwo extends WizardPage {
+        final JCheckBox box = new JCheckBox ("Check me, please!");
+        PageTwo () {
+            this ("box2");
+            setLongDescription ("second long description");
+        }
+        
+        PageTwo (String boxName) {
+            super (boxName,"First step");
+            box.setName (boxName);
+            add (box);
+        }
+        
+        public String validateContents (Component c, Object event) {
+            return box.isSelected() ? null : "No.";
+        }
+    }
+    
     
     private class WRP implements WizardResultProducer {
         boolean finishCalled;
