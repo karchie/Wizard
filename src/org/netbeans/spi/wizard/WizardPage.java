@@ -16,6 +16,7 @@ enclosed by brackets [] replaced by your own identifying information:
 
 package org.netbeans.spi.wizard;
 
+import java.beans.Beans;
 import javax.swing.*;
 import javax.swing.text.JTextComponent;
 import javax.swing.tree.TreePath;
@@ -771,6 +772,31 @@ public class WizardPage extends JPanel implements WizardPanel {
         }
         return wizardData;
     }
+    
+    private String longDescription;
+    /**
+     * Set the long description of this page.  This method may be called
+     * only once and should be called from within the constructor.
+     * @param desc The long description for this step
+     */ 
+    protected void setLongDescription(String desc) {
+        if (!Beans.isDesignTime() && this.longDescription != null) {
+            throw new IllegalStateException ("Long description already set to" +
+                    " " + desc);
+        }
+        this.longDescription = desc;
+    }
+    
+    /**
+     * Get the long description of this page, which should be used in the title
+     * area of the wizard's UI if non-null.  To use, call setLongDescription()
+     * in your WizardPage's constructor.  It may be set only once.
+     * 
+     * @return the description
+     */ 
+    public final String getLongDescription() {
+        return longDescription;
+    }
 
     static WizardPanelProvider createWizardPanelProvider (WizardPage page) {
         return new WPP (new WizardPage[] { page }, WizardResultProducer.NO_OP);
@@ -871,6 +897,16 @@ public class WizardPage extends JPanel implements WizardPanel {
         public boolean cancel(Map settings) {
             return finish.cancel (settings);
         }
+    
+        public String getLongDescription(String stepId) {
+            for (int i = 0; i < pages.length; i++) {
+                WizardPage wizardPage = pages[i];
+                if (stepId.equals(wizardPage.getID())) {
+                    return wizardPage.getLongDescription();
+                }
+            }
+            return null;
+        }
     }
 
     /**
@@ -880,6 +916,7 @@ public class WizardPage extends JPanel implements WizardPanel {
     private static final class CWPP extends WizardPanelProvider {
         private final Class[] classes;
         private final WizardResultProducer finish;
+        private final String[] longDescriptions;
 
         CWPP(String title, Class[] classes, WizardResultProducer finish) {
             super(title, getSteps(classes), getDescriptions(classes));
@@ -891,6 +928,7 @@ public class WizardPage extends JPanel implements WizardPanel {
             _validateArgs (classes, finish);
             this.finish = finish;
             this.classes = classes;
+            longDescriptions = new String [ classes.length ];
         }
 
         private void _validateArgs (Class [] classes, WizardResultProducer finish)
@@ -922,12 +960,14 @@ public class WizardPage extends JPanel implements WizardPanel {
 //                    "Duplicate entries in class array";
 //            assert finish != null : "WizardResultProducer may not be null";
 
+            longDescriptions = new String [ classes.length ];
             _validateArgs (classes, finish);
 
             this.classes = classes;
             this.finish = finish;
         }
 
+        
         protected JComponent createPanel(WizardController controller, String id, Map wizardData) {
             int idx = indexOfStep(id);
 
@@ -938,7 +978,8 @@ public class WizardPage extends JPanel implements WizardPanel {
             }
             try {
                 WizardPage result = (WizardPage) classes[idx].newInstance();
-
+                longDescriptions[idx] = result.getLongDescription();
+                
                 result.setController(controller);
                 result.setWizardDataMap(wizardData);
 
@@ -961,6 +1002,14 @@ public class WizardPage extends JPanel implements WizardPanel {
         
         public String toString() {
             return super.toString() + " for " + finish;
+        }
+    
+        public String getLongDescription(String stepId) {
+            int idx = indexOfStep (stepId);
+            if (idx != -1) {
+                return descriptions [idx];
+            }
+            return null;
         }
     }
 

@@ -187,6 +187,17 @@ public final class Wizard {
     public String[] getAllSteps() {
         return impl.getAllSteps();
     }
+    
+    /**
+     * Get a long description for this panel.  The long description should be
+     * used in preference to the short description in the top of a wizard
+     * panel in the UI, if it returns non-null.
+     * @param stepId The ID of the step for which a description is requested
+     * @return A more detailed localized description or null
+     */ 
+    public String getLongDescription(String stepId) {
+        return impl.getLongDescription (stepId);
+    }
 
     /**
      * Get a localized String description of the step for the passed id,

@@ -174,6 +174,8 @@ interface WizardImplementation {
      */
     public String getStepDescription(String id);
     
+    public String getLongDescription(String id);
+    
     /**
      * Add a listener for changes in the count or order of steps in this 
      * wizard and for changes in Next/Previous/Finish button enablement.

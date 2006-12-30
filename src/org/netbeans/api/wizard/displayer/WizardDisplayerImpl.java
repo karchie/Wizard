@@ -222,6 +222,10 @@ public class WizardDisplayerImpl extends WizardDisplayer
         }
 
         wizardPanel = wizard.navigatingTo(first, settings);
+        String desc = wizard.getLongDescription (first);
+        if (desc != null) {
+            ttlLabel.setText (desc);
+        }
 
         inner.add(wizardPanel, BorderLayout.CENTER);
 
@@ -492,7 +496,11 @@ public class WizardDisplayerImpl extends WizardDisplayer
     public void navigateTo(String id)
     {
         JComponent comp = wizard.navigatingTo(id, getSettings());
-        getTtlLabel().setText(wizard.getStepDescription(id));
+        String description = wizard.getLongDescription (id);
+        if (description == null) {
+            description = wizard.getStepDescription (id);
+        }
+        getTtlLabel().setText(description);
         setCurrentWizardPanel(comp);
     }
 

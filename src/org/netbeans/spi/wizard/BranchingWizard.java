@@ -210,6 +210,14 @@ final class BranchingWizard implements WizardImplementation {
         }
         return w.getStepDescription(id);
     }
+    
+    public final String getLongDescription(String id) {
+        WizardImplementation w = ownerOf(id);
+        if (w == null) {
+            return null;
+        }
+        return w.getLongDescription(id);
+    }
 
     private WizardImplementation ownerOf(String id) {
         if (UNDETERMINED_STEP.equals(id)) {

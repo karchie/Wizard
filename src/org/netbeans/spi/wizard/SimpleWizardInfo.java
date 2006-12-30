@@ -144,6 +144,10 @@ final class SimpleWizardInfo implements WizardControllerImplementation {
 //        }
         return provider.finish (settings);
     }
+    
+    public String getLongDescription (String id) {
+        return provider.getLongDescription (id);
+    }
 
     /**
      * The method provides a chance to call setProblem() or setCanFinish() when

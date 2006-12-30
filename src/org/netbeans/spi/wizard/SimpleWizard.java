@@ -95,6 +95,10 @@ final class SimpleWizard implements WizardImplementation {
         return info.getDescriptions()[idx];
     }
     
+    public String getLongDescription(String id) {
+        return info.getLongDescription (id);
+    }
+    
     public JComponent navigatingTo(String id, Map settings) {
 //        assert SwingUtilities.isEventDispatchThread();
 

@@ -273,6 +273,20 @@ public abstract class WizardPanelProvider {
     }
     
     /**
+     * This method can optionally be overridden to provide a longer
+     * description of a step to be shown in the top of its panel.
+     * The default implementation returns null, indicating that the
+     * short description should be used.
+     * 
+     * @param stepId a unique id for one step of the wizard
+     * @return An alternate description for use in the top of the wizard
+     *   page when this page is the current one, or null
+     */ 
+    public String getLongDescription (String stepId) {
+        return null;
+    }
+    
+    /**
      * Convenience method to get the index into the array of steps passed to
      * the constructor of a specific step id.  
      */
