@@ -52,8 +52,6 @@ import org.netbeans.spi.wizard.DeferredWizardResult;
 import org.netbeans.spi.wizard.ResultProgressHandle;
 import org.netbeans.spi.wizard.Summary;
 import org.netbeans.spi.wizard.Wizard;
-import org.netbeans.spi.wizard.WizardException;
-import org.netbeans.spi.wizard.WizardPage.WizardResultProducer;
 import org.netbeans.spi.wizard.WizardPanel;
 
 /**

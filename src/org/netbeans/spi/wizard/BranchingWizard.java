@@ -18,7 +18,6 @@ enclosed by brackets [] replaced by your own identifying information:
 package org.netbeans.spi.wizard;
 
 import javax.swing.*;
-import javax.swing.event.EventListenerList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;

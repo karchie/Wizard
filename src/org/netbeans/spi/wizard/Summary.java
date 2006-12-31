@@ -23,7 +23,6 @@ import java.awt.Component;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.UIManager;
 
 /**
  * Object which may be returned from <code>WizardPage.WizardResultProducer.finish()</code>

@@ -24,7 +24,6 @@ import org.netbeans.modules.wizard.MergeMap;
 
 import javax.swing.*;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
