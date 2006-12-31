@@ -567,7 +567,9 @@ public class NavButtonManager implements ActionListener
         prev.setEnabled(false);
         cancel.setEnabled(true);
         finish.setEnabled(false);
-        ((JDialog) window).getRootPane().setDefaultButton(cancel);
+        if (window != null && parent.receiver == null && window instanceof JDialog) {
+            ((JDialog) window).getRootPane().setDefaultButton(cancel);
+        }
 
         cancel.setText(closeString); // NOI18N
         cancel.setName(NAME_CLOSE);

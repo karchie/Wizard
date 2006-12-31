@@ -293,6 +293,9 @@ public class WizardDisplayerImpl extends WizardDisplayer
         {
             public void windowClosing(WindowEvent e)
             {
+                if (!(e.getWindow() instanceof JDialog)) {
+                    return;
+                }
                 JDialog dlg = (JDialog) e.getWindow();
                 boolean dontClose = false;
                 if (!wizard.isBusy())
