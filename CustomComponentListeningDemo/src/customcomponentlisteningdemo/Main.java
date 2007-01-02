@@ -13,6 +13,7 @@ import java.awt.Color;
 import java.util.Map;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.UIManager;
 import org.netbeans.api.wizard.WizardDisplayer;
 import org.netbeans.spi.wizard.Summary;
 import org.netbeans.spi.wizard.WizardException;
@@ -28,7 +29,9 @@ public class Main {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
+        UIManager.setLookAndFeel (UIManager.getSystemLookAndFeelClassName());
+        
         WizardDisplayer.showWizard(WizardPage.createWizard("Custom Listening Demo",
                 new WizardPage[] { new PickColorPanel() }, new WRP()));
     }
@@ -39,12 +42,17 @@ public class Main {
             JLabel lbl = new JLabel ("You chose " + c);
             lbl.setOpaque (true);
             lbl.setBackground (c);
+            int avg = (c.getRed() + c.getGreen() + c.getBlue()) / 3;
+            if (avg <= 128) {
+                lbl.setForeground (Color.WHITE);
+            }
             Summary s = Summary.create(lbl, c);
             return s;
         }
 
         public boolean cancel(Map settings) {
-            int result = JOptionPane.showConfirmDialog(null, "Really cancel?");
+            int result = JOptionPane.showConfirmDialog(null, "Really cancel?", "Cancel", 
+                    JOptionPane.OK_CANCEL_OPTION);
             return result == JOptionPane.OK_OPTION;
         }
     }

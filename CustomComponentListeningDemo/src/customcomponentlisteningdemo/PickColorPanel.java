@@ -35,7 +35,7 @@ import org.netbeans.spi.wizard.WizardPage.CustomComponentListener;
  * @author Tim Boudreau
  */
 public class PickColorPanel extends WizardPage {
-    private final JLabel lbl = new JLabel ("Pick a color, but not black or white");
+    private final JLabel lbl = new JLabel ("Click to choose color, but not black or white");
     private final ColorChooser chooser = new ColorChooser (Color.BLACK);
     
     public PickColorPanel() {
