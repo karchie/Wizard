@@ -1,15 +1,23 @@
  
 package loginWizardDemo;
 
+import java.sql.Array;
+import java.sql.Blob;
 import java.sql.CallableStatement;
+import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.NClob;
 import java.sql.PreparedStatement;
+import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
+import java.sql.SQLXML;
 import java.sql.Savepoint;
 import java.sql.Statement;
+import java.sql.Struct;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * Fake connection used in this wizard demo for testing on systems without a datbase.
@@ -226,6 +234,58 @@ public class FakeConnection implements Connection
     {
         throw new RuntimeException ("Fake driver for testing only");
         
+    }
+
+    public Clob createClob() throws SQLException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public Blob createBlob() throws SQLException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public NClob createNClob() throws SQLException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public SQLXML createSQLXML() throws SQLException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public boolean isValid(int arg0) throws SQLException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public void setClientInfo(String arg0, String arg1) throws SQLClientInfoException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public void setClientInfo(Properties arg0) throws SQLClientInfoException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public String getClientInfo(String arg0) throws SQLException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public Properties getClientInfo() throws SQLException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public Array createArrayOf(String arg0, Object[] arg1) throws SQLException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public Struct createStruct(String arg0, Object[] arg1) throws SQLException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public <T> T unwrap(Class<T> arg0) throws SQLException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public boolean isWrapperFor(Class<?> arg0) throws SQLException {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
 }

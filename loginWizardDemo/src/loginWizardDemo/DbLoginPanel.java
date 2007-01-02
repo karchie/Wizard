@@ -99,11 +99,11 @@ public class DbLoginPanel extends WizardPage
     /** Creates new form FirstPage */
     public DbLoginPanel()
     {
-        super(STEP_ID, DESCRIPTION, false);
+        super(STEP_ID, DESCRIPTION, true);
 
         // construction of the listener will attach it to the components
         // must done be before the components are added to the panel
-        new LoginPanelWizardListener(this);
+//        new LoginPanelWizardListener(this);
 
         initComponents();
     }

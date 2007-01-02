@@ -15,12 +15,11 @@ import java.awt.Rectangle;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
-
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.UIManager;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableModel;
-
 import org.netbeans.api.wizard.WizardDisplayer;
 import org.netbeans.spi.wizard.Summary;
 import org.netbeans.spi.wizard.Wizard;
@@ -36,8 +35,9 @@ import org.netbeans.spi.wizard.WizardPage.WizardResultProducer;
  */
 public class LoginWizardDemoMain
 {
-    public static void main(String[] ignored)
+    public static void main(String[] ignored) throws Exception
     {
+        UIManager.setLookAndFeel (UIManager.getSystemLookAndFeelClassName());
         LoginWizardDemoMain main = new LoginWizardDemoMain ();
         main.run ();
     }
