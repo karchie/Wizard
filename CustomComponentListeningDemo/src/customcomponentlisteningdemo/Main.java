@@ -24,6 +24,7 @@ import java.util.Map;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
+import net.java.dev.colorchooser.ColorChooser;
 import org.netbeans.api.wizard.WizardDisplayer;
 import org.netbeans.spi.wizard.Summary;
 import org.netbeans.spi.wizard.WizardException;
@@ -49,7 +50,7 @@ public class Main {
     private static class WRP implements WizardResultProducer {
         public Object finish(Map wizardData) throws WizardException {
             Color c = (Color) wizardData.get("color");
-            JLabel lbl = new JLabel ("You chose " + c);
+            JLabel lbl = new JLabel ("You chose " + ColorChooser.colorToString(c));
             lbl.setOpaque (true);
             lbl.setBackground (c);
             int avg = (c.getRed() + c.getGreen() + c.getBlue()) / 3;
