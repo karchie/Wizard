@@ -20,6 +20,7 @@ package customcomponentlisteningdemo;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -42,9 +43,11 @@ public class PickColorPanel extends WizardPage {
     public PickColorPanel() {
         super ("Step1", "Choose a Color", true);
         setLongDescription("Select a color");
+        chooser.setName ("color");
         setLayout (new FlowLayout());
         add (lbl);
         add (chooser);
+        setPreferredSize(new Dimension (500, 300));
     }
     
     protected CustomComponentListener createCustomComponentListener() {
