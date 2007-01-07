@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.1//EN" "http://www.netbeans.org/dtds/filesystem-1_1.dtd">
+<filesystem>
+    <folder name="org-netbeans-api-project-libraries">
+        <folder name="Libraries">
+            <file name="Wizard_Library.xml" url="Wizard_Library.xml"/>
+        </folder>
+    </folder>
+    <folder name="Templates">
+        <folder name="Swing">
+            <attr name="SystemFileSystem.localizingBundle" stringvalue="net.java.dev.wizard.template.Bundle"/>
+            <file name="wizard.html" url="description.html">
+                <attr name="SystemFileSystem.localizingBundle" stringvalue="net.java.dev.wizard.template.Bundle"/>
+                <attr name="instantiatingIterator" methodvalue="org.netbeans.modules.wizard2.WizardFactory.createWrapperWizard"/>
+                <attr name="instantiatingWizardURL" urlvalue="nbresloc:/net/java/dev/wizard/template/description.html"/>
+                <attr name="wizard" methodvalue="net.java.dev.wizard.template.WizardWizard.createWizard"/>
+                <attr name="template" boolvalue="true"/>
+            </file>
+        </folder>
+    </folder>
+</filesystem>

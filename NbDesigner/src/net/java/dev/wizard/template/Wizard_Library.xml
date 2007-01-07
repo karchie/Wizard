@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE library PUBLIC "-//NetBeans//DTD Library Declaration 1.0//EN" "http://www.netbeans.org/dtds/library-declaration-1_0.dtd">
+<library version="1.0">
+    <name>Wizard_Library</name>
+    <type>j2se</type>
+    <localizing-bundle>net.java.dev.wizard.template.Bundle</localizing-bundle>
+    <volume>
+        <type>classpath</type>
+        <resource>jar:nbinst://net.java.dev.wizard.template/libs/wizard.jar!/</resource>
+    </volume>
+    <volume>
+        <type>src</type>
+        <resource>jar:nbinst://net.java.dev.wizard.template/sources/src.zip!/</resource>
+    </volume>
+    <volume>
+        <type>javadoc</type>            
+        <resource>jar:nbinst://net.java.dev.wizard.template/docs/WizardAPI.zip!/</resource>
+    </volume>
+</library>
