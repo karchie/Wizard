@@ -12,6 +12,7 @@ import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.NoSuchElementException;
+import java.util.logging.Logger;
 
 import javax.swing.Action;
 import javax.swing.BorderFactory;
@@ -30,6 +31,7 @@ import org.netbeans.spi.wizard.Summary;
 import org.netbeans.spi.wizard.Wizard;
 import org.netbeans.spi.wizard.WizardException;
 import org.netbeans.spi.wizard.WizardObserver;
+import org.netbeans.spi.wizard.WizardPage;
 import org.netbeans.spi.wizard.WizardPanel;
 import org.netbeans.spi.wizard.WizardPanelNavResult;
 
@@ -58,6 +60,10 @@ public class NavButtonManager implements ActionListener
     /** Prefix for the name in deferredStatus */
     static final String DEFERRED_FAILED = "FAILED_";
 
+    private static final Logger logger =
+        Logger.getLogger(NavButtonManager.class.getName());
+
+    
     JButton             next           = null;
 
     JButton             prev           = null;
@@ -524,12 +530,13 @@ public class NavButtonManager implements ActionListener
         Wizard wizard = parent.getWizard();
         MergeMap settings = parent.getSettings();
         
-        System.err.println("ProcessCancel " + reallyCancel + " receiver " + parent.receiver);
+        // System.err.println("ProcessCancel " + reallyCancel + " receiver " + parent.receiver);
         boolean closeWindow = false;
         
         if (reallyCancel && parent.cancel()) 
         {
-            System.err.println("DO IT");
+            // System.err.println("DO CANCEL");
+            logger.fine("calling wizard cancel method on " + wizard);
             wizard.cancel (settings);
             return;
         }

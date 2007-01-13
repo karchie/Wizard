@@ -583,7 +583,7 @@ public class WizardPage extends JPanel implements WizardPanel {
         }
 
         Object mapKey = getMapKeyFor(comp);
-        System.err.println("MaybeUpdateMap " + mapKey + " from " + comp);
+        // debug: System.err.println("MaybeUpdateMap " + mapKey + " from " + comp);
         if (mapKey != null) {
             Object value = valueFrom(comp);
             if (logger.isLoggable(Level.FINE)) {
@@ -1123,6 +1123,9 @@ public class WizardPage extends JPanel implements WizardPanel {
             // really an error, but the 0.9 version allowed it
             // want a non-null value, return something
             result = clazz.getName();
+            
+            logger.warning("There is no static getStep method in " + result);
+
         }
         return result;
     }

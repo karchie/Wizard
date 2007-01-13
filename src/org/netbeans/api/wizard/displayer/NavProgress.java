@@ -3,6 +3,7 @@ package org.netbeans.api.wizard.displayer;
 import java.awt.EventQueue;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
+import java.util.logging.Logger;
 
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
@@ -14,6 +15,7 @@ import org.netbeans.modules.wizard.InstructionsPanel;
 import org.netbeans.modules.wizard.NbBridge;
 import org.netbeans.spi.wizard.ResultProgressHandle;
 import org.netbeans.spi.wizard.Summary;
+import org.netbeans.spi.wizard.WizardPage;
 
 /**
  * Show progress bar for deferred results, with a label showing percent done and progress bar.
@@ -28,6 +30,9 @@ import org.netbeans.spi.wizard.Summary;
  */
 public class NavProgress implements ResultProgressHandle
 {
+    private static final Logger logger =
+        Logger.getLogger(NavProgress.class.getName());
+    
     JProgressBar        progressBar = new JProgressBar();
 
     JLabel              lbl         = new JLabel();
@@ -176,9 +181,11 @@ public class NavProgress implements ResultProgressHandle
             catch (InvocationTargetException ex)
             {
                 ex.printStackTrace();
+                logger.severe("Error invoking operation " + ex.getClass().getName() + " " + ex.getMessage());
             }
             catch (InterruptedException ex)
             {
+                logger.severe("Error invoking operation " + ex.getClass().getName() + " " + ex.getMessage());
                 ex.printStackTrace();
             }
         }
