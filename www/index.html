@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>Project Home Page</title>
+<title>The SwingLabs Wizard Project</title>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 </head>
 
@@ -23,6 +23,37 @@ of that API and problems encountered with it over the years. It provides a
 simple, easy-to-use solution that enables any Swing application to provide 
 Wizards with a minimum of code and effort.
 <p>
+<h3>Goals</h3>
+<p>
+<ul>
+    <li>Provide an easy-to-use API for creating wizards</li>
+    <li>Leverage existing research into how to make wizards easy to use 
+        for end users</li>
+    <li>Leverage knowledge of known problems in existing wizard APIs to
+        avoid them in this one</li>
+    <li>Make it easy to create wizards that end users find easy to use</li>
+    <li>Minimalism - the API should be low-surface-area, exposing
+        no more concepts or classes than necessary</li>
+    <li>Robustness - keep the code simple and heavily covered by tests</li>
+</ul>
+<p>
+<h3>Features At A Glance</h3>
+<ul>
+    <li>Assemble a Wizard from a series of panels</li>
+    <li>Panels put key/value pairs into a java.util.Map</li>
+    <li>When Finish is pressed, your code evaluates the contents of the Map
+        and does whatever your wizard does (optionally on a background thread
+        with progress notification)</li>
+    <li>Automatic listening to components - for simple cases, just set names
+        on standard swing components and they will automatically be listened to
+        and their changes handled</li>
+    <li>Simple support for multiple branches (dynamically changing sets of steps)</li>
+    <li>Panels can be validated as the user interacts, or when the user presses
+        next (including on a background thread)</li>
+    <li>Support for long running operations with progress indication</li>
+    <li>Support for end-of-wizard summary panels</li>
+</ul>
+    
 <table border="0" width="100%" cellpadding="5">
     <tr valign="top"><td width="50%">
 <h3>Downloads and Documents</h3>
@@ -30,7 +61,7 @@ Wizards with a minimum of code and effort.
     <li><a href="quickstart.html">Quick Start Guide</a></li>
     <li><a href="faq.html">Frequently Asked Questions</a></li>
     <li><a href="WizardAPI.zip">Download the Javadoc (zip file)</a></li>
-    <li><a href="wizard.jar">Download the library (ver. 0.991) </a></li>
+    <li><a href="wizard.jar">Download the library (ver. 0.992) </a></li>
     <li><a href="http://wizard.dev.java.net/nonav/javadoc/index.html">Javadoc (online)</a></li>
     <li><a href="https://wizard.dev.java.net/source/browse/wizard/wizardPageDemo/src/wizardpagedemo/?hideattic=1">Basic example source</a></li>
     <li><a href="https://wizard.dev.java.net/source/browse/wizard/WizardDemo/src/wizarddemo/?hideattic=1">Advanced example source</a>
@@ -43,6 +74,17 @@ Wizards with a minimum of code and effort.
     <td>
 <h3>News</h3>
 <ul>
+<li><i>2/8/06</i> - Summary pages now use proportional fonts, instructions panel
+is accessible</li>
+<li><i>12/30/06</i> - WizardDisplayer.installInContainer() - use a wizard ui in any
+ad-hoc swing container</li>
+<li><i>12/29/06</i> - Improvements contributed by Stanley Knutson:  
+WizardPanel allows veto of "next" or "prev" button actions (possibly
+using a background thread with busy indication);  Busy icon alternative for 
+long-running deferred result computations; The map of values can be pre-initialized when 
+the wizard is started; the size of the wizard can be specified when starting.
+Validation can now be deferred until Next is pressed, optionally on a background
+thread
 <li><i>9/24/06</i> - Examples of new features in CVS - see DeferredResultDemo,
 SummaryPageDemo and WizardPageDemo</li>
 <li><i>9/24/06</i>&mdash;Support for asynchronously computed results w/ progress
@@ -61,20 +103,6 @@ but using your favorite GUI designer.  See the first item in the
 </ul>
     </td></tr></table>
 <p>
-<h3>Goals</h3>
-<p>
-<ul>
-    <li>Provide an easy-to-use API for creating wizards</li>
-    <li>Leverage existing research into how to make wizards easy to use 
-        for end users</li>
-    <li>Leverage knowledge of known problems in existing wizard APIs to
-        avoid them in this one</li>
-    <li>Make it easy to create wizards that end users find easy to use</li>
-    <li>Minimalism - the API should be low-surface-area, exposing
-        no more concepts or classes than necessary</li>
-    <li>Robustness - keep the code simple and heavily covered by tests</li>
-</ul>
-<p>
 <h3>Status</h3>
 <p>
 This library has not yet reached 1.0 status (we reserve the right to make
@@ -84,9 +112,10 @@ encounter a problem, please file bugs;  bugs with unit tests attached are
 much appreciated.
 <h3>To Do:</h3>
 <ul>
+<li>JDK 5 and up enhancements:  Allow WizardPage ids/descriptions via 
+    annotations, generify where it makes sense</li>
 <li>Repackage to net.java namespace?</li>
 <li>Merge/include concepts/classes from EZ-Branch</li>
-<li>
 </ul>
 </body>
 </html>
