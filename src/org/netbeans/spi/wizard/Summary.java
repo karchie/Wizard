@@ -20,9 +20,11 @@ enclosed by brackets [] replaced by your own identifying information:
 package org.netbeans.spi.wizard;
 
 import java.awt.Component;
+import java.awt.Font;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.UIManager;
 
 /**
  * Object which may be returned from <code>WizardPage.WizardResultProducer.finish()</code>
@@ -58,6 +60,10 @@ public class Summary {
         jta.getCaret().setBlinkRate(0);
         jta.setEditable(false);
         jta.getCaret().setVisible(true);
+        Font f = UIManager.getFont ("Label.font");
+        if (f != null) { //may be on old GTK L&F, etc.
+            jta.setFont (f);
+        }
         comp = new JScrollPane (jta);
     }
     

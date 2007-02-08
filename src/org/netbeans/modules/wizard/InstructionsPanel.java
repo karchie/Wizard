@@ -22,12 +22,22 @@ import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.IllegalComponentStateException;
 import java.awt.Insets;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
+import java.util.Locale;
+import javax.accessibility.Accessible;
+import javax.accessibility.AccessibleContext;
+import javax.accessibility.AccessibleRole;
+import javax.accessibility.AccessibleState;
+import javax.accessibility.AccessibleStateSet;
+import javax.accessibility.AccessibleText;
 import javax.imageio.ImageIO;
+import javax.swing.CellRendererPane;
 import javax.swing.JComponent;
+import javax.swing.JEditorPane;
 import javax.swing.UIManager;
 import org.netbeans.spi.wizard.Wizard;
 import org.netbeans.spi.wizard.WizardObserver;
@@ -43,7 +53,7 @@ import org.netbeans.spi.wizard.WizardObserver;
  *
  * @author Tim Boudreau
  */
-public class InstructionsPanel extends JComponent implements WizardObserver {
+public class InstructionsPanel extends JComponent implements WizardObserver, Accessible {
     private final BufferedImage img;
     private final Wizard wizard;
     private static final int MARGIN = 5;
@@ -140,6 +150,16 @@ public class InstructionsPanel extends JComponent implements WizardObserver {
             //only be the base ones
             steps = wizard.getAllSteps();
         }
+        String steps[] = this.steps;
+        if (inSummaryPage) {
+            String summaryStep = NbBridge.getString(
+                    "org/netbeans/modules/wizard/Bundle", //NOI18N
+                    InstructionsPanel.class, "Summary"); //NOI18N
+            String[] nue = new String[steps.length + 1];
+            System.arraycopy(steps, 0, nue, 0, steps.length);
+            nue[nue.length - 1] = summaryStep;
+            steps = nue;
+        }
         int y = fm.getMaxAscent() + ins.top + MARGIN;
         int x = ins.left + MARGIN;
         int h = fm.getMaxAscent() + fm.getMaxDescent() + 3;
@@ -165,13 +185,19 @@ public class InstructionsPanel extends JComponent implements WizardObserver {
             if (isUndetermined && canOnlyFinish) {
                 break;
             }
-            String curr = (i + 1) + ". " + (isUndetermined ?
-                NbBridge.getString("org/netbeans/modules/wizard/Bundle",  //NOI18N
-                InstructionsPanel.class, "elipsis") :  //NOI18N
-                wizard.getStepDescription(steps[i])); //NOI18N
+            String curr;
+            if (inSummaryPage && i == this.steps.length) {
+                curr = (i + 1) + ". " + steps[i];
+            } else {
+                curr = (i + 1) + ". " + (isUndetermined ?
+                    NbBridge.getString("org/netbeans/modules/wizard/Bundle",  //NOI18N
+                    InstructionsPanel.class, "elipsis") :  //NOI18N
+                    wizard.getStepDescription(steps[i])); //NOI18N
+            }
             if (curr != null) {
-                boolean selected = steps[i].equals (currentStep);
-                if (selected && !inSummaryPage) {
+                boolean selected = (steps[i].equals (currentStep) && !inSummaryPage) || 
+                        (inSummaryPage && i == steps.length - 1);
+                if (selected) {
                     g.setFont (boldFont);
                 }
                 
@@ -262,6 +288,88 @@ public class InstructionsPanel extends JComponent implements WizardObserver {
             Dimension d = c[i].getPreferredSize();
             c[i].setBounds (x, y - d.height, w, d.height);
             y -= d.height;
+        }
+    }
+    
+    public AccessibleContext getAccessibleContext() {
+        return new ACI (this);
+    }
+    
+    private static class ACI extends AccessibleContext {
+        private final Wizard wizard;
+        private final InstructionsPanel panel;
+        public ACI(InstructionsPanel pnl) {
+            this.wizard = pnl.wizard;
+            panel = pnl;
+            if (pnl.getParent() instanceof Accessible) {
+                setAccessibleParent ((Accessible) pnl.getParent());
+            }
+            setAccessibleName (NbBridge.getString(
+                    "org/netbeans/modules/wizard/Bundle", //NOI18N
+                    InstructionsPanel.class, "ACN_InstructionsPanel")); //NOI18N
+            setAccessibleDescription (NbBridge.getString(
+                    "org/netbeans/modules/wizard/Bundle", //NOI18N
+                    InstructionsPanel.class, "ACSD_InstructionsPanel")); //NOI18N
+        }
+        
+        JEditorPane pane;
+        public AccessibleText getAccessibleText() {
+            if (pane == null) {
+                //Cheat just a bit here - will do for now - the text is
+                //there, more or less where it should be, and a screen
+                //reader should be able to find it;  exact bounds don't
+                //make much difference
+                pane = new JEditorPane();
+                pane.setBounds (panel.getBounds());
+                pane.getAccessibleContext().getAccessibleText();
+                pane.setFont (panel.getFont());
+                CellRendererPane cell = new CellRendererPane();
+                cell.add (pane);
+            }
+            pane.setText(getText());
+            pane.selectAll();
+            pane.validate();
+            return pane.getAccessibleContext().getAccessibleText();
+        }
+        
+        public String getText() {
+            StringBuffer sb = new StringBuffer();
+            String[] s = wizard.getAllSteps();
+            for (int i = 0; i < s.length; i++) {
+                sb.append (wizard.getStepDescription(s[i]));
+                sb.append ('\n');
+            }
+            return sb.toString();
+        }
+        
+        public AccessibleRole getAccessibleRole() {
+            return AccessibleRole.LIST;
+        }
+
+        public AccessibleStateSet getAccessibleStateSet() {
+            AccessibleState[] states = new AccessibleState[] {
+                AccessibleState.VISIBLE,
+                AccessibleState.OPAQUE,
+                AccessibleState.SHOWING,
+                AccessibleState.MULTI_LINE,
+            };
+            return new AccessibleStateSet (states);
+        }
+
+        public int getAccessibleIndexInParent() {
+            return -1;
+        }
+
+        public int getAccessibleChildrenCount() {
+            return 0;
+        }
+
+        public Accessible getAccessibleChild(int i) {
+            throw new IndexOutOfBoundsException("" + i);
+        }
+
+        public Locale getLocale() throws IllegalComponentStateException {
+            return Locale.getDefault();
         }
     }
 }
