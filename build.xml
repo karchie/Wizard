@@ -15,9 +15,12 @@
         </delete>
     </target>
     
-    <target name="release" depends="jar,cleanjavadoc,javadoc" description="Prepare a new release">
-        <copy file="dist/wizard.jar" todir="www"/>
+    <target name="release-javadoc" depends="javadoc">
         <zip destfile="www/WizardAPI.zip" basedir="dist/javadoc" update="false" whenempty="fail" compress="true"/>
+    </target>
+    
+    <target name="release" depends="jar,cleanjavadoc,release-javadoc,nbm" description="Prepare a new release">
+        <copy file="dist/wizard.jar" todir="www"/>
         <mkdir dir="www/javadoc"/>
         <copy todir="www/javadoc">
             <fileset dir="dist/javadoc" includes="**"/>
@@ -54,5 +57,28 @@
             </packageset>            
         </javadoc>
     </target>
-    
+    <target name="nbm" description="Generate a NetBeans Module" depends="jar,release-javadoc">
+      <zip zipfile="dist/wizard-src.zip">
+          <fileset dir="src">
+              <exclude name="**/CVS"/>
+          </fileset>
+      </zip>
+      <taskdef classpath="lib/beans2nbm.jar" classname="beans2nbm.ant.GenNbmTask"
+      name="nbm"/>
+
+      <nbm destFolder="www" 
+        destFileName="org-netbeans-spi-wizard.nbm"
+        description="A library for easily creating Wizard dialogs in Swing." 
+        version="0.99" 
+        homepage="http://wizard.dev.java.net"
+        codeName="org.netbeans.spi.wizard" 
+        jarFileName="dist\wizard.jar" 
+        author="Tim Boudreau" 
+        displayName="Wizard Library" 
+        license="cddl"
+        minJDK="1.4" 
+        sourceJar="dist\wizard-src.zip" 
+        docsJar="www\WizardAPI.zip"/>
+        
+    </target>
 </project>
