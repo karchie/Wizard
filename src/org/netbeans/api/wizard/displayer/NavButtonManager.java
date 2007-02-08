@@ -321,7 +321,8 @@ public class NavButtonManager implements ActionListener
         }
         else if (NAME_CANCEL.equals(name))
         {
-            processCancel((ActionEvent)o, false);
+            processCancel(o instanceof ActionEvent ? (ActionEvent)o
+                    : null, false);
         }
         else if (NAME_FINISH.equals(name))
         {

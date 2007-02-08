@@ -117,6 +117,7 @@ public class InstructionsPanel extends JComponent implements WizardObserver {
         return img != null;
     }
     
+    String[] steps = new String[0];
     public void paintComponent(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
         Font f = getFont() != null ? getFont() : UIManager.getFont("controlFont"); //NOI18N
@@ -134,7 +135,11 @@ public class InstructionsPanel extends JComponent implements WizardObserver {
             g.fillRect (ins.left, ins.top, getWidth() - (ins.left + ins.right), getHeight() - (ins.top + ins.bottom));
         }
         String currentStep = wizard.getCurrentStep();
-        String[] steps = wizard.getAllSteps();
+        if (!inSummaryPage) {
+            //Don't fetch step list if in summary page, there will
+            //only be the base ones
+            steps = wizard.getAllSteps();
+        }
         int y = fm.getMaxAscent() + ins.top + MARGIN;
         int x = ins.left + MARGIN;
         int h = fm.getMaxAscent() + fm.getMaxDescent() + 3;
