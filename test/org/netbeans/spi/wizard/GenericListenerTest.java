@@ -115,9 +115,9 @@ public class GenericListenerTest extends TestCase {
         frame.setBounds (20, 20, 200, 200);
         adhoc.assertNotValidated();
         new WaitWindow (frame);
-        System.err.println("now clicking");
+        //System.err.println("now clicking");
         adhoc.box.doClick();
-        System.err.println("clicked");
+        //System.err.println("clicked");
         adhoc.assertPair("box", Boolean.TRUE); //NOI18N
         adhoc.button.doClick();
         adhoc.assertPair("button", Boolean.TRUE); //NOI18N
@@ -500,9 +500,9 @@ public class GenericListenerTest extends TestCase {
         final boolean[] fired = new boolean[] { false };
         cb.addPropertyChangeListener (new PropertyChangeListener() {
             public void propertyChange(PropertyChangeEvent pce) {
-                System.err.println(" ***** PROPERTY CHANGE! " + 
-                        pce.getPropertyName() + " " + pce.getOldValue() +
-                        "->" + pce.getNewValue());
+                //System.err.println(" ***** PROPERTY CHANGE! " + 
+                //        pce.getPropertyName() + " " + pce.getOldValue() +
+                //        "->" + pce.getNewValue());
                 if ("name".equals(pce.getPropertyName())) {
                     fired[0] = true;
                 }

@@ -137,13 +137,13 @@ public class WizardInAdHocContainerTest extends TestCase {
         Map cm;
         public Object finish(Map wizardData) throws WizardException {
             fm = wizardData;
-            System.err.println("WRP FINISH " + wizardData);
+            //System.err.println("WRP FINISH " + wizardData);
             return "Hello";
         }
 
         public boolean cancel(Map settings) {
             cm = settings;
-            System.err.println("WRP CANCEL " + settings);
+            //System.err.println("WRP CANCEL " + settings);
             return true;
         }
         
@@ -175,13 +175,13 @@ public class WizardInAdHocContainerTest extends TestCase {
         private Object r;
         public void finished(Object wizardResult) {
             r = wizardResult;
-            System.err.println("WRR FINISH " + wizardResult);
+            //System.err.println("WRR FINISH " + wizardResult);
             frm.setVisible(false);
             frm.dispose();
         }
 
         public void cancelled(Map settings) {
-            System.err.println("WRR CANCELLED " + settings);
+            //System.err.println("WRR CANCELLED " + settings);
             m = settings;
             frm.setVisible (false);
             frm.dispose();

@@ -758,13 +758,13 @@ public class WizardDisplayerImplTest extends TestCase {
             }
             started = true;
             synchronized (this) {
-                System.err.println("D waiting");
+                //System.err.println("D waiting");
                 try {
                     wait();
                 } catch (InterruptedException ex) {
                     ex.printStackTrace();
                 }
-                System.err.println("D continuing");
+                //System.err.println("D continuing");
                 if (!aborted) {
                     progress.finished (sum);
                 } else {
