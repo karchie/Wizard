@@ -60,19 +60,6 @@ public class WizardPageTest extends TestCase {
         }
 
         clazz = new Class[]{
-                A.class, A.class
-        };
-
-        try {
-            WizardPage.createWizard(clazz);
-            fail("Redundant WizardPages should not be permitted");
-        } catch (AssertionError e) {
-            assertNotNull(e);
-        } catch (Exception e) {
-            assertNotNull(e);
-        }
-
-        clazz = new Class[]{
                 A.class, B.class, BadNoDefaultConstructor.class
         };
 
