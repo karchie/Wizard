@@ -111,17 +111,6 @@ public class WizardPageTest extends TestCase {
         assertEquals("Step IDs should match", Arrays.asList(ids), Arrays.asList(fromWizIds));
     }
 
-    public void testNullStepOrIDFailsOnRawClass() {
-        System.out.println("testNullStepOrIDFailsOnRawClass");
-        Exception e = null;
-        try {
-            Object o = new WizardPage(null, null);
-        } catch (NullPointerException ex) {
-            e = ex;
-        }
-//        assertNotNull (e);
-    }
-    
     public void testUniquify() {
         Set s = new HashSet();
         String hello = "Hello".intern();
