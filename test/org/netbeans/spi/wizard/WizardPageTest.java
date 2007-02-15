@@ -20,11 +20,12 @@ package org.netbeans.spi.wizard;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
-
 import javax.swing.*;
 import java.awt.*;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author tim
@@ -78,6 +79,8 @@ public class WizardPageTest extends TestCase {
         try {
             result = WizardPage.createWizard(clazz);
             String[] steps = result.getAllSteps();
+            System.err.println("THE LOGGED EXCEPTION THAT FOLLOWS IS SUPPOSED " +
+                    "TO BE THROWN AND IS NOT AN ERROR");
             for (int i = 0; i < steps.length; i++) {
                 // Attempt to use the default constructor will throw an
                 // exception when we get to BadNoDefaultConstructor
@@ -117,6 +120,35 @@ public class WizardPageTest extends TestCase {
             e = ex;
         }
 //        assertNotNull (e);
+    }
+    
+    public void testUniquify() {
+        Set s = new HashSet();
+        String hello = "Hello".intern();
+        for (int i=0; i < 5; i++) {
+            String test = WizardPage.uniquify(hello, s);
+            if (i > 0) {
+                assertFalse (hello.equals(test));
+            }
+            s.add (test);
+        }
+    }
+    
+    public void testWizardPageWithNullIdGetsClassNameAsId() {
+        System.out.println("testWizardPageWithNullIdGetsClassNameAsId");
+        DP dp = new DP();
+        assertNotNull (dp.id);
+        assertEquals (DP.class.getName(), dp.id);
+    }
+    
+    public void testTwoPagesOfSameTypeDoNotGetDuplicateIdsInWizard() {
+        System.out.println("testTwoPagesOfSameTypeDoNotGetDuplicateIdsInWizard");
+        DP[] dp = new DP[] { new DP(), new DP(), new DP() };
+        Set s = new HashSet();
+        for (int i = 0; i < dp.length; i++) {
+            assertFalse (s.contains(dp[i].id));
+        }
+        WizardPage.createWizard(dp); //will throw exception if duplicate ids
     }
 
     public static final class A extends WizardPage {
@@ -191,6 +223,12 @@ public class WizardPageTest extends TestCase {
             combo.setModel(mdl);
             combo.setName("combo");
             add(combo, BorderLayout.CENTER);
+        }
+    }
+    
+    private static final class DP extends WizardPage {
+        public DP() {
+            super("Something");
         }
     }
 }

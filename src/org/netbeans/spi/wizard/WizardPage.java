@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -104,7 +105,7 @@ public class WizardPage extends JPanel implements WizardPanel {
             Logger.getLogger(WizardPage.class.getName());
 
     private final String description;
-    private final String id;
+    String id;
 
     //Have an initial dummy map so it's never null.  We'll dump its contents
     //into the real map the first time it's set
@@ -123,18 +124,30 @@ public class WizardPage extends JPanel implements WizardPanel {
     private final CustomComponentListener ccl;
 
     /**
+     * Create a WizardPage with the passed description and auto-listening
+     * behavior.
+     * 
+     * @param stepDescription the localized description of this step
+     * @param autoListen      if true, components added will automatically be
+     *                        listened to for user input
+     */ 
+    public WizardPage(String stepDescription, boolean autoListen) {
+        this (null, stepDescription, autoListen);
+    }
+    /**
      * Construct a new WizardPage with the passed step id and description.
      * Use this constructor for WizardPages which will be constructed ahead
      * of time and passed in an array to <code>createWizard</code>.
      *
-     * @param stepId          the unique ID for the step represented
+     * @param stepId          the unique ID for the step represented.  If null,
+     *                        the class name or a variant of it will be used
      * @param stepDescription the localized description of this step
      * @param autoListen      if true, components added will automatically be
      *                        listened to for user input
      * @see #validateContents
      */
     public WizardPage(String stepId, String stepDescription, boolean autoListen) {
-        id = stepId;
+        id = stepId == null ? getClass().getName() : stepId;
         description = stepDescription;
 
         if (autoListen) {
@@ -154,7 +167,22 @@ public class WizardPage extends JPanel implements WizardPanel {
 //        }
         setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5)); //XXX
     }
+    
+    /**
+     * Create an auto-listening WizardPage with the passed description
+     * @param stepDescription the localized description of this step
+     */ 
+    public WizardPage (String stepDescription) {
+        this (null, stepDescription);
+    }
 
+    /**
+     * Create an auto-listening WizardPage with the passed description
+     * @param stepId The unique id for the step.  If null, an id will be
+     *               generated
+     * @param stepDescription the localized description of this step
+     * 
+     */ 
     public WizardPage(String stepId, String stepDescription) {
         this(stepId, stepDescription, true);
     }
@@ -1069,14 +1097,28 @@ public class WizardPage extends JPanel implements WizardPanel {
     private static String[] getSteps(WizardPage[] pages) {
         String[] result = new String[pages.length];
 
+        Set uniqueNames = new HashSet(pages.length);
         for (int i = 0; i < pages.length; i++) {
             result[i] = pages[i].getID();
-            if (result[i] == null) {
-                result[i] = getIDFromStaticMethod(pages[i].getClass());
+            if (result[i] == null || uniqueNames.contains(result[i])) {
+                result[i] = uniquify (getIDFromStaticMethod(pages[i].getClass()), 
+                        uniqueNames);
+                pages[i].id = result[i];
+            }
+            uniqueNames.add (result[i]);
+        }
+        return result;
+    }
+    
+    static String uniquify (String s, Set /* <String> */ used) {
+        String test = s;
+        if (test != null) {
+            int ix = 0;
+            while (used.contains(test)) {
+                test = s + "_" + ix++;
             }
         }
-
-        return result;
+        return test;
     }
 
     /**
@@ -1105,29 +1147,10 @@ public class WizardPage extends JPanel implements WizardPanel {
             if (result == null) {
                 throw new NullPointerException ("getStep may not return null");
             }
-        } catch (IllegalArgumentException ex) {
-            // throw new IllegalStateException (ex);
-            throw new RuntimeException ("error getting id for " + clazz, ex);
-        } catch (IllegalAccessException ex) {
-            throw new RuntimeException ("error getting id for " + clazz, ex);
-            // throw new IllegalStateException (ex);
-        } catch (InvocationTargetException ex) {
-            throw new RuntimeException ("error getting id for " + clazz, ex);
-            // throw new IllegalStateException (ex);
-        } catch (SecurityException ex) {
-            throw new RuntimeException ("error getting id for " + clazz, ex);
-//             throw new IllegalStateException (ex);
-        } catch (NoSuchMethodException ex) {
-            // we don't log the missing method, but it is really an error
-            // System.err.println("METHOD getStep NOT FOUND in class " + clazz.getName());
-            // really an error, but the 0.9 version allowed it
-            // want a non-null value, return something
-            result = clazz.getName();
-            
-            logger.warning("There is no static getStep method in " + result);
-
+        } catch (Exception ex) {
+            //do nothing
         }
-        return result;
+        return result == null ? clazz.getName() : result;
     }
 
     /**
@@ -1141,6 +1164,7 @@ public class WizardPage extends JPanel implements WizardPanel {
 
         String[] result = new String[pages.length];
 
+        Set used = new HashSet (pages.length);
         for (int i = 0; i < pages.length; i++) {
             if (pages[i] == null) {
                 throw new NullPointerException("Null at " + i + " in array " + //NOI18N
@@ -1148,10 +1172,10 @@ public class WizardPage extends JPanel implements WizardPanel {
             }
 
             if (!WizardPage.class.isAssignableFrom(pages[i])) {
-                throw new IllegalArgumentException(pages[i].getName() +
+                throw new IllegalArgumentException(pages[i] +
                         " is not a subclass of WizardPage"); //NOI18N
             }
-            result[i] = getIDFromStaticMethod (pages[i]);
+            result[i] = uniquify (getIDFromStaticMethod (pages[i]), used);
             if (result[i] == null) {
                 result[i] = pages[i].getName();
             }
