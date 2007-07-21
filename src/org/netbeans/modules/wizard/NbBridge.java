@@ -12,6 +12,7 @@ enclosed by brackets [] replaced by your own identifying information:
 package org.netbeans.modules.wizard;
 
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import org.netbeans.api.wizard.WizardDisplayer;
@@ -38,17 +39,19 @@ public final class NbBridge {
     }
 
     private static Method lkpMethod;
+    public static Method defLkpMethod;
     public static WizardDisplayer getFactoryViaLookup() {
-        
         // Sknutson: make compatible with JDK 1.4.2
         if (inNetBeans()) {
             try {
                 if (lkpMethod == null) {
                     Class clazz = Class.forName("org.openide.util.Lookup"); //NOI18N
+                    defLkpMethod = clazz.getMethod("getDefault", null); //NOI18N
                     lkpMethod = clazz.getMethod("lookup", new Class[] { Class.class}); //NOI18N
                 }
+                Object o = defLkpMethod.invoke(null, new Object[0]);
                 return (WizardDisplayer)
-                        lkpMethod.invoke(null, (Object[]) 
+                        lkpMethod.invoke(o, (Object[]) 
                             new Class[] { WizardDisplayer.class});
             } catch (Exception e) {
                 e.printStackTrace();
