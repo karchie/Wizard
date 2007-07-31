@@ -69,12 +69,41 @@ final class BranchingWizard implements WizardImplementation {
 
         WizardImplementation newSecondary = createSecondary(wizardData);
 
-        if (((subsequentSteps == null) != (newSecondary == null)) ||
-                (subsequentSteps != null && !subsequentSteps.equals(newSecondary))) {
-            subsequentSteps = newSecondary;
-            fireStepsChanged();
+        /* 
+         * johnflournoy 7/20/07
+         * check for secondary should be adding the secondary to the activeWizard
+         * not the initial wizard.  Adding it to the initial wizard was breaking
+         * multiple branching - to accomplish this created a new method:
+         * setSecondary()
+         */
+        if (activeWizard instanceof BranchingWizard) {
+            ((BranchingWizard) activeWizard).setSecondary(newSecondary);
+        } else {
+           this.setSecondary(newSecondary);
         }
     }
+    
+    /**
+     * Set the secondary for this <code>BranchingWizard</code>.  
+     * @param newSecondary is a WizardImplementation.
+     */
+    private void setSecondary(WizardImplementation newSecondary) {
+        /* johnflournoy added additional condition: secondary != this */
+        if ((((subsequentSteps == null) != (newSecondary == null)) 
+            || (subsequentSteps != null && !subsequentSteps.equals(newSecondary)))
+            && !this.equals(newSecondary)) {
+        
+             /* 
+              * johnflournoy: only set the subsequent steps if it 
+              * this wizard owns the current step.
+              */    
+             if (Arrays.asList(initialSteps.getAllSteps()).contains(currStep)) {
+                subsequentSteps = newSecondary;
+                fireStepsChanged();
+            }
+        }
+    }
+    
 
     public int getForwardNavigationMode() {
         return activeWizard.getForwardNavigationMode();
@@ -226,7 +255,21 @@ final class BranchingWizard implements WizardImplementation {
         if (Arrays.asList(initialSteps.getAllSteps()).contains(id)) {
             return initialSteps;
         } else {
-            checkForSecondary();
+            /*
+             * johnflournoy 
+             * need to check an existing subsequentsteps to see if
+             * we can find the owner of "id", otherwise we were losing
+             * a wizard if we had multiple branches and we backed up to an 
+             * earlier wizard and then went down the same path again.
+             */
+            if (subsequentSteps != null) {
+                if (!Arrays.asList(subsequentSteps.getAllSteps()).contains(id)) {
+                    checkForSecondary();
+                }
+            } else {
+                checkForSecondary();
+            }
+            
             return subsequentSteps;
         }
     }
