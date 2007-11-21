@@ -5,6 +5,6 @@ OpenIDE-Module-Module-Dependencies: org.openide.util > 6.0
 OpenIDE-Module-Java-Dependencies: Java > 1.5
 OpenIDE-Module-Build-Version: 060925
 OpenIDE-Module: org.netbeans.api.wizard/1
-OpenIDE-Module-Implementation-Version: 090624
-OpenIDE-Module-Specification-Version: 3.1
+OpenIDE-Module-Implementation-Version: 072111
+OpenIDE-Module-Specification-Version: 3.2
 OpenIDE-Module-Requires: org.openide.modules.ModuleFormat1

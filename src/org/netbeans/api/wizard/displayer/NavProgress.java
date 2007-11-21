@@ -1,5 +1,6 @@
 package org.netbeans.api.wizard.displayer;
 
+import java.awt.Container;
 import java.awt.EventQueue;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
@@ -11,7 +12,7 @@ import javax.swing.JLabel;
 import javax.swing.JProgressBar;
 import javax.swing.border.EmptyBorder;
 
-import org.netbeans.modules.wizard.InstructionsPanel;
+import org.netbeans.modules.wizard.InstructionsPanelImpl;
 import org.netbeans.modules.wizard.NbBridge;
 import org.netbeans.spi.wizard.ResultProgressHandle;
 import org.netbeans.spi.wizard.Summary;
@@ -45,7 +46,7 @@ public class NavProgress implements ResultProgressHandle
     
     boolean             isUseBusy = false;
     
-    InstructionsPanel   ipanel = null;
+    Container   ipanel = null;
     
     boolean             isInitialized = false;
     
@@ -58,7 +59,7 @@ public class NavProgress implements ResultProgressHandle
         isUseBusy = useBusy;
     }
     
-    public void addProgressComponents (InstructionsPanel panel)
+    public void addProgressComponents (Container panel)
     {
         panel.add(lbl);
         if (isUseBusy)

@@ -45,7 +45,7 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import org.netbeans.api.wizard.WizardDisplayer;
 import org.netbeans.api.wizard.WizardResultReceiver;
-import org.netbeans.modules.wizard.InstructionsPanel;
+import org.netbeans.modules.wizard.InstructionsPanelImpl;
 import org.netbeans.modules.wizard.MergeMap;
 import org.netbeans.modules.wizard.NbBridge;
 import org.netbeans.spi.wizard.DeferredWizardResult;
@@ -81,7 +81,7 @@ public class WizardDisplayerImpl extends WizardDisplayer
 
     NavButtonManager          buttonManager  = null;
 
-    InstructionsPanel         instructions   = null;
+    InstructionsPanel     instructions   = null;
 
     MergeMap                  settings       = null;
 
@@ -188,7 +188,7 @@ public class WizardDisplayerImpl extends WizardDisplayer
 
         outerPanel.setLayout(new BorderLayout());
 
-        instructions = new InstructionsPanel(wizard);
+        instructions = createInstructionsPanel();
 
         // ? bogus
         // outerPanel.setMinimumSize (new Dimension (500, 500));
@@ -205,7 +205,7 @@ public class WizardDisplayerImpl extends WizardDisplayer
         inner.add(problem, BorderLayout.SOUTH);
         problem.setPreferredSize(new Dimension(20, 20));
 
-        outerPanel.add(instructions, BorderLayout.WEST);
+        outerPanel.add(instructions.getComponent(), BorderLayout.WEST);
         outerPanel.add(buttonManager.getButtons(), BorderLayout.SOUTH);
         outerPanel.add(inner, BorderLayout.CENTER);
 
@@ -229,6 +229,10 @@ public class WizardDisplayerImpl extends WizardDisplayer
 
         buttonManager.initializeNavigation();
         return outerPanel;
+    }
+    
+    protected InstructionsPanel createInstructionsPanel() {
+        return new InstructionsPanelImpl (wizard);
     }
     
     public void install (Container c, Object layoutConstraint, Wizard awizard,
@@ -426,7 +430,7 @@ public class WizardDisplayerImpl extends WizardDisplayer
         
     }
 
-    ResultProgressHandle createProgressDisplay (boolean isUseBusy)
+    protected ResultProgressHandle createProgressDisplay (boolean isUseBusy)
     {
         return new NavProgress(this, isUseBusy);
     }
@@ -436,10 +440,13 @@ public class WizardDisplayerImpl extends WizardDisplayer
         deferredResult = r;
         wizardPanel.setEnabled(false);
         progress = createProgressDisplay(r.isUseBusy());
-        progress.addProgressComponents(instructions);
-        instructions.invalidate();
-        instructions.revalidate();
-        instructions.repaint();
+        Container inst = instructions.getComponent();
+        progress.addProgressComponents(inst);
+        inst.invalidate();
+        if (inst instanceof JComponent) {
+            ((JComponent)inst).revalidate();
+        }
+        inst.repaint();
         Runnable run = new Runnable()
         {
             public void run()
@@ -483,10 +490,13 @@ public class WizardDisplayerImpl extends WizardDisplayer
                 {
                     deferredResult = null;
                     buttonManager.getCancel().setEnabled(true);
-                    instructions.removeAll();
-                    instructions.invalidate();
-                    instructions.revalidate();
-                    instructions.repaint();
+                    Container inst = instructions.getComponent();
+                    inst.removeAll();
+                    inst.invalidate();
+                    if (inst instanceof JComponent) {
+                        ((JComponent)instructions).revalidate();
+                    }
+                    inst.repaint();
                 }
             }
         };

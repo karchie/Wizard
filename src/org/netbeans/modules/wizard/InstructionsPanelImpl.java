@@ -17,6 +17,7 @@ enclosed by brackets [] replaced by your own identifying information:
 package org.netbeans.modules.wizard;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -39,26 +40,30 @@ import javax.swing.CellRendererPane;
 import javax.swing.JComponent;
 import javax.swing.JEditorPane;
 import javax.swing.UIManager;
+import org.netbeans.api.wizard.displayer.InstructionsPanel;
 import org.netbeans.spi.wizard.Wizard;
 import org.netbeans.spi.wizard.WizardObserver;
 
 /**
  * A panel that displays a background image and optionally instructions
  * from a wizard, tracking the selected panel and showing that in bold.
- * <p>
+ * <p/>
  * <b><i><font color="red">This class is NOT AN API CLASS.  There is no
  * commitment that it will remain backward compatible or even exist in the
  * future.  The API of this library is in the packages <code>org.netbeans.api.wizard</code>
  * and <code>org.netbeans.spi.wizard</code></font></i></b>.
+ * <p/>
+ * There is currently a single use-case for subclassing this - a navigation
+ * panel that wants to display a different image for each step.
  *
  * @author Tim Boudreau
  */
-public class InstructionsPanel extends JComponent implements WizardObserver, Accessible {
+public class InstructionsPanelImpl extends JComponent implements WizardObserver, Accessible, InstructionsPanel {
     private final BufferedImage img;
     private final Wizard wizard;
     private static final int MARGIN = 5;
 
-    public InstructionsPanel (Wizard wiz) {
+    public InstructionsPanelImpl (Wizard wiz) {
         this (null, wiz);
         Font f = UIManager.getFont ("Tree.font"); //NOI18N
         if (f != null) {
@@ -66,21 +71,47 @@ public class InstructionsPanel extends JComponent implements WizardObserver, Acc
         }
     }
     
+    /**
+     * Get the wizard this panel is monitoring.
+     * @return
+     */
+    protected final Wizard getWizard() {
+        return wizard;
+    }
+
+    public final Container getComponent() {
+        return this;
+    }
+
+    /**
+     * Overridden to start listening to the wizard when added to a container
+     */
     public void addNotify() {
         super.addNotify();
         wizard.addWizardObserver (this);
     }
     
+    /**
+     * Overridden to stop listening to the wizard when removed from a container
+     */
     public void removeNotify() {
         wizard.removeWizardObserver (this);
         super.removeNotify();
     }
     
-    BufferedImage getImage() { //for unit test
+    /**
+     * Get the image to be displayed.  Note that unpredictable behavior
+     * may result if all images returned from this method are not the 
+     * same size.  Override to display a different wizard depending on the
+     * step.
+     * 
+     * @return
+     */
+    protected BufferedImage getImage() { //for unit test
         return img;
     }
     
-    public InstructionsPanel(BufferedImage img, Wizard wizard) {
+    public InstructionsPanelImpl(BufferedImage img, Wizard wizard) {
         if (img == null) {
             //In the event of classloader issues, also have a way to get
             //the image from UIManager - slightly more portable for large
@@ -112,7 +143,7 @@ public class InstructionsPanel extends JComponent implements WizardObserver, Acc
         }
         if (img == null) {
             try {
-                img = ImageIO.read(InstructionsPanel.class.getResourceAsStream(
+                img = ImageIO.read(InstructionsPanelImpl.class.getResourceAsStream(
                         "defaultWizard.png")); //NOI18N
             } catch (IOException ioe) {
                 ioe.printStackTrace();
@@ -127,23 +158,39 @@ public class InstructionsPanel extends JComponent implements WizardObserver, Acc
         return img != null;
     }
     
+    /**
+     * Paints the background image for this component, or fills the
+     * background with a color if no image present.
+     * 
+     * @param g A Graphic2D to paint into
+     * @param x The x coordinate of the area that should contain the image
+     * @param y The y coordinate of the area that should contain the image
+     * @param w The width of the area that should contain the image
+     * @param h The height of the area that should contain the image
+     */
+    protected void paintImage(Graphics2D g, int x, int y, int w, int h) {
+        BufferedImage image = getImage();
+        if (image != null) {
+            g.drawImage(image, x, y, w, h, this);
+        } else {
+            Color c = g.getColor();
+            g.setColor (Color.WHITE);
+            g.fillRect (x, y, w, h);
+            g.setColor (c);
+        }
+    }
+    
     String[] steps = new String[0];
-    public void paintComponent(Graphics g) {
+    public final void paintComponent(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
         Font f = getFont() != null ? getFont() : UIManager.getFont("controlFont"); //NOI18N
         FontMetrics fm = g.getFontMetrics (f);
         Insets ins = getInsets();
-        if (img != null) {
-            int dx = ins.left;
-            int dy = ins.top;
-            int w = getWidth() - (ins. left + ins.right);
-            int h = getHeight() - (ins.top + ins.bottom);
-            
-            g2d.drawImage(img, dx, dy, w, h, this);
-        } else {
-            g.setColor (Color.WHITE);
-            g.fillRect (ins.left, ins.top, getWidth() - (ins.left + ins.right), getHeight() - (ins.top + ins.bottom));
-        }
+        int dx = ins.left;
+        int dy = ins.top;
+        int w = getWidth() - (ins. left + ins.right);
+        int hh = getHeight() - (ins.top + ins.bottom);
+        paintImage(g2d, dx, dy, w, hh);
         String currentStep = wizard.getCurrentStep();
         if (!inSummaryPage) {
             //Don't fetch step list if in summary page, there will
@@ -154,7 +201,7 @@ public class InstructionsPanel extends JComponent implements WizardObserver, Acc
         if (inSummaryPage) {
             String summaryStep = NbBridge.getString(
                     "org/netbeans/modules/wizard/Bundle", //NOI18N
-                    InstructionsPanel.class, "Summary"); //NOI18N
+                    InstructionsPanelImpl.class, "Summary"); //NOI18N
             String[] nue = new String[steps.length + 1];
             System.arraycopy(steps, 0, nue, 0, steps.length);
             nue[nue.length - 1] = summaryStep;
@@ -168,7 +215,7 @@ public class InstructionsPanel extends JComponent implements WizardObserver, Acc
         
         g.setFont (boldFont);
         g.drawString (NbBridge.getString ("org/netbeans/modules/wizard/Bundle", //NOI18N
-                InstructionsPanel.class, "Steps"), x, y); //NOI18N
+                InstructionsPanelImpl.class, "Steps"), x, y); //NOI18N
         
         int underlineY = ins.top + MARGIN + fm.getAscent() + 3;
         g.drawLine (x, underlineY, x + (getWidth() - (x + ins.left + MARGIN)), 
@@ -191,7 +238,7 @@ public class InstructionsPanel extends JComponent implements WizardObserver, Acc
             } else {
                 curr = (i + 1) + ". " + (isUndetermined ?
                     NbBridge.getString("org/netbeans/modules/wizard/Bundle",  //NOI18N
-                    InstructionsPanel.class, "elipsis") :  //NOI18N
+                    InstructionsPanelImpl.class, "elipsis") :  //NOI18N
                     wizard.getStepDescription(steps[i])); //NOI18N
             }
             if (curr != null) {
@@ -206,7 +253,7 @@ public class InstructionsPanel extends JComponent implements WizardObserver, Acc
                     curr = curr.substring(0, curr.length() - 5) + 
                             NbBridge.getString(
                                 "org/netbeans/modules/wizard/Bundle", //NOI18N
-                                InstructionsPanel.class, "elipsis"); //NOI18N
+                                InstructionsPanelImpl.class, "elipsis"); //NOI18N
                 }
                 
                 g.drawString (curr, x, y);
@@ -219,7 +266,7 @@ public class InstructionsPanel extends JComponent implements WizardObserver, Acc
     }
     
     private int historicWidth = Integer.MIN_VALUE;
-    public Dimension getPreferredSize() {
+    public final Dimension getPreferredSize() {
         Font f = getFont() != null ? getFont() : 
             UIManager.getFont("controlFont"); //NOI18N
         
@@ -237,7 +284,7 @@ public class InstructionsPanel extends JComponent implements WizardObserver, Acc
         for (int i=0; i < steps.length; i++) {
             String desc = i + ". " + (Wizard.UNDETERMINED_STEP.equals(steps[i]) ?
                 NbBridge.getString ("org/netbeans/modules/wizard/Bundle",  //NOI18N
-                InstructionsPanel.class, "elipsis") :  //NOI18N
+                InstructionsPanelImpl.class, "elipsis") :  //NOI18N
                 wizard.getStepDescription(steps[i]));
             if (desc != null) {
                 w = Math.max (w, fm.stringWidth(desc) + MARGIN);
@@ -246,6 +293,7 @@ public class InstructionsPanel extends JComponent implements WizardObserver, Acc
         if (Integer.MIN_VALUE == w) {
             w = 250;
         }
+        BufferedImage img = getImage();
         if (img != null) {
             w = Math.max (w, img.getWidth());
         }
@@ -261,7 +309,7 @@ public class InstructionsPanel extends JComponent implements WizardObserver, Acc
         repaint();
     }
     
-    public Dimension getMinimumSize() {
+    public final Dimension getMinimumSize() {
         return getPreferredSize();
     }
     
@@ -277,7 +325,7 @@ public class InstructionsPanel extends JComponent implements WizardObserver, Acc
         repaint();
     }
     
-    public void doLayout() {
+    public final void doLayout() {
         Component[] c = getComponents();
         Insets ins = getInsets();
         int y = getHeight() - (MARGIN + ins.bottom);
@@ -291,14 +339,14 @@ public class InstructionsPanel extends JComponent implements WizardObserver, Acc
         }
     }
     
-    public AccessibleContext getAccessibleContext() {
+    public final AccessibleContext getAccessibleContext() {
         return new ACI (this);
     }
     
-    private static class ACI extends AccessibleContext {
+    private static final class ACI extends AccessibleContext {
         private final Wizard wizard;
-        private final InstructionsPanel panel;
-        public ACI(InstructionsPanel pnl) {
+        private final InstructionsPanelImpl panel;
+        public ACI(InstructionsPanelImpl pnl) {
             this.wizard = pnl.wizard;
             panel = pnl;
             if (pnl.getParent() instanceof Accessible) {
@@ -306,10 +354,10 @@ public class InstructionsPanel extends JComponent implements WizardObserver, Acc
             }
             setAccessibleName (NbBridge.getString(
                     "org/netbeans/modules/wizard/Bundle", //NOI18N
-                    InstructionsPanel.class, "ACN_InstructionsPanel")); //NOI18N
+                    InstructionsPanelImpl.class, "ACN_InstructionsPanel")); //NOI18N
             setAccessibleDescription (NbBridge.getString(
                     "org/netbeans/modules/wizard/Bundle", //NOI18N
-                    InstructionsPanel.class, "ACSD_InstructionsPanel")); //NOI18N
+                    InstructionsPanelImpl.class, "ACSD_InstructionsPanel")); //NOI18N
         }
         
         JEditorPane pane;

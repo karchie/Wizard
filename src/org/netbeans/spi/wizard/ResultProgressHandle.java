@@ -1,6 +1,6 @@
 package org.netbeans.spi.wizard;
 
-import org.netbeans.modules.wizard.InstructionsPanel;
+import java.awt.Container;
 
 /**
  * A controller for the progress bar shown in the user interface.  Used in
@@ -78,7 +78,7 @@ public interface ResultProgressHandle {
     /**
      * Add the component to show for the progress display to the instructions panel. 
      */
-    public abstract void addProgressComponents (InstructionsPanel panel);
+    public abstract void addProgressComponents (Container panel);
     
     /**
      * Returns true if the computation is still running, i.e., if neither finished or failed have been called.
