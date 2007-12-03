@@ -314,7 +314,7 @@ public class MyController extends WizardBranchController {
         Class[] e2bSequence = new Class[] {
             E2b.class, F2b.class, G2b.class,
         };
-	Wizard e2b = WizardPage.createWizard (e2aSequence, WizardResultProducer.NO_OP);
+	Wizard e2b = WizardPage.createWizard (e2bSequence, WizardResultProducer.NO_OP);
 
         public Wizard getWizardForStep (String step, Map data) {
            if ("B".equals(step)) {
