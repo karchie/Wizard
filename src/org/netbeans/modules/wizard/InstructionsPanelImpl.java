@@ -29,6 +29,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Locale;
+import java.util.Arrays;
 import javax.accessibility.Accessible;
 import javax.accessibility.AccessibleContext;
 import javax.accessibility.AccessibleRole;
@@ -221,11 +222,69 @@ public class InstructionsPanelImpl extends JComponent implements WizardObserver,
         g.drawLine (x, underlineY, x + (getWidth() - (x + ins.left + MARGIN)), 
                 underlineY);
         
-        y += h + 10;
-        g.setFont (getFont());
+        int bottom = getComponentCount() == 0 ? getHeight() - getInsets().bottom :
+            getHeight() - getInsets().bottom - getComponents()[0].getPreferredSize().height;
         
+        y += h + 10;
+        int first = 0;
+        int stop = steps.length;
+        String elipsis = NbBridge.getString("org/netbeans/modules/wizard/Bundle", //NOI18N
+                            InstructionsPanelImpl.class, "elipsis"); //NOI18N
+        boolean wontFit = y + (h * (steps.length)) > getHeight();
+        if (wontFit) {
+            //try to center the current step
+            int availHeight = bottom - y;
+            int willFit = availHeight / h;
+            int currStepIndex = Arrays.asList (steps).indexOf(currentStep);
+            int rangeStart = Math.max (0, currStepIndex - (willFit / 2));
+            int rangeEnd = Math.min (rangeStart + willFit, steps.length);
+            if (rangeStart + willFit > steps.length) {
+                //Don't scroll off if there's room
+                rangeStart = steps.length - willFit;
+                rangeEnd = steps.length;
+            }
+            steps = (String[]) steps.clone();
+            if (rangeStart != 0) {
+                steps[rangeStart] = elipsis;
+                first = rangeStart;
+            }
+            if (rangeEnd != steps.length && rangeEnd > 0) {
+                steps[rangeEnd - 1] = elipsis;
+                stop = rangeEnd;
+            }
+        }
+        /*
+        if (wontFit) {
+            int currStepIndex = Arrays.asList (steps).indexOf(currentStep);
+            if (currStepIndex != -1) { //shouldn't happen
+                steps = (String[]) steps.clone();
+                first = Math.max (0, currStepIndex - 2);
+                if (first != 0) {
+                    if (y + ((currStepIndex - first) * h) > getHeight()) {
+                        //Best effort to keep current step on screen
+                        first++;
+                    }
+                    if (first != currStepIndex) {
+                        steps[first] = elipsis;
+                    }
+                }
+            }
+        }
+        if (y + ((stop - first) * h) > bottom) {
+            int avail = bottom - y;
+            int willFit = avail / h;
+            int last = first + willFit - 1;
+            if (last < steps.length - 1) {
+                steps[last] = elipsis;
+                stop = last + 1;
+            }
+        }
+         */ 
+        
+        g.setFont (getFont());
         g.setColor (getForeground());
-        for (int i=0; i < steps.length; i++) {
+        
+        for (int i=first; i < stop; i++) {
             boolean isUndetermined = Wizard.UNDETERMINED_STEP.equals(steps[i]);
             boolean canOnlyFinish = wizard.getForwardNavigationMode() ==
                     Wizard.MODE_CAN_FINISH;
@@ -233,13 +292,18 @@ public class InstructionsPanelImpl extends JComponent implements WizardObserver,
                 break;
             }
             String curr;
-            if (inSummaryPage && i == this.steps.length) {
-                curr = (i + 1) + ". " + steps[i];
+            if (!elipsis.equals(steps[i])) {
+                if (inSummaryPage && i == this.steps.length) {
+                    curr = (i + 1) + ". " + steps[i];
+                } else {
+                    curr = (i + 1) + ". " + (isUndetermined ?
+                        NbBridge.getString("org/netbeans/modules/wizard/Bundle",  //NOI18N
+                        InstructionsPanelImpl.class, "elipsis") :  //NOI18N
+                        steps[i].equals(elipsis) ? elipsis : 
+                        wizard.getStepDescription(steps[i])); //NOI18N
+                }
             } else {
-                curr = (i + 1) + ". " + (isUndetermined ?
-                    NbBridge.getString("org/netbeans/modules/wizard/Bundle",  //NOI18N
-                    InstructionsPanelImpl.class, "elipsis") :  //NOI18N
-                    wizard.getStepDescription(steps[i])); //NOI18N
+                curr = elipsis;
             }
             if (curr != null) {
                 boolean selected = (steps[i].equals (currentStep) && !inSummaryPage) || 
