@@ -1,10 +1,8 @@
 Manifest-Version: 1.0
-OpenIDE-Module-Public-Packages: org.netbeans.api.wizard.*, org.netbean
- s.spi.wizard.*
+OpenIDE-Module-Public-Packages: org.netbeans.api.wizard.*, org.netbeans.spi.wizard.*
 OpenIDE-Module-Module-Dependencies: org.openide.util > 6.0
-OpenIDE-Module-Java-Dependencies: Java > 1.5
-OpenIDE-Module-Build-Version: 060925
+OpenIDE-Module-Build-Version: 081102
 OpenIDE-Module: org.netbeans.api.wizard/1
-OpenIDE-Module-Implementation-Version: 072111
-OpenIDE-Module-Specification-Version: 3.2
+OpenIDE-Module-Implementation-Version: 081102
+OpenIDE-Module-Specification-Version: 3.3
 OpenIDE-Module-Requires: org.openide.modules.ModuleFormat1

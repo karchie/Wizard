@@ -96,6 +96,14 @@ import java.util.logging.Logger;
  * custom components, implement WizardPage.CustomComponentListener and return
  * it from <code>createCustomComponentListener()</code> to add supplementary
  * listening code for custom components.
+ * <p/>
+ * Note: Swing components do not fire property changes when setName() is called.
+ * If your component's values are not being propagated into the settings map,
+ * make sure you are calling setName() <i>before</i> adding the component
+ * to the hierarchy.
+ * <p/>
+ * Also note that cell editors in tables and lists and so forth are always
+ * ignored by the automatic listening code.
  *
  * @author Tim Boudreau
  */
