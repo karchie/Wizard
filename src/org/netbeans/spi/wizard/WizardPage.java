@@ -1216,7 +1216,7 @@ public class WizardPage extends JPanel implements WizardPanel {
         } catch (Exception e) {
             throw new IllegalArgumentException("Could not find or access " + //NOI18N
                     "public static String " + clazz.getName() +  //NOI18N
-                    ".getStep() - make sure it exists"); //NOI18N
+                    ".getDescription() - make sure it exists"); //NOI18N
         }
 
         if (m.getReturnType() != String.class) {
@@ -1231,15 +1231,16 @@ public class WizardPage extends JPanel implements WizardPanel {
         }
 
         try {
+            m.setAccessible(true);
             result= (String) m.invoke(null, (Object[]) null);
         } catch (InvocationTargetException ite) {
             throw new IllegalArgumentException("Could not invoke " + //NOI18N
                     "public static String " + clazz.getName() +  //NOI18N
-                    ".getStep() - make sure it exists."); //NOI18N
+                    ".getDescription() - make sure it exists."); //NOI18N
         } catch (IllegalAccessException iae) {
             throw new IllegalArgumentException("Could not invoke " + //NOI18N
                     "public static String " + clazz.getName() +  //NOI18N
-                    ".getStep() - make sure it exists."); //NOI18N
+                    ".getDescription() - make sure it exists."); //NOI18N
         }
         return result;
     }

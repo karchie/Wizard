@@ -1,5 +1,13 @@
 <html>
 <head>
+<style type="text/css">
+<!--
+table {color: #000000; background-color: #e9e8e2; font-family: Monospaced}
+.string {color: #cc0066}
+.keyword-directive {color: #0000e6}
+.comment {color: #ffffff}
+-->
+</style>    
 <title>Wizard API FAQ</title>
 </head>
 <body>
@@ -276,64 +284,81 @@ So, first you create a wizard for each contiguous sequence - you can use
 either WizardPanelProvider, or one of the methods that creates a Wizard 
 from a sequence of WizardPage instances (the latter is probably simpler).
 <p/>
-Then you just implement one WizardBranchController;  it gets told 
+Then you implement one WizardBranchController for each branch point;  it gets told 
 what step you are on and is passed the Map of the gathered settings 
 in <code>getWizardForStep()</code> or <code>getPanelProviderForStep()</code>
-(I'm assuming below that the step IDs is the same as the unqualified class 
-names).
 So you just check if you are on B, and if so check the Map for a value 
 that will indicate whether the C1 sequence or the C2 sequence was chosen;  and you also check if you are on D2, and if so, check the Map to see if the user has indicated the next sequence should be the E2a sequence or the E2b sequence.
 <p/>
 Say you have each step implemented as a WizardPage (so A and B and all 
-the .class objects below are instances of WizardPage):
+the .class objects below are instances of WizardPage).  Full source can be
+found in CVS in the MultiBranchDemo/ subdirectory of the project.
+
 <pre>
-public class MyController extends WizardBranchController {
-        public MyController() {
-            <font color="gray">//create the base pages - these are also WizardPage subclasses</font>
-            super (new WizardPage[] { new A(), new B() });
+<span class="keyword-directive">public</span> <span class="keyword-directive">class</span> Brancher <span class="keyword-directive">extends</span> WizardBranchController {
+    <span class="comment">//Probably you really want to create these lazily if they are </span>
+    <span class="comment">//needed, but the example is clearer this way...&lt;/font&gt;</span>
+    Class[] c1Sequence = <span class="keyword-directive">new</span> Class[]{
+        C1.<span class="keyword-directive">class</span>, D1.<span class="keyword-directive">class</span>, E1.<span class="keyword-directive">class</span>, F1.<span class="keyword-directive">class</span>, 
+    };
+    <span class="comment">//Create a wizard for this sequence of steps</span>
+    Wizard c1 = WizardPage.createWizard(c1Sequence, WizardResultProducer.NO_OP);
+
+    <span class="comment">//This will be one of the secondary branches</span>
+    Class[] e2aSequence = <span class="keyword-directive">new</span> Class[]{
+        E2a.<span class="keyword-directive">class</span>, F2a.<span class="keyword-directive">class</span>, G2a.<span class="keyword-directive">class</span>,
+    };
+    Wizard e2a = WizardPage.createWizard (e2aSequence, WizardResultProducer.NO_OP);
+    
+    <span class="comment">//This will be the other secondary branch</span>
+    Class[] e2bSequence = <span class="keyword-directive">new</span> Class[] {
+        E2b.<span class="keyword-directive">class</span>, F2b.<span class="keyword-directive">class</span>, G2b.<span class="keyword-directive">class</span>,
+    };
+    Wizard e2b = WizardPage.createWizard (e2bSequence, WizardResultProducer.NO_OP);
+    
+    <span class="comment">//Now make another branching wizard for our second set of steps</span>
+    Wizard secondBranch = <span class="keyword-directive">new</span> Brancher2().createWizard();
+
+    <span class="keyword-directive">public</span> <span class="keyword-directive">static</span> <span class="keyword-directive">void</span> main(String[] args) {
+        Brancher brancher = <span class="keyword-directive">new</span> Brancher();
+        Wizard wizard = brancher.createWizard();
+        WizardDisplayer.showWizard (wizard);
+    }
+    
+    <span class="keyword-directive">public</span> Brancher() {
+        <span class="comment">//create the base pages - these are also WizardPage subclasses</span>
+        <span class="keyword-directive">super</span>(<span class="keyword-directive">new</span> WizardPage[]{<span class="keyword-directive">new</span> A(), <span class="keyword-directive">new</span> B()});
+    }
+    
+    <span class="keyword-directive">public</span> Wizard getWizardForStep (String step, Map data) {
+       System.err.println(<span class="string">&quot;</span><span class="string">Get Wizard For Step </span><span class="string">&quot;</span> + step + <span class="string">&quot;</span><span class="string"> with </span><span class="string">&quot;</span> + data);
+       <span class="comment">//The class name is the default ID for instantiated WizardPages</span>
+       <span class="keyword-directive">if</span> (<span class="string">&quot;</span><span class="string">multibranchdemo.Brancher$B</span><span class="string">&quot;</span>.equals(step)) {
+            <span class="keyword-directive">if</span> (Boolean.TRUE.equals(data.get(<span class="string">&quot;</span><span class="string">foo</span><span class="string">&quot;</span>))) { <span class="comment">//check some data in the map to decide</span>
+                <span class="keyword-directive">return</span> c1;
+            } <span class="keyword-directive">else</span> {
+                <span class="keyword-directive">return</span> secondBranch;
+            }
+        }
+        <span class="keyword-directive">return</span> <span class="keyword-directive">null</span>;
+    }
+    
+    <span class="keyword-directive">private</span> <span class="keyword-directive">class</span> Brancher2 <span class="keyword-directive">extends</span> WizardBranchController {
+        Brancher2 () {
+            <span class="keyword-directive">super</span> (<span class="keyword-directive">new</span> WizardPage[] { <span class="keyword-directive">new</span> C2(), <span class="keyword-directive">new</span> D2() });
         }
         
-        <font color="gray">//Probably you really want to create these lazily if they are 
-        //needed, but the example is clearer this way...</font>
-
-        Class[] c1Sequence = new Class[] {
-            C1.class, E1.class, E1.class, F1.class, 
-        };
-	Wizard c1 = WizardPage.createWizard (c1Sequence, WizardResultProducer.NO_OP);
-
-        Class[] c2Sequence = new Class[] {
-            C2.class, D2.class
-        };
-	Wizard c2 = WizardPage.createWizard (c2Sequence, WizardResultProducer.NO_OP);
-
-        Class[] e2aSequence = new Class[] {
-            E2a.class, F2a.class, G2a.class,
-        };
-	Wizard e2a = WizardPage.createWizard (e2aSequence, WizardResultProducer.NO_OP);
-
-        Class[] e2bSequence = new Class[] {
-            E2b.class, F2b.class, G2b.class,
-        };
-	Wizard e2b = WizardPage.createWizard (e2bSequence, WizardResultProducer.NO_OP);
-
-        public Wizard getWizardForStep (String step, Map data) {
-           if ("B".equals(step)) {
-              if (Boolean.TRUE.equals(data.get("foo")) { <font color="gray">//check some data in the map to decide</font>
-                 return c1;
-              } else {
-                 return c2;
-              }
-           } else if ("D2".equals(step)) {
-              if (Boolean.TRUE.equals(data.get("bar")) { <font color="gray">//check some data in the map to decide</font>
-                return e2a;
-              } else {
-                return e2b;
-              }
-           }
-           return null;
+        <span class="keyword-directive">public</span> Wizard getWizardForStep (String step, Map data) {
+            <span class="keyword-directive">if</span> (<span class="string">&quot;</span><span class="string">multibranchdemo.Brancher$D2</span><span class="string">&quot;</span>.equals(step)) {
+                <span class="keyword-directive">if</span> (Boolean.TRUE.equals(data.get(<span class="string">&quot;</span><span class="string">bar</span><span class="string">&quot;</span>))) { <span class="comment">//check some data in the map to decide</span>
+                    <span class="keyword-directive">return</span> e2a;
+                } <span class="keyword-directive">else</span> {
+                    <span class="keyword-directive">return</span> e2b;
+                }
+            }
+            <span class="keyword-directive">return</span> <span class="keyword-directive">null</span>;
         }
-   }
-}
+    }
 </pre>
 </body>
 </html>
