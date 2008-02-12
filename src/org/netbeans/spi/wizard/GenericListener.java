@@ -31,27 +31,9 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.logging.Level;
-import javax.swing.AbstractButton;
-import javax.swing.JColorChooser;
-import javax.swing.JComboBox;
-import javax.swing.JComponent;
-import javax.swing.JDesktopPane;
-import javax.swing.JFrame;
-import javax.swing.JInternalFrame;
-import javax.swing.JLayeredPane;
-import javax.swing.JList;
-import javax.swing.JPanel;
-import javax.swing.JRootPane;
-import javax.swing.JScrollPane;
-import javax.swing.JSlider;
-import javax.swing.JSpinner;
-import javax.swing.JSplitPane;
-import javax.swing.JTabbedPane;
-import javax.swing.JTable;
-import javax.swing.JToggleButton;
-import javax.swing.JToolBar;
-import javax.swing.JTree;
-import javax.swing.JViewport;
+import javax.swing.*;
+import javax.swing.table.*;
+import javax.swing.tree.*;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -280,6 +262,15 @@ final class GenericListener
             return true;
         }
         if (!(jc instanceof JComponent)) {
+            return false;
+        }
+        if (jc instanceof TableCellEditor || jc instanceof TreeCellEditor || 
+                SwingUtilities.getAncestorOfClass(JTable.class, jc) != null || 
+                SwingUtilities.getAncestorOfClass(JTree.class, jc) != null || 
+                SwingUtilities.getAncestorOfClass(JList.class, jc) != null){
+            //Don't listen to cell editors, we can end up listening to them
+            //multiple times, and the tree/table model will give us the event
+            //we need
             return false;
         }
         return isProbablyAContainer (jc) || 
