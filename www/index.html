@@ -39,6 +39,10 @@ Wizards with a minimum of code and effort.
     <li>Panels can be validated as the user interacts, or when the user presses
         next (including on a background thread)</li>
     <li>Support for long running operations with progress indication</li>
+    <li>Evaluate next button presses on a background thread with automatic 
+        progress notification</li>
+    <li>Allow pressing Finish to fail with a WizardException that returns the
+        wizard to any earlier step</li>
     <li>Support for end-of-wizard summary panels</li>
 </ul>
 </td><td>
@@ -77,11 +81,13 @@ Wizards with a minimum of code and effort.
     <td>
 <h3>News</h3>
 <ul>
+<li><i>4/23/08</i> - Read the <a href="http://www.javaworld.com/javaworld/jw-04-2008/jw-04-opensourcejava-wizard-api.html">JavaWorld Magazine Article</a> 
+about this project; minor bugfix release to fix the issue with returning to the
+first step from finish via a WizardException which the article identified.</li>
 <li><i>2/11/08</i> - <a href="https://wizard.dev.java.net/source/browse/wizard/MultiBranchDemo/src/multibranchdemo/Brancher.java?only_with_tag=HEAD&view=markup">Multi-branch demo</a> added.
                      Improved scrolling behavior if more steps will fit in the
                      navigation panel;  Dutch localization thanks to 
-                     Axel Hallez;  Portuguese localization thanks to
-                     Sandra Szembrzuski</li>
+                     Axel Hallez;  Portuguese localization.
 <li><i>11/21/07</i> - Added ability to have different image on each step in the
                       navigation bar</li>
 <li><i>7/20/07</i> - French translation with thanks to Laurent Sauvage</li>
