@@ -516,7 +516,7 @@ public class NavButtonManager implements ActionListener
             {
                 throw new IllegalStateException("Exception " + // NOI18N
                     "said to return to " + id + " but no such " + // NOI18N
-                    "step found"); // NOI18N
+                    "step found", ex); // NOI18N
             }
         }
     }

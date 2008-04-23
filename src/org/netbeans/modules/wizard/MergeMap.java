@@ -108,7 +108,7 @@ public class MergeMap implements Map {
      * values associated with the ID being removed will be restored.
      */
     public String popAndCalve() {
-        if (order.size() == 1) {
+        if (order.size() == 0) {
             throw new NoSuchElementException ("Cannot back out past first " + //NOI18N
                     "entry"); //NOI18N
         }
