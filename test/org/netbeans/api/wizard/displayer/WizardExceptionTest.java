@@ -54,6 +54,7 @@ public class WizardExceptionTest extends TestCase {
             wpp.wait(2000);
         }
         mgr = displayer.getButtonManager();
+        mgr.suppressMessageDialog = true;
         assertNotNull(mgr);
         next = mgr.getNext();
         prev = mgr.getPrev();

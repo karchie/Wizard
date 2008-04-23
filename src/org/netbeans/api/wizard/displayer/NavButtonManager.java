@@ -84,6 +84,7 @@ public class NavButtonManager implements ActionListener
     String              closeString    = NbBridge.getString("org/netbeans/api/wizard/Bundle", // NOI18N
                                                             WizardDisplayerImpl.class, "Close"); // NOI18N
 
+    boolean suppressMessageDialog = false;
     /**
      * Deferred status of not null means we are waiting for a deferred result to
      * be completed as part of the handling for some button Value of the
@@ -498,8 +499,9 @@ public class NavButtonManager implements ActionListener
         }
         catch (WizardException we)
         {
-            JOptionPane pane = new JOptionPane(we.getLocalizedMessage());
-            pane.setVisible(true);
+            if (!suppressMessageDialog) {
+                JOptionPane.showMessageDialog(next, we.getLocalizedMessage());
+            }
             String id = we.getStepToReturnTo();
             String curr = settings.currID();
             try
