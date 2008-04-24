@@ -528,9 +528,11 @@ public class NavButtonManager implements ActionListener
             }
             catch (NoSuchElementException ex)
             {
-                throw new IllegalStateException("Exception " + // NOI18N
+                IllegalStateException e = new IllegalStateException("Exception " + // NOI18N
                     "said to return to " + id + " but no such " + // NOI18N
-                    "step found", ex); // NOI18N
+                    "step found"); // NOI18N
+                e.initCause(ex);
+                throw e;
             }
         }
     }

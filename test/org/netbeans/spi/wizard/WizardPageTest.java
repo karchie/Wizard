@@ -102,7 +102,7 @@ public class WizardPageTest extends TestCase {
         Set s = new HashSet();
         String hello = "Hello".intern();
         for (int i=0; i < 5; i++) {
-            String test = WizardPage.uniquify(hello, s);
+            String test = Util.uniquify(hello, s);
             if (i > 0) {
                 assertFalse (hello.equals(test));
             }

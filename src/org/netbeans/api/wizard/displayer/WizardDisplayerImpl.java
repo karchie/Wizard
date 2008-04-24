@@ -43,6 +43,7 @@ import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
+import javax.swing.RootPaneContainer;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 import javax.swing.border.Border;
@@ -253,9 +254,17 @@ public class WizardDisplayerImpl extends WizardDisplayer
             Action helpAction, Map initialProperties, WizardResultReceiver receiver) {        
         JPanel pnl = createOuterPanel (awizard, new Rectangle(), helpAction, initialProperties);
         if (layoutConstraint != null) {
-            c.add (pnl, layoutConstraint);
+            if (c instanceof RootPaneContainer) {
+                ((RootPaneContainer) c).getContentPane().add (pnl, layoutConstraint);
+            } else {
+                c.add (pnl, layoutConstraint);
+            }
         } else {
-            c.add (pnl);
+            if (c instanceof RootPaneContainer) {
+                ((RootPaneContainer) c).getContentPane().add (pnl);
+            } else {
+                c.add (pnl);
+            }
         }
         this.receiver = receiver;
     }

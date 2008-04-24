@@ -64,7 +64,7 @@ public class WizardInAdHocContainerTest extends TestCase {
         pane = new JDesktopPane();
         frm = new JFrame();
         in = new JInternalFrame();
-        in.setLayout (new BorderLayout());
+        in.getContentPane().setLayout (new BorderLayout());
         frm.getContentPane().setLayout (new BorderLayout());
         frm.getContentPane().add(pane, BorderLayout.CENTER);
         pane.setLayout (new BorderLayout());
