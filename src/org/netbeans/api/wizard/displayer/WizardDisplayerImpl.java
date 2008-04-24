@@ -28,16 +28,21 @@ import java.awt.KeyboardFocusManager;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.Window;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
+import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.KeyStroke;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 import javax.swing.border.Border;
@@ -187,6 +192,18 @@ public class WizardDisplayerImpl extends WizardDisplayer
         buttonManager = new NavButtonManager(this);
 
         outerPanel.setLayout(new BorderLayout());
+        
+        Action kbdCancel = new AbstractAction() {
+            public void actionPerformed(ActionEvent e) {
+                JButton b = buttonManager.getCancel();
+                if (b.isEnabled()) {
+                    b.doClick();
+                }
+            }
+        };
+        outerPanel.getInputMap(outerPanel.WHEN_IN_FOCUSED_WINDOW).put(
+                KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "cancel"); //NOI18N
+        outerPanel.getActionMap().put("cancel", kbdCancel); //NOI18N
 
         instructions = createInstructionsPanel();
 
