@@ -115,7 +115,8 @@ final class GenericListener
                        c instanceof JFrame || c instanceof JRootPane || c instanceof
                        Window || c instanceof Frame || c instanceof Dialog ||
                        c instanceof JTabbedPane || c instanceof JInternalFrame ||
-                       c instanceof JDesktopPane || c instanceof JLayeredPane;
+                       c instanceof JDesktopPane || c instanceof JLayeredPane ||
+                       c instanceof Box;
             } else {
                 result = c instanceof Container;
             }
