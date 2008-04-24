@@ -6,12 +6,14 @@ table {color: #000000; background-color: #e9e8e2; font-family: Monospaced}
 .string {color: #cc0066}
 .keyword-directive {color: #0000e6}
 .comment {color: #888888}
+.foo {background: #FFFFFF}
 body {background: #FFFFFF}
 -->
 </style>    
 <title>Wizard API FAQ</title>
 </head>
 <body bgcolor="#FFFFFF">
+<span class="foo">
 <h1>Wizards FAQ</h1>
 <img align="right" src="logo.png"/> 
 
@@ -128,7 +130,7 @@ what information is missing or incorrect, and how it is incorrect.
 The Java Look and Feel guidelines for wizards.  A lot of time, expertise and
 effort went into figuring out how to create wizards that somebody's
 grandmother could use in creating those - experimenting with different
-designs and putting real users in front of them.  They are Good Stuff[tm].
+designs and putting real users in front of them.  They are Good Stuff&trade;.
 
 
 <p>
@@ -335,7 +337,6 @@ found in CVS in the MultiBranchDemo/ subdirectory of the project.
     }
     
     <span class="keyword-directive">public</span> Wizard getWizardForStep (String step, Map data) {
-       System.err.println(<span class="string">&quot;</span><span class="string">Get Wizard For Step </span><span class="string">&quot;</span> + step + <span class="string">&quot;</span><span class="string"> with </span><span class="string">&quot;</span> + data);
        <span class="comment">//The class name is the default ID for instantiated WizardPages</span>
        <span class="keyword-directive">if</span> (<span class="string">&quot;</span><span class="string">multibranchdemo.Brancher$B</span><span class="string">&quot;</span>.equals(step)) {
             <span class="keyword-directive">if</span> (Boolean.TRUE.equals(data.get(<span class="string">&quot;</span><span class="string">foo</span><span class="string">&quot;</span>))) { <span class="comment">//check some data in the map to decide</span>
@@ -364,5 +365,6 @@ found in CVS in the MultiBranchDemo/ subdirectory of the project.
         }
     }
 </pre>
+</span>
 </body>
 </html>
