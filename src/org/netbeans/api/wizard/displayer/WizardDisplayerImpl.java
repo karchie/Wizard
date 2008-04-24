@@ -190,9 +190,6 @@ public class WizardDisplayerImpl extends WizardDisplayer
 
         instructions = createInstructionsPanel();
 
-        // ? bogus
-        // outerPanel.setMinimumSize (new Dimension (500, 500));
-
         buttonManager.buildButtons(helpAction);
 
         inner = new JPanel();
@@ -329,10 +326,12 @@ public class WizardDisplayerImpl extends WizardDisplayer
         });
 
         Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
-        // XXX get screen insets?
-        int x = (d.width - dlg.getWidth()) / 2;
-        int y = (d.height - dlg.getHeight()) / 2;
-        dlg.setLocation(x, y);
+        if (bounds == null) {
+            // XXX get screen insets?
+            int x = (d.width - dlg.getWidth()) / 2;
+            int y = (d.height - dlg.getHeight()) / 2;
+            dlg.setLocation(x, y);
+        }
 
         dlg.setModal(true);
         dlg.getRootPane().setDefaultButton(buttonManager.getNext());
