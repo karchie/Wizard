@@ -460,7 +460,7 @@ public class WizardDisplayerImpl extends WizardDisplayer
         return new NavProgress(this, isUseBusy);
     }
     
-    void handleDeferredWizardResult(final DeferredWizardResult r)
+    void handleDeferredWizardResult(final DeferredWizardResult r, final boolean inSummary)
     {
         deferredResult = r;
         wizardPanel.setEnabled(false);
@@ -480,7 +480,8 @@ public class WizardDisplayerImpl extends WizardDisplayer
                 {
                     try
                     {
-                        instructions.setInSummaryPage(true);
+                        //XXX THIS IS ALL STUFF YOU DO NOT EVER EVER DO IN A BACKGROUND THREAD! -Tim
+                        instructions.setInSummaryPage(inSummary);
                         buttonManager.getWindow()
                             .setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                         r.start(settings, progress);

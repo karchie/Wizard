@@ -368,7 +368,7 @@ public class NavButtonManager implements ActionListener
             if (proceed.isDeferredComputation())
             {
                 deferredStatus = NAME_NEXT;
-                parent.handleDeferredWizardResult(proceed);
+                parent.handleDeferredWizardResult(proceed, false);
                 return;
             }
         }
@@ -408,7 +408,7 @@ public class NavButtonManager implements ActionListener
             if (proceed.isDeferredComputation())
             {
                 deferredStatus = NAME_PREV;
-                parent.handleDeferredWizardResult(proceed);
+                parent.handleDeferredWizardResult(proceed,false);
                 return;
             }
         }
@@ -449,7 +449,7 @@ public class NavButtonManager implements ActionListener
             if (proceed.isDeferredComputation())
             {
                 deferredStatus = NAME_FINISH;
-                parent.handleDeferredWizardResult((DeferredWizardResult) proceed);
+                parent.handleDeferredWizardResult((DeferredWizardResult) proceed,false);
                 return;
             }
         }
@@ -486,7 +486,7 @@ public class NavButtonManager implements ActionListener
                 // the button still says "cancel"
                 deferredStatus = NAME_CANCEL;
                 // deferredStatus = NAME_CLOSE;
-                parent.handleDeferredWizardResult(r);
+                parent.handleDeferredWizardResult(r, true);
 
                 closeWindow = false;
             }
