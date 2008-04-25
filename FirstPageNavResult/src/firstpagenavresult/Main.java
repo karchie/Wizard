@@ -10,9 +10,13 @@ import java.awt.Component;
 import java.util.Map;
 import javax.swing.JCheckBox;
 import org.netbeans.api.wizard.WizardDisplayer;
+import org.netbeans.spi.wizard.DeferredWizardResult;
 import org.netbeans.spi.wizard.ResultProgressHandle;
+import org.netbeans.spi.wizard.Summary;
 import org.netbeans.spi.wizard.Wizard;
+import org.netbeans.spi.wizard.WizardException;
 import org.netbeans.spi.wizard.WizardPage;
+import org.netbeans.spi.wizard.WizardPage.WizardResultProducer;
 import org.netbeans.spi.wizard.WizardPanel;
 import org.netbeans.spi.wizard.WizardPanelNavResult;
 
@@ -26,7 +30,37 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        Wizard w = WizardPage.createWizard(new Class[] { A.class, B1.class, C1.class, D1.class});
+        Wizard w = WizardPage.createWizard(new Class[] { A.class, B1.class, C1.class, D1.class},
+                new WizardResultProducer() {
+
+            public Object finish(Map wizardData) throws WizardException {
+                DeferredWizardResult res = new DeferredWizardResult() {
+
+                    @Override
+                    public void start(Map settings, ResultProgressHandle progress) {
+                        try {
+                            progress.setProgress(1, 4);
+                            Thread.sleep(500);
+                            progress.setProgress(2, 4);
+                            Thread.sleep(500);
+                            progress.setProgress(3, 4);
+                            Thread.sleep(500);
+                            progress.finished(Summary.create("Hi there", null));
+//                            progress.finished(null);
+                        } catch (Exception e) {
+                            
+                        }
+                    }
+                    
+                };
+                return res;
+            }
+
+            public boolean cancel(Map settings) {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+            
+        });
         WizardDisplayer.showWizard(w);
     }
     
