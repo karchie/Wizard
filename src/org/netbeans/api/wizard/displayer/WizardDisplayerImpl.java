@@ -439,6 +439,7 @@ public class WizardDisplayerImpl extends WizardDisplayer
     void handleSummary(Summary summary)
     {
         inSummary = true;
+        instructions.setInSummaryPage(true);
         JComponent summaryComp = (JComponent) summary.getSummaryComponent(); // XXX
         if (summaryComp.getBorder() != null)
         {
@@ -447,7 +448,6 @@ public class WizardDisplayerImpl extends WizardDisplayer
             summaryComp.setBorder(b);
         }
         setCurrentWizardPanel((JComponent) summaryComp); // XXX
-        instructions.setInSummaryPage(true);
         ttlLabel.setText(NbBridge.getString("org/netbeans/api/wizard/Bundle", // NOI18N
                                             WizardDisplayerImpl.class, "Summary")); // NOI18N
         getButtonManager().setSummaryShowingMode();
@@ -480,14 +480,17 @@ public class WizardDisplayerImpl extends WizardDisplayer
                 {
                     try
                     {
-                        //XXX THIS IS ALL STUFF YOU DO NOT EVER EVER DO IN A BACKGROUND THREAD! -Tim
-                        instructions.setInSummaryPage(inSummary);
-                        buttonManager.getWindow()
-                            .setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                        EventQueue.invokeLater (new Runnable() {
+                            public void run() {
+                            buttonManager.getWindow()
+                                .setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                            }
+                        });
                         r.start(settings, progress);
                         if (progress.isRunning())
                         {
-                            progress.failed("Start method did not inidicate failure or finished in " + r, false);
+                            progress.failed("Start method did not inidicate " +
+                                    "failure or finished in " + r, false);
                         }
                     }
                     finally
@@ -564,6 +567,16 @@ public class WizardDisplayerImpl extends WizardDisplayer
     public void setInSummary(boolean state)
     {
         inSummary = state;
+        Runnable r = new Runnable() {
+            public void run() {
+                instructions.setInSummaryPage(true);
+            }
+        };
+        if (EventQueue.isDispatchThread()) {
+            r.run();
+        } else {
+            EventQueue.invokeLater (r);
+        }
     }
 
     public JPanel getOuterPanel()
