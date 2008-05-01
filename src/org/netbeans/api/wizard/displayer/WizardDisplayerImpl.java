@@ -564,12 +564,12 @@ public class WizardDisplayerImpl extends WizardDisplayer
         return inSummary;
     }
 
-    public void setInSummary(boolean state)
+    public void setInSummary(final boolean state)
     {
         inSummary = state;
         Runnable r = new Runnable() {
             public void run() {
-                instructions.setInSummaryPage(true);
+                instructions.setInSummaryPage(state);
             }
         };
         if (EventQueue.isDispatchThread()) {
