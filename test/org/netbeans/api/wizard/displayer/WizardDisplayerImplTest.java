@@ -28,6 +28,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Map;
@@ -91,7 +92,7 @@ public class WizardDisplayerImplTest extends TestCase {
         show(wiz, ha);
 
         while (!impl.active) {
-            Thread.sleep(200);
+            Thread.sleep(100);
         }
 
         NavButtonManager mgr = displayer.getButtonManager();
@@ -251,8 +252,6 @@ public class WizardDisplayerImplTest extends TestCase {
 
         NavButtonManager mgr = displayer.getButtonManager();
         JButton next = mgr.getNext();
-        JButton prev = mgr.getPrev();
-        JButton finish = mgr.getFinish();
         JButton cancel = mgr.getCancel();
         
         impl.assertNotCancelled();
@@ -260,9 +259,61 @@ public class WizardDisplayerImplTest extends TestCase {
         impl.assertNotCancelled();
         click(cancel);
         impl.assertCancelled();
-
-        Thread.currentThread().sleep (1000);
+        
+        int ct = 0;
+        while (impl.dlg.isVisible() && ct < 20) {
+            Thread.sleep(100);
+            ct++;
+        }
         assertFalse (impl.dlg.isVisible());
+    }
+    
+    public void testEscapeInvokesCancel() throws Exception {
+        System.out.println("testEscapeInvokesCancel");
+        final PanelProviderImpl impl = new PanelProviderImpl();
+        Wizard wiz = impl.createWizard();
+        show(wiz);
+        NavButtonManager mgr = displayer.getButtonManager();
+        JButton cancel = mgr.getCancel();
+        class AL implements ActionListener {
+            boolean invoked = false;
+            public void actionPerformed(ActionEvent e) {
+                invoked = true;
+            }
+        }
+        AL al = new AL();
+        cancel.addActionListener (al);
+        impl.cb.requestFocus();
+        
+        int ct = 0;
+        while (!impl.cb.hasFocus() && ct++ < 20) {
+            Thread.sleep(200);
+        }
+        assertTrue ("Checkbox never received focus.  Window manager may be insane.", 
+                impl.cb.hasFocus());
+        
+        KeyEvent k1 = new KeyEvent (impl.cb, KeyEvent.KEY_PRESSED, System.currentTimeMillis(),
+                0, KeyEvent.VK_ESCAPE, (char) 0, KeyEvent.KEY_LOCATION_STANDARD);
+        KeyEvent k2 = new KeyEvent (impl.cb, KeyEvent.KEY_RELEASED, System.currentTimeMillis(),
+                0, KeyEvent.VK_ESCAPE, (char) 0, KeyEvent.KEY_LOCATION_STANDARD);
+        class R implements Runnable {
+            KeyEvent ke;
+            R(KeyEvent ke) {
+                this.ke = ke;
+            }
+            public void run() {
+                KeyboardFocusManager.getCurrentKeyboardFocusManager().dispatchKeyEvent(ke);
+            }
+        }
+        EventQueue.invokeAndWait (new R(k1));
+        EventQueue.invokeAndWait (new R(k2));
+        Thread.yield();
+        ct =0;
+        while (ct++ < 20 && impl.cb.isShowing()) {
+            Thread.sleep(200);
+        }
+        assertFalse (impl.cb.isShowing());
+        assertTrue (al.invoked);
     }
 
     public void testDialogNotHiddenIfCancelReturnsFalse() throws Exception {
@@ -276,21 +327,14 @@ public class WizardDisplayerImplTest extends TestCase {
         while (!impl.active) {
             Thread.sleep(200);
         }
-
         NavButtonManager mgr = displayer.getButtonManager();
-        JButton next = mgr.getNext();
-        JButton prev = mgr.getPrev();
-        JButton finish = mgr.getFinish();
         JButton cancel = mgr.getCancel();
-        
         impl.assertNotCancelled();
         impl.shouldCancel = false;
         click(cancel);
         impl.assertCancelled();
-
-        Thread.currentThread().sleep (1000);
         
-        Thread.currentThread().sleep (1000);
+        Thread.sleep (500);
         
         assertTrue (impl.dlg.isVisible());
     }
@@ -319,7 +363,7 @@ public class WizardDisplayerImplTest extends TestCase {
         click(cancel);
         impl.assertNotCancelled();
 
-        Thread.currentThread().sleep (1000);
+        Thread.currentThread().sleep (500);
         assertTrue (impl.dlg.isVisible());
     }
 
@@ -493,7 +537,7 @@ public class WizardDisplayerImplTest extends TestCase {
         
         click (finish);
         wrp.assertFinishCalled();
-        Thread.currentThread().sleep (1000);
+        Thread.sleep (500);
         
         wrp.d.assertStarted();
         assertFalse (cancel.isEnabled());
@@ -501,13 +545,13 @@ public class WizardDisplayerImplTest extends TestCase {
             wrp.d.notify();
         }
         
-        Thread.currentThread().sleep(200);
+        Thread.sleep(1000);
         //should be showing the summary page
         assertTrue (next.isDisplayable());
         assertTrue (wrp.d.sum.summaryComponentWasCalled());
         
         click (cancel);
-        Thread.currentThread().sleep(300);
+        Thread.sleep(300);
         assertTrue (wrp.d.sum.getResultWasCalled());
         
         assertNotNull ("WizardDisplayer.show() should have returned a " +

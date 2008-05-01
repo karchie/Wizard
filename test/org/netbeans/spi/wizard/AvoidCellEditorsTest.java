@@ -70,8 +70,8 @@ public class AvoidCellEditorsTest extends TestCase {
     public void testCellEditorsNotListenedTo() throws Exception {
         int ct = 0;
         System.out.println("Waiting for table to be visible");
-        while (!table.isVisible() && ct < 10) {
-            Thread.sleep(1000);
+        while (!table.isVisible() && ct < 25) {
+            Thread.sleep(100);
             ct++;
         }
         if (ct == 10) {
@@ -83,8 +83,8 @@ public class AvoidCellEditorsTest extends TestCase {
 
         System.out.println("Waiting for focus gained");
 
-        while (getFocusOwner() != table && ct < 10) {
-            Thread.sleep(1000);
+        while (getFocusOwner() != table && ct < 30) {
+            Thread.sleep(100);
             ct++;
         }
         if (ct == 10) {
@@ -114,7 +114,7 @@ public class AvoidCellEditorsTest extends TestCase {
             }
             });
         Thread.yield();
-        Thread.sleep (5000);
+        Thread.sleep (1000);
         final TableCellEditor editor = table.getCellEditor();
         assertTrue("Expected " + Ed.class.getName() + " not " +
                 editor.getClass().getName(), editor instanceof Ed);

@@ -129,7 +129,8 @@ public class WizardPage extends JPanel implements WizardPanel {
     //implementation of validateContents changed a component's value, triggering
     //a new event on GenericListener
     private boolean inUiChanged = false;
-    private final CustomComponentListener ccl;
+    private CustomComponentListener ccl;
+    private boolean autoListen;
 
     /**
      * Create a WizardPage with the passed description and auto-listening
@@ -156,12 +157,19 @@ public class WizardPage extends JPanel implements WizardPanel {
      */
     public WizardPage(String stepId, String stepDescription, boolean autoListen) {
         id = stepId == null ? getClass().getName() : stepId;
+        this.autoListen = autoListen;
         description = stepDescription;
+        
+    }
 
+    private boolean listening;
+    private void startListening() {
+        listening = true;
         if (autoListen) {
             //It will attach itself
-            new GenericListener(this, ccl = createCustomComponentListener(),
+            GenericListener gl = new GenericListener(this, ccl = createCustomComponentListener(),
                     ccl == null ? null : new CustomComponentNotifierImpl(this));
+            gl.attachToHierarchyOf(this);
         } else {
             if ((ccl = createCustomComponentListener()) != null) {
                 throw new IllegalStateException ("CustomComponentListener " +
@@ -348,6 +356,9 @@ public class WizardPage extends JPanel implements WizardPanel {
 
     public void addNotify() {
         super.addNotify();
+        if (!listening) {
+            startListening();
+        }
 
         renderingPage();
         inValidateContents = true;

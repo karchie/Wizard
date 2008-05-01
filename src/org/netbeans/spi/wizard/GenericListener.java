@@ -25,6 +25,7 @@ import java.awt.Window;
 import java.awt.event.*;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.util.Arrays;
 import java.util.EventObject;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -149,7 +150,6 @@ final class GenericListener
             }
             return;
         }
-        //XXX do mapping model -> component?
         if (isProbablyAContainer(jc)) {
             attachToHierarchyOf((Container) jc);
         } else if (jc instanceof JList) {
@@ -176,7 +176,6 @@ final class GenericListener
             listenedTo.add(jc);
             ((JTable) jc).getSelectionModel().addListSelectionListener(this);
         } else {
-            //XXX
             if (logger.isLoggable(Level.FINE)) {
                 logger.fine("Don't know how to listen to a " + // NOI18N
                         jc.getClass().getName());
@@ -250,8 +249,10 @@ final class GenericListener
         }
     }
 
-    private void attachToHierarchyOf(Container container) {
-        container.addContainerListener(this);
+    void attachToHierarchyOf(Container container) {
+        if (!Arrays.asList (container.getContainerListeners()).contains(this)) {
+            container.addContainerListener(this);
+        }
         Component[] components = container.getComponents();
         for (int i = 0; i < components.length; i++) {
             attachTo(components[i]); // Will recursively add any child components in

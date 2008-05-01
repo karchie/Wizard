@@ -136,6 +136,12 @@ public class GenericListenerTest extends TestCase {
     public void testRadioButtonGroup() throws Exception {
         ButtonGroupPage page = new ButtonGroupPage();
         Wizard wizard = WizardPage.createWizard(new WizardPage[] { page });
+        
+        JFrame jf = new JFrame();
+        jf.getContentPane().setLayout (new BorderLayout());
+        jf.getContentPane().add (page);
+        jf.pack();
+        jf.setVisible (true);
 
         Map wizardData = new HashMap();
         JComponent component = wizard.navigatingTo("group", wizardData);
@@ -175,6 +181,12 @@ public class GenericListenerTest extends TestCase {
         ButtonGroupPage page = new ButtonGroupPage();
         Wizard wizard = WizardPage.createWizard(new WizardPage[] { page });
 
+        JFrame jf = new JFrame();
+        jf.getContentPane().setLayout (new BorderLayout());
+        jf.getContentPane().add (page);
+        jf.pack();
+        jf.setVisible (true);
+        
         Map wizardData = new HashMap();
         JComponent component = wizard.navigatingTo("group", wizardData);
         assertEquals("Component should match page", component, page);
@@ -272,7 +284,7 @@ public class GenericListenerTest extends TestCase {
     private void assertListenedTo(JPanel pnl) {
         assertTrue (Arrays.asList(pnl.getContainerListeners()).contains(gl));
     }
-/*
+
     public void testImmediateChildrenListenedTo() {
         System.out.println("testImmediateChildrenListenedTo");
 
@@ -280,7 +292,7 @@ public class GenericListenerTest extends TestCase {
         cb.getModel().setSelected(true);
         cb.setName ("checkBox");
         wp.add (cb);
-        assertTrue (Arrays.asList(cb.getActionListeners()).contains(gl));
+        assertTrue (Arrays.asList(cb.getItemListeners()).contains(gl));
         
         
         JComboBox box = new JComboBox ();
@@ -313,7 +325,7 @@ public class GenericListenerTest extends TestCase {
         wp.add (jp);
         
         assertTrue (Arrays.asList(box.getActionListeners()).contains(gl));
-        assertTrue (Arrays.asList(cb.getActionListeners()).contains(gl));
+        assertTrue (Arrays.asList(cb.getItemListeners()).contains(gl));
         
         
         wp.assertPair ("hooeyBox", "Hooey");
@@ -338,7 +350,7 @@ public class GenericListenerTest extends TestCase {
         jp.add (box);
         
         assertTrue (Arrays.asList(box.getActionListeners()).contains(gl));
-        assertTrue (Arrays.asList(cb.getActionListeners()).contains(gl));
+        assertTrue (Arrays.asList(cb.getItemListeners()).contains(gl));
         
         
         wp.assertPair ("hooeyBox", "Hooey");
@@ -369,7 +381,7 @@ public class GenericListenerTest extends TestCase {
         jp.add (box);
         
         assertTrue (Arrays.asList(box.getActionListeners()).contains(gl));
-        assertTrue (Arrays.asList(cb.getActionListeners()).contains(gl));
+        assertTrue (Arrays.asList(cb.getItemListeners()).contains(gl));
         
         wp.assertPair ("hooeyBox", "Hooey");
         wp.assertPair ("checkBox", Boolean.TRUE);
@@ -393,7 +405,7 @@ public class GenericListenerTest extends TestCase {
         jp.add (box);
         
         assertTrue (Arrays.asList(box.getActionListeners()).contains(gl));
-        assertTrue (Arrays.asList(cb.getActionListeners()).contains(gl));
+        assertTrue (Arrays.asList(cb.getItemListeners()).contains(gl));
         
         
         wp.assertPair ("hooeyBox", "Hooey");
@@ -442,7 +454,7 @@ public class GenericListenerTest extends TestCase {
         jp.add (box);
         
         assertTrue (Arrays.asList(box.getActionListeners()).contains(gl));
-        assertTrue (Arrays.asList(cb.getActionListeners()).contains(gl));
+        assertTrue (Arrays.asList(cb.getItemListeners()).contains(gl));
         
         
         wp.assertPair ("hooeyBox", "Hooey");
@@ -473,7 +485,6 @@ public class GenericListenerTest extends TestCase {
         //XXX send some keystrokes, check validation
         
     }
- */
 
     
     public void testRenamingComponentChangesMapKey() {

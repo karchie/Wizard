@@ -201,7 +201,7 @@ public abstract class WizardDisplayer {
         // for JDK 1.4.2: replace assert with runtime exception
         if (new HashSet(Arrays.asList(s)).size() != s.length)
         {
-            throw new RuntimeException ("steps are duplicated");
+            throw new RuntimeException ("steps are duplicated: " + Arrays.asList(s));
         }
         if (s.length == 1 && Wizard.UNDETERMINED_STEP.equals(s[0])) {
            // assert false : "Only ID may not be UNDETERMINED_ID"; //NOI18N

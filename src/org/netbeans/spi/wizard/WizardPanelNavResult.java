@@ -25,11 +25,11 @@ public abstract class WizardPanelNavResult extends DeferredWizardResult
     /**
      * value for procced to next step in the wizard.
      */
-    public static final WizardPanelNavResult PROCEED = new WPNRimmediate(Boolean.TRUE);
+    public static final WizardPanelNavResult PROCEED = new WPNRimmediate(true);
     /**
      * Value to remain on the current page in the wizard
      */
-    public static final WizardPanelNavResult REMAIN_ON_PAGE = new WPNRimmediate(Boolean.FALSE);
+    public static final WizardPanelNavResult REMAIN_ON_PAGE = new WPNRimmediate(false);
     
     public boolean isDeferredComputation()
     {
@@ -41,9 +41,9 @@ public abstract class WizardPanelNavResult extends DeferredWizardResult
      */
     private final static class WPNRimmediate extends WizardPanelNavResult
     {
-        Boolean value;
+        boolean value;
         
-        WPNRimmediate (Boolean v)
+        WPNRimmediate (boolean v)
         {
             value = v;
         }
@@ -54,7 +54,7 @@ public abstract class WizardPanelNavResult extends DeferredWizardResult
         
         public boolean equals (Object o)
         {
-            if (o instanceof WPNRimmediate && ((WPNRimmediate)o).value.equals(value))
+            if (o instanceof WPNRimmediate && ((WPNRimmediate)o).value == value)
             {
                 return true;
             }
@@ -63,7 +63,7 @@ public abstract class WizardPanelNavResult extends DeferredWizardResult
         
         public int hashCode()
         {
-            return value.booleanValue() ? 1 : 2;
+            return value ? 1 : 2;
         }
         
         public void start(Map settings, ResultProgressHandle progress)

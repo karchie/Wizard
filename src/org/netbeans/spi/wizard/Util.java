@@ -64,7 +64,7 @@ final class Util {
         return result;
     }
 
-    private static String getIDFromStaticMethod (Class clazz) {
+    static String getIDFromStaticMethod (Class clazz) {
         // System.err.println("GetID by method for " + clazz);
         String result = null;
         try {
@@ -135,7 +135,7 @@ final class Util {
         return result;
     }
 
-    private static String getDescriptionFromStaticMethod(Class clazz) {
+    static String getDescriptionFromStaticMethod(Class clazz) {
         String result = null;
         Method m;
         try {

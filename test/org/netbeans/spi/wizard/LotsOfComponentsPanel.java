@@ -113,11 +113,11 @@ public class LotsOfComponentsPanel extends WizardPage {
     private void tickle(final Component c) {
         logger.info("Tickle " + c.getClass());
 
-        try {
-            Thread.sleep(500); //XXX for testing
-        } catch (InterruptedException e) {
-            logger.log(Level.WARNING, "Unexpected thread interruption", e);
-        }
+//        try {
+//            Thread.sleep(500); //XXX for testing
+//        } catch (InterruptedException e) {
+//            logger.log(Level.WARNING, "Unexpected thread interruption", e);
+//        }
 
         c.requestFocus();
 
