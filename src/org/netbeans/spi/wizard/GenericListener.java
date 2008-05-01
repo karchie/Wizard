@@ -162,6 +162,8 @@ final class GenericListener
             ((JTree) jc).getSelectionModel().addTreeSelectionListener(this);
         } else if (jc instanceof JToggleButton) {
             ((AbstractButton) jc).addItemListener(this);
+        } else if (jc instanceof JFormattedTextField) {        //JFormattedTextField must be tested before JTextCompoent
+            jc.addPropertyChangeListener("value", this);
         } else if (jc instanceof JTextComponent) {
             listenedTo.add(jc);
             ((JTextComponent) jc).getDocument().addDocumentListener(this);
@@ -210,6 +212,8 @@ final class GenericListener
         } else if (jc instanceof JToggleButton) {
             ((AbstractButton) jc).removeActionListener(this);
         } else if (jc instanceof JTextComponent) {
+        } else if (jc instanceof JFormattedTextField) {        //JFormattedTextField must be tested before JTextCompoent
+            jc.removePropertyChangeListener("value", this);
             ((JTextComponent) jc).getDocument().removeDocumentListener(this);
         } else if (jc instanceof JColorChooser) {
             ((JColorChooser) jc).getSelectionModel().removeChangeListener(this);
@@ -376,6 +380,8 @@ final class GenericListener
                     e.getSource());
             }
 
+        } else if (e.getSource() instanceof JFormattedTextField && "value".equals(e.getPropertyName())) {
+            fire(e);
             wizardPage.maybeUpdateMap((JComponent) e.getSource());
         }
     }

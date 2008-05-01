@@ -676,6 +676,8 @@ public class WizardPage extends JPanel implements WizardPanel {
             if (path != null) {
                 return path.getLastPathComponent();
             }
+        } else if (comp instanceof JFormattedTextField) {
+            return ((JFormattedTextField) comp).getValue();
         } else if (comp instanceof JList) {
             Object[] o = ((JList) comp).getSelectedValues();
             if (o != null) {
@@ -716,6 +718,8 @@ public class WizardPage extends JPanel implements WizardPanel {
                 ((AbstractButton) comp).getModel().setSelected(((Boolean) value).booleanValue());   
             }
 // TOFIX: JTree
+        } else if (comp instanceof JFormattedTextField) {
+            ((JFormattedTextField) comp).setValue(value);
 //      }  else if (comp instanceof JTree) {
 //            TreePath path = ((JTree) comp).getSelectionPath();
 //            if (path != null) {

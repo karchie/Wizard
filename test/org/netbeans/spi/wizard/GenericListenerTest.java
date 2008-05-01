@@ -521,7 +521,11 @@ public class GenericListenerTest extends TestCase {
         });
         
         cb.setName ("nue");
-        try { Thread.currentThread().sleep (500); } catch (Exception e) {}
+        
+        wp.remove(cb);
+        wp.add (cb);
+        
+        try { Thread.sleep (1000); } catch (Exception e) {}
         if (fired[0]) {
             wp.assertPair("nue", Boolean.TRUE);
             wp.assertNotPresent("checkBox");
