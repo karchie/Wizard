@@ -36,22 +36,39 @@ import java.util.Map;
  * @author Tim Boudreau
  */
 public abstract class DeferredWizardResult {
-    private boolean canAbort = false;
-    
-    protected boolean useBusy = false;
-    
+    private final boolean canAbort;
+    private final boolean useBusy;
     /** 
      * Creates a new instance of DeferredWizardResult which cannot be 
-     * aborted.
+     * aborted and shows a progress bar.
      */
     public DeferredWizardResult() {
+        useBusy = false;
+        canAbort = false;
     }
     
     /** Creates a new instance of DeferredWizardResult which may or may not
-     * be able to be aborted. */
+     * be able to be aborted. 
+     * @param canAbort determine if background computation can be aborted by
+     * calling the <code>abort()</code> method
+     */
     public DeferredWizardResult (boolean canAbort) {
         this.canAbort = canAbort;
+        this.useBusy = false;
     }
+    
+    /** Creates a new instance of DeferredWizardResult which may or may not
+     * be able to be aborted, and which may simply disable the wizard's UI
+     * instead of showing a progress bar while the background work runs.
+     * 
+     * @param canAbort
+     * @param useBusy
+     */
+    public DeferredWizardResult (boolean canAbort, boolean useBusy) {
+        this.canAbort = canAbort;
+        this.useBusy = useBusy;
+    }
+    
     
     /** 
      * Begin computing the result.  This method is called on a background
@@ -72,36 +89,64 @@ public abstract class DeferredWizardResult {
      * abort, then the UI may allow the dialog to be closed while the result
      * is being computed.
      */ 
-    public boolean canAbort() {
+    public final boolean canAbort() {
         return canAbort;
     }
     
     /**
      * Abort computation of the result.  This method will usually be called on
      * the event thread, after <code>start()<code> has been called, and before
-     * <code>finished()</code> has been called on the <code>ResultProgressHandler</code>
+     * <code>finished()</code> has been called on the <code>ResultProgressHandle</code>
      * that is passed to <code>start()</code>, for example, if the user clicks
      * the close button on the dialog showing the wizard while the result is
      * being computed.
+     * <p>
+     * <b>This method does <i>nothing</i> by default</b> - it is left empty so
+     * that people who do not want to support aborting background work do not
+     * have to override it.  It is up to the implementor
+     * to set a flag or otherwise notify the background thread to halt 
+     * computation.  A simple method for doing so is as follows:
+     * <pre>
+     * volatile Thread thread;
+     * public void start (Map settings, ResultProgressHandle handle) {
+     * try {
+     *  synchronized (this) {
+     *     thread = Thread.currentThread();
+     *  }
+     *  
+     *  //do the background computation, update progress.  Every so often, 
+     *  //check Thread.interrupted() and exit if true
+     * } finally {
+     *    synchronized (this) {
+     *       thread = null;
+     *    }
+     *  }
+     * }
+     * 
+     * public synchronized void abort() {
+     *  if (thread != null) thread.interrupt();
+     * }
+     * </pre>
+     * or you can use a <code>volatile boolean</code> flag that you set in
+     * <code>abort()</code> and periodically check in the body of <code>start()</code>.
+     * 
      */ 
     public void abort() {
         //do nothing
     }
 
-    public boolean isUseBusy()
+    /**
+     * Determine if the UI should be completely disabled while the background
+     * work is running (i.e. you do not want a progress bar, you just want all
+     * navigation disabled [note on some window managers, the user will still
+     * be able to click the dialog's window drag-bar close button, so you still
+     * should override abort() to stop computation if possible]).
+     * 
+     * @return true if no progress bar should be displayed and the UI should
+     * just disable itself
+     */
+    public final boolean isUseBusy()
     {
         return useBusy;
-    }
-
-    /**
-     * Indicate "busy" icon is to be used instead of a progress bar.
-     * This can be called by the constructor to avoid an initial display of
-     * the progress bar.
-     *
-     * @param useBusy
-     */
-    public void setUseBusy(boolean useBusy)
-    {
-        this.useBusy = useBusy;
     }
 }

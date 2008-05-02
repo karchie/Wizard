@@ -1066,7 +1066,8 @@ public class WizardPage extends JPanel implements WizardPanel {
         public String getLongDescription(String stepId) {
             int idx = indexOfStep (stepId);
             if (idx != -1) {
-                return descriptions [idx];
+                return longDescriptions[idx] == null ? descriptions [idx] :
+                    longDescriptions[idx];
             }
             return null;
         }
@@ -1162,7 +1163,7 @@ public class WizardPage extends JPanel implements WizardPanel {
          */
         WizardResultProducer NO_OP = new WizardResultProducer() {
             public Object finish(Map wizardData) {
-                return null;
+                return wizardData;
             }
 
             public boolean cancel (Map settings) {

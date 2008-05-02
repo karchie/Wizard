@@ -17,6 +17,7 @@ enclosed by brackets [] replaced by your own identifying information:
 
 package org.netbeans.spi.wizard;
 
+import java.lang.reflect.InvocationTargetException;
 import junit.framework.Test;
 import junit.framework.TestCase;
 import junit.framework.TestSuite;
@@ -26,6 +27,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import org.netbeans.api.wizard.WizardDisplayer;
 
 /**
  * @author tim
@@ -126,6 +128,16 @@ public class WizardPageTest extends TestCase {
         }
         WizardPage.createWizard(dp); //will throw exception if duplicate ids
     }
+    
+    public void testLongDescription() throws Exception {
+        System.out.println("testLongDescription");
+        final Wizard w = WizardPage.createWizard(new Class[] { AP.class });
+        JComponent jc = w.navigatingTo("org.netbeans.spi.wizard.WizardPageTest$AP", new HashMap());
+        assertEquals (AP.class, jc.getClass());
+        String s = w.getLongDescription("org.netbeans.spi.wizard.WizardPageTest$AP");
+        assertEquals ("LONG DESCRIPTION", ((AP) jc).getLongDescription());
+        assertEquals ("LONG DESCRIPTION", s);
+    }
 
     public static final class A extends WizardPage {
         public static String getID() {
@@ -167,6 +179,10 @@ public class WizardPageTest extends TestCase {
     }
 
     public static final class AP extends WizardPage {
+        public AP() {
+            this ("one");
+        }
+        
         public AP(String id) {
             super(id, "one", true);
 
@@ -174,6 +190,15 @@ public class WizardPageTest extends TestCase {
             JCheckBox jcb = new JCheckBox("The sky is blue");
             jcb.setName("blueSky");
             add(jcb, BorderLayout.CENTER);
+            setLongDescription("LONG DESCRIPTION");
+        }
+        
+        public static String getID() {
+            return "one";
+        }
+        
+        public static String getDescription() {
+            return "one desc";
         }
     }
 

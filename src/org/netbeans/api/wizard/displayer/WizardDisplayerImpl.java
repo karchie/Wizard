@@ -327,13 +327,17 @@ public class WizardDisplayerImpl extends WizardDisplayer
                 boolean dontClose = false;
                 if (!wizard.isBusy())
                 {
+                    DeferredWizardResult defResult;
+                    synchronized(WizardDisplayerImpl.this) {
+                        defResult = deferredResult;
+                    }
                     try
                     {
-                        if (deferredResult != null && deferredResult.canAbort())
+                        if (defResult != null && defResult.canAbort())
                         {
-                            deferredResult.abort();
+                            defResult.abort();
                         }
-                        else if (deferredResult != null && !deferredResult.canAbort())
+                        else if (defResult != null && !defResult.canAbort())
                         {
                             dontClose = true;
                             return;
@@ -462,7 +466,9 @@ public class WizardDisplayerImpl extends WizardDisplayer
     
     void handleDeferredWizardResult(final DeferredWizardResult r, final boolean inSummary)
     {
-        deferredResult = r;
+        synchronized (this) {
+            deferredResult = r;
+        }
         wizardPanel.setEnabled(false);
         progress = createProgressDisplay(r.isUseBusy());
         Container inst = instructions.getComponent();
@@ -492,6 +498,7 @@ public class WizardDisplayerImpl extends WizardDisplayer
                             progress.failed("Start method did not inidicate " +
                                     "failure or finished in " + r, false);
                         }
+                        
                     }
                     finally
                     {
@@ -517,7 +524,9 @@ public class WizardDisplayerImpl extends WizardDisplayer
                 }
                 else
                 {
-                    deferredResult = null;
+                    synchronized (this) {
+                        deferredResult = null;
+                    }
                     buttonManager.getCancel().setEnabled(true);
                     Container inst = instructions.getComponent();
                     inst.removeAll();
@@ -549,7 +558,7 @@ public class WizardDisplayerImpl extends WizardDisplayer
         return buttonManager;
     }
 
-    public DeferredWizardResult getDeferredResult()
+    public synchronized DeferredWizardResult getDeferredResult()
     {
         return deferredResult;
     }
@@ -622,7 +631,7 @@ public class WizardDisplayerImpl extends WizardDisplayer
         }
     }
 
-    public void setDeferredResult(DeferredWizardResult deferredResult)
+    public synchronized void setDeferredResult(DeferredWizardResult deferredResult)
     {
         this.deferredResult = deferredResult;
     }

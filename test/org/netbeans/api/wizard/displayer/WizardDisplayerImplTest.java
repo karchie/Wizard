@@ -784,10 +784,9 @@ public class WizardDisplayerImplTest extends TestCase {
     }
     
     private class D extends DeferredWizardResult {
-        final boolean canAbort;
         final Summ sum = new Summ ("Done", "done");
         D (boolean canAbort) {
-            this.canAbort = canAbort;
+            super (canAbort);
         }
         
         D() {
@@ -830,10 +829,6 @@ public class WizardDisplayerImplTest extends TestCase {
         
         public void assertNotAborted() {
             assertFalse ("abort was already called", aborted);
-        }
-        
-        public boolean canAbort() {
-            return canAbort;
         }
         
         private volatile boolean aborted;
