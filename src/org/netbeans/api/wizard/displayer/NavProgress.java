@@ -233,7 +233,7 @@ public class NavProgress implements ResultProgressHandle
                 parent.getTtlLabel().setText(
                                              NbBridge
                                                  .getString("org/netbeans/api/wizard/Bundle", // NOI18N
-                                                            WizardDisplayerImpl.class, "Failed")); // NOI18N
+                                                            WizardDisplayer.class, "Failed")); // NOI18N
                 NavButtonManager bm = parent.getButtonManager();
                 bm.deferredResultFailed(canGoBack);
             }

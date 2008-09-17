@@ -82,7 +82,7 @@ public class NavButtonManager implements ActionListener
     WizardDisplayerImpl parent;
 
     String              closeString    = NbBridge.getString("org/netbeans/api/wizard/Bundle", // NOI18N
-                                                            WizardDisplayerImpl.class, "Close"); // NOI18N
+                                                            WizardDisplayer.class, "Close"); // NOI18N
 
     boolean suppressMessageDialog = false;
     /**
@@ -102,28 +102,28 @@ public class NavButtonManager implements ActionListener
     {
 
         next = new JButton(NbBridge.getString("org/netbeans/api/wizard/Bundle", // NOI18N
-                                              WizardDisplayerImpl.class, "Next_>")); // NOI18N
+                                              WizardDisplayer.class, "Next_>")); // NOI18N
         next.setName(NAME_NEXT);
         next.setMnemonic(NbBridge.getString("org/netbeans/api/wizard/Bundle", // NOI18N
-                                              WizardDisplayerImpl.class, "Next_mnemonic").charAt(0)); // NOI18N
+                                              WizardDisplayer.class, "Next_mnemonic").charAt(0)); // NOI18N
 
         prev = new JButton(NbBridge.getString("org/netbeans/api/wizard/Bundle", // NOI18N
-                                              WizardDisplayerImpl.class, "<_Prev")); // NOI18N
+                                              WizardDisplayer.class, "<_Prev")); // NOI18N
         prev.setName(NAME_PREV);
         prev.setMnemonic(NbBridge.getString("org/netbeans/api/wizard/Bundle", // NOI18N
-                                              WizardDisplayerImpl.class, "Prev_mnemonic").charAt(0)); // NOI18N
+                                              WizardDisplayer.class, "Prev_mnemonic").charAt(0)); // NOI18N
 
         finish = new JButton(NbBridge.getString("org/netbeans/api/wizard/Bundle", // NOI18N
-                                                WizardDisplayerImpl.class, "Finish")); // NOI18N
+                                                WizardDisplayer.class, "Finish")); // NOI18N
         finish.setName(NAME_FINISH);
         finish.setMnemonic(NbBridge.getString("org/netbeans/api/wizard/Bundle", // NOI18N
-                                              WizardDisplayerImpl.class, "Finish_mnemonic").charAt(0)); // NOI18N
+                                              WizardDisplayer.class, "Finish_mnemonic").charAt(0)); // NOI18N
 
         cancel = new JButton(NbBridge.getString("org/netbeans/api/wizard/Bundle", // NOI18N
-                                                WizardDisplayerImpl.class, "Cancel")); // NOI18N
+                                                WizardDisplayer.class, "Cancel")); // NOI18N
         cancel.setName(NAME_CANCEL);
         cancel.setMnemonic(NbBridge.getString("org/netbeans/api/wizard/Bundle", // NOI18N
-                                              WizardDisplayerImpl.class, "Cancel_mnemonic").charAt(0)); // NOI18N
+                                              WizardDisplayer.class, "Cancel_mnemonic").charAt(0)); // NOI18N
 
         help = new JButton();
         if (helpAction != null)
@@ -132,17 +132,17 @@ public class NavButtonManager implements ActionListener
             if (helpAction.getValue(Action.NAME) == null)
             {
                 help.setText(NbBridge.getString("org/netbeans/api/wizard/Bundle", // NOI18N
-                                                WizardDisplayerImpl.class, "Help")); // NOI18N
+                                                WizardDisplayer.class, "Help")); // NOI18N
                 help.setMnemonic(NbBridge.getString("org/netbeans/api/wizard/Bundle", // NOI18N
-                                                      WizardDisplayerImpl.class, "Help_mnemonic").charAt(0)); // NOI18N
+                                                      WizardDisplayer.class, "Help_mnemonic").charAt(0)); // NOI18N
             }
         }
         else
         {
             help.setText(NbBridge.getString("org/netbeans/api/wizard/Bundle", // NOI18N
-                                            WizardDisplayerImpl.class, "Help")); // NOI18N
+                                            WizardDisplayer.class, "Help")); // NOI18N
             help.setMnemonic(NbBridge.getString("org/netbeans/api/wizard/Bundle", // NOI18N
-                                              WizardDisplayerImpl.class, "Help_mnemonic").charAt(0)); // NOI18N
+                                              WizardDisplayer.class, "Help_mnemonic").charAt(0)); // NOI18N
         }
 
         next.setDefaultCapable(true);
@@ -597,7 +597,7 @@ public class NavButtonManager implements ActionListener
 
         cancel.setText(closeString); // NOI18N
         cancel.setMnemonic(NbBridge.getString("org/netbeans/api/wizard/Bundle", // NOI18N
-                                              WizardDisplayerImpl.class, "Close_mnemonic").charAt(0)); // NOI18N
+                                              WizardDisplayer.class, "Close_mnemonic").charAt(0)); // NOI18N
         cancel.setName(NAME_CLOSE);
         deferredStatus = null;  // ?? should summary be different
     }
