@@ -12,6 +12,7 @@ import javax.swing.JLabel;
 import javax.swing.JProgressBar;
 import javax.swing.border.EmptyBorder;
 
+import org.netbeans.api.wizard.WizardDisplayer;
 import org.netbeans.modules.wizard.InstructionsPanelImpl;
 import org.netbeans.modules.wizard.NbBridge;
 import org.netbeans.spi.wizard.ResultProgressHandle;

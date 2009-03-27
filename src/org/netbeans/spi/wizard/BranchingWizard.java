@@ -136,7 +136,6 @@ final class BranchingWizard implements WizardImplementation {
     }
 
     public final Object finish(Map settings) throws WizardException {
-        WizardException exc = null;
         try {
             Object result = activeWizard.finish(settings);
             initialSteps.removeWizardObserver(wl);
@@ -146,7 +145,6 @@ final class BranchingWizard implements WizardImplementation {
             }
             return result;
         } catch (WizardException we) {
-            exc = we;
             if (we.getStepToReturnTo() != null) {
                 initialSteps.addWizardObserver(wl);
                 //Can be null, we allow bail-out with finish mid-wizard now
@@ -155,10 +153,6 @@ final class BranchingWizard implements WizardImplementation {
                 }
             }
             throw we;
-        } finally {
-            if (exc == null) {
-                subsequentSteps = null;
-            }
         }
     }
 

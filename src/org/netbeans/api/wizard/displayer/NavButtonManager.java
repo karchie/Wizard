@@ -24,6 +24,7 @@ import javax.swing.JPanel;
 import javax.swing.JRootPane;
 import javax.swing.UIManager;
 
+import org.netbeans.api.wizard.WizardDisplayer;
 import org.netbeans.modules.wizard.MergeMap;
 import org.netbeans.modules.wizard.NbBridge;
 import org.netbeans.spi.wizard.DeferredWizardResult;
