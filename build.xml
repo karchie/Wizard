@@ -28,7 +28,7 @@
     </target>
 
     <target name="release-source" description="Zip the sources">
-        <delete file="www/src.zip"/>
+        <delete file="www/wizard-src.zip"/>
         <zip zipfile="www/wizard-src.zip" compress="9">
             <zipfileset dir="." excludes="www/**,nbproject/private/**,wizard-uml/**,NbDesigner/**,dist/**,build/**,doc/**,lib/**,.classpath,.project"/>
         </zip>
