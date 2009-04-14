@@ -1,165 +1,330 @@
 <html>
+
 <head>
+
 <title>The SwingLabs Wizard Project</title>
+
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+
 </head>
 
+
+
 <body bgcolor="#FFFFFF" text="#000000">
+
 <table width="100%" border="0">
+
 <tr>
+
 <td align="left" valign="middle">
+
 Provides a simple API and UI for Wizards, a commonly used UI pattern in GUI 
+
 interfaces. Traditionally, everybody has needed to write their own 
+
 Wizards from scratch, and such code is painful and hard to get right. 
+
 <p>
+
 This 
+
 library aims to provide a simple, relatively bulletproof API 
+
 for writing Wizards.  The UI for Wizards is pluggable;  the default
+
 implementation conforms to the JLF usability guidelines for
+
 Wizards.
+
 <p>
+
 This library was originally designed as a 
+
 replacement for NetBeans' Wizard API,
+
 and takes into account the long history 
+
 of that API and issues encountered with it over the years. It provides a 
+
 simple, easy-to-use solution that enables any Swing application to provide 
+
 Wizards with a minimum of code and effort.
+
 <p>
+
 The current release is compatible with JDK 1.4 and up.
+
 <center>
-    <a href="wizard.jar">Download</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href="http://wizard.dev.java.net/nonav/javadoc/index.html">Javadoc</a> (<a href="WizardAPI.zip">download</a>)&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href="faq.html">FAQ</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href="quickstart.html">Quick Start Guide</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href="http://contrib.netbeans.org/beans2nbm/beans2nbm.jnlp">Demo</a>
+
+    <a href="wizard.jar">Download</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href="http://wizard.dev.java.net/nonav/javadoc/index.html">Javadoc</a> (<a href="WizardAPI.zip">download</a>)&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href="faq.html">FAQ</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href="quickstart.html">Quick Start Guide</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href="http://contrib.netbeans.org/beans2nbm/beans2nbm.jnlp">Demo</a>&nbsp;&nbsp;&middot;&nbsp;&nbsp;<a href="wizard-src.zip">Source</a>
+
 </center>
 
+
+
 </td>
+
 <td align="right" valign="top">
+
 <img src="logo.png"/> 
+
 </td>
+
 </tr>
-</table>
-<table border="0" width="100%" cellpadding="0" cellspacing="5">
-<tr valign="top">
-<td width="50%">
-<h3>Features At A Glance</h3>
-<ul>
-    <li>Assemble a Wizard from a series of panels</li>
-    <li>Panels put key/value pairs into a java.util.Map</li>
-    <li>When Finish is pressed, your code evaluates the contents of the Map
-        and does whatever your wizard does (optionally on a background thread
-        with progress notification)</li>
-    <li>Automatic listening to components - for simple cases, just set names
-        on standard swing components and they will automatically be listened to
-        and their changes handled</li>
-    <li>Simple support for multiple branches (dynamically changing sets of steps)</li>
-    <li>Panels can be validated as the user interacts, or when the user presses
-        next (including on a background thread)</li>
-    <li>Support for long running operations with progress indication</li>
-    <li>Evaluate next button presses on a background thread with automatic 
-        progress notification</li>
-    <li>Allow pressing Finish to fail with a WizardException that returns the
-        wizard to any earlier step</li>
-    <li>Support for end-of-wizard summary panels</li>
-</ul>
-</td>
-<td rowspan="3" valign="top">
-<h3>News</h3>
-<ul>
-<li><i>5/1/08</i>  - Misc bug fixes;  <code>WizardPage.createCustomComponentListener()</code>
-no longer called from superclass constructor;  2.0/generified API brainstorming started on
-dev mailing list and <code>JDK_15</code> branch;  German translation thanks to
-Ruth Kusterer</li>
-<li><i>4/23/08</i> - Read the <a href="http://www.javaworld.com/javaworld/jw-04-2008/jw-04-opensourcejava-wizard-api.html">JavaWorld Magazine Article</a> 
-about this project; minor bugfix release to fix the issue with returning to the
-first step from finish via a WizardException which the article identified.</li>
-<li><i>2/11/08</i> - <a href="https://wizard.dev.java.net/source/browse/wizard/MultiBranchDemo/src/multibranchdemo/Brancher.java?only_with_tag=HEAD&view=markup">Multi-branch demo</a> added.
-                     Improved scrolling behavior if more steps will fit in the
-                     navigation panel;  Dutch localization thanks to 
-                     Axel Hallez;  Portuguese localization.
-<li><i>11/21/07</i> - Added ability to have different image on each step in the
-                      navigation bar</li>
-<li><i>7/20/07</i> - French translation with thanks to Laurent Sauvage</li>
-<li><i>2/8/06</i> - Summary pages now use proportional fonts, instructions panel
-is accessible</li>
-<li><i>12/30/06</i> - WizardDisplayer.installInContainer() - use a wizard ui in any
-ad-hoc swing container</li>
-<li><i>12/29/06</i> - Improvements contributed by Stanley Knutson:  
-WizardPanel allows veto of "next" or "prev" button actions (possibly
-using a background thread with busy indication);  Busy icon alternative for 
-long-running deferred result computations; The map of values can be pre-initialized when 
-the wizard is started; the size of the wizard can be specified when starting.
-Validation can now be deferred until Next is pressed, optionally on a background
-thread
-<li><i>9/24/06</i> - Examples of new features in CVS - see DeferredResultDemo,
-SummaryPageDemo and WizardPageDemo</li>
-<li><i>9/24/06</i>&mdash;Support for asynchronously computed results w/ progress
-bar, and support for JLF-style summary panels added.  Just return an instance of
-<code>Summary</code> or an instance of <code>DeferredWizardResult</code> from
-the appropriate <code>finish()</code> methods, or return pass a <code>Summary</code>
-object to <code>DeferredWizardResult.ResultProgressHandle.finished()</code>;
-new <a href="quickstart.html">Quick Start Guide</a></li>
-<li><i>9/23/06</i>&mdash;WizardPage now listens to nested 
-containers so any named component can participate in the wizard settings map with
-no code needed.</li>
-<li><i>8/20/05</i>&mdash;A convenience class, WizardPage, has been added,
-which makes it even easier to create new wizards, often doing almost nothing
-but using your favorite GUI designer.  See the first item in the
-<a href="faq.html">FAQ</a>.</li>
-</ul>
-</td>
-</tr>
-<tr valign="top">
-<td width="50%">
-<h3>Goals</h3>
-<p>
-<ul>
-    <li>Provide an easy-to-use API for creating wizards</li>
-    <li>Leverage existing research into how to make wizards easy to use 
-        for end users</li>
-    <li>Leverage knowledge of known problems in existing wizard APIs to
-        avoid them in this one</li>
-    <li>Make it easy to create wizards that end users find easy to use</li>
-    <li>Minimalism - the API should be low-surface-area, exposing
-        no more concepts or classes than necessary</li>
-    <li>Robustness - keep the code simple and heavily covered by tests</li>
-</ul>
-</td>
-</tr><tr>
-<td width="50%">
-<h3>Downloads and Documents</h3>
-<ul>
-    <li><a href="quickstart.html">Quick Start Guide</a></li>
-    <li><a href="faq.html">Frequently Asked Questions</a></li>
-    <li><a href="WizardAPI.zip">Download the Javadoc (zip file)</a></li>
-    <li><a href="wizard.jar">Download the library (ver. 0.998.1) </a></li>
-    <li><a href="http://wizard.dev.java.net/nonav/javadoc/index.html">Javadoc (online)</a></li>
-    <li><a href="https://wizard.dev.java.net/source/browse/wizard/wizardPageDemo/src/wizardpagedemo/?hideattic=1">Basic example source</a></li>
-    <li><a href="https://wizard.dev.java.net/source/browse/wizard/WizardDemo/src/wizarddemo/?hideattic=1">Advanced example source</a>
-    <li><a href="http://contrib.netbeans.org/beans2nbm/beans2nbm.jnlp">Java WebStart&trade; Demo</a> (for more info about what the demo is check <a href="http://contrib.netbeans.org/beans2nbm/">here</a>)</li>
-    <li><a href="org-netbeans-spi-wizard.nbm">A NetBeans Module</a> that adds the Wizard Library, 
-    its source and Javadoc to the set of registered libraries in the NetBeans IDE</li>
-</ul>
-</td>
-</tr>
-<tr>
-    <td colspan="2">
-<h3>Status</h3>
-<p>
-This library has not yet reached 1.0 status (we reserve the right to make
-API changes), but is stable in terms
-of functionality and used in many projects. If you 
-encounter a problem, please file bugs;  bugs with unit tests attached are 
-much appreciated.
-</td>
-</tr><tr>
-    <td colspan="2">
-<h3>To Do:</h3>
-<ul>
-<li>JDK 5 and up enhancements:  Allow WizardPage ids/descriptions via 
-    annotations, generify where it makes sense</li>
-<li>Repackage to net.java namespace?</li>
-</ul>
-</td>
-</tr>
+
 </table>
 
+<table border="0" width="100%" cellpadding="0" cellspacing="5">
+
+<tr valign="top">
+
+<td width="50%">
+
+<h3>Features At A Glance</h3>
+
+<ul>
+
+    <li>Assemble a Wizard from a series of panels</li>
+
+    <li>Panels put key/value pairs into a java.util.Map</li>
+
+    <li>When Finish is pressed, your code evaluates the contents of the Map
+
+        and does whatever your wizard does (optionally on a background thread
+
+        with progress notification)</li>
+
+    <li>Automatic listening to components - for simple cases, just set names
+
+        on standard swing components and they will automatically be listened to
+
+        and their changes handled</li>
+
+    <li>Simple support for multiple branches (dynamically changing sets of steps)</li>
+
+    <li>Panels can be validated as the user interacts, or when the user presses
+
+        next (including on a background thread)</li>
+
+    <li>Support for long running operations with progress indication</li>
+
+    <li>Evaluate next button presses on a background thread with automatic 
+
+        progress notification</li>
+
+    <li>Allow pressing Finish to fail with a WizardException that returns the
+
+        wizard to any earlier step</li>
+
+    <li>Support for end-of-wizard summary panels</li>
+
+</ul>
+
+</td>
+
+<td rowspan="3" valign="top">
+
+<h3>News</h3>
+
+<ul>
+
+<li><i>5/1/08</i>  - Misc bug fixes;  <code>WizardPage.createCustomComponentListener()</code>
+
+no longer called from superclass constructor;  2.0/generified API brainstorming started on
+
+dev mailing list and <code>JDK_15</code> branch;  German translation thanks to
+
+Ruth Kusterer</li>
+
+<li><i>4/23/08</i> - Read the <a href="http://www.javaworld.com/javaworld/jw-04-2008/jw-04-opensourcejava-wizard-api.html">JavaWorld Magazine Article</a> 
+
+about this project; minor bugfix release to fix the issue with returning to the
+
+first step from finish via a WizardException which the article identified.</li>
+
+<li><i>2/11/08</i> - <a href="https://wizard.dev.java.net/source/browse/wizard/MultiBranchDemo/src/multibranchdemo/Brancher.java?only_with_tag=HEAD&view=markup">Multi-branch demo</a> added.
+
+                     Improved scrolling behavior if more steps will fit in the
+
+                     navigation panel;  Dutch localization thanks to 
+
+                     Axel Hallez;  Portuguese localization.
+
+<li><i>11/21/07</i> - Added ability to have different image on each step in the
+
+                      navigation bar</li>
+
+<li><i>7/20/07</i> - French translation with thanks to Laurent Sauvage</li>
+
+<li><i>2/8/06</i> - Summary pages now use proportional fonts, instructions panel
+
+is accessible</li>
+
+<li><i>12/30/06</i> - WizardDisplayer.installInContainer() - use a wizard ui in any
+
+ad-hoc swing container</li>
+
+<li><i>12/29/06</i> - Improvements contributed by Stanley Knutson:  
+
+WizardPanel allows veto of "next" or "prev" button actions (possibly
+
+using a background thread with busy indication);  Busy icon alternative for 
+
+long-running deferred result computations; The map of values can be pre-initialized when 
+
+the wizard is started; the size of the wizard can be specified when starting.
+
+Validation can now be deferred until Next is pressed, optionally on a background
+
+thread
+
+<li><i>9/24/06</i> - Examples of new features in CVS - see DeferredResultDemo,
+
+SummaryPageDemo and WizardPageDemo</li>
+
+<li><i>9/24/06</i>&mdash;Support for asynchronously computed results w/ progress
+
+bar, and support for JLF-style summary panels added.  Just return an instance of
+
+<code>Summary</code> or an instance of <code>DeferredWizardResult</code> from
+
+the appropriate <code>finish()</code> methods, or return pass a <code>Summary</code>
+
+object to <code>DeferredWizardResult.ResultProgressHandle.finished()</code>;
+
+new <a href="quickstart.html">Quick Start Guide</a></li>
+
+<li><i>9/23/06</i>&mdash;WizardPage now listens to nested 
+
+containers so any named component can participate in the wizard settings map with
+
+no code needed.</li>
+
+<li><i>8/20/05</i>&mdash;A convenience class, WizardPage, has been added,
+
+which makes it even easier to create new wizards, often doing almost nothing
+
+but using your favorite GUI designer.  See the first item in the
+
+<a href="faq.html">FAQ</a>.</li>
+
+</ul>
+
+</td>
+
+</tr>
+
+<tr valign="top">
+
+<td width="50%">
+
+<h3>Goals</h3>
+
+<p>
+
+<ul>
+
+    <li>Provide an easy-to-use API for creating wizards</li>
+
+    <li>Leverage existing research into how to make wizards easy to use 
+
+        for end users</li>
+
+    <li>Leverage knowledge of known problems in existing wizard APIs to
+
+        avoid them in this one</li>
+
+    <li>Make it easy to create wizards that end users find easy to use</li>
+
+    <li>Minimalism - the API should be low-surface-area, exposing
+
+        no more concepts or classes than necessary</li>
+
+    <li>Robustness - keep the code simple and heavily covered by tests</li>
+
+</ul>
+
+</td>
+
+</tr><tr>
+
+<td width="50%">
+
+<h3>Downloads and Documents</h3>
+
+<ul>
+
+    <li><a href="quickstart.html">Quick Start Guide</a></li>
+
+    <li><a href="faq.html">Frequently Asked Questions</a></li>
+
+    <li><a href="WizardAPI.zip">Download the Javadoc (zip file)</a></li>
+
+    <li><a href="wizard.jar">Download the library (ver. 0.998.1) </a></li>
+
+    <li><a href="http://wizard.dev.java.net/nonav/javadoc/index.html">Javadoc (online)</a></li>
+
+    <li><a href="https://wizard.dev.java.net/source/browse/wizard/wizardPageDemo/src/wizardpagedemo/?hideattic=1">Basic example source</a></li>
+
+    <li><a href="https://wizard.dev.java.net/source/browse/wizard/WizardDemo/src/wizarddemo/?hideattic=1">Advanced example source</a>
+
+    <li><a href="http://contrib.netbeans.org/beans2nbm/beans2nbm.jnlp">Java WebStart&trade; Demo</a> (for more info about what the demo is check <a href="http://contrib.netbeans.org/beans2nbm/">here</a>)</li>
+
+    <li><a href="org-netbeans-spi-wizard.nbm">A NetBeans Module</a> that adds the Wizard Library, 
+
+    its source and Javadoc to the set of registered libraries in the NetBeans IDE</li>
+
+</ul>
+
+</td>
+
+</tr>
+
+<tr>
+
+    <td colspan="2">
+
+<h3>Status</h3>
+
+<p>
+
+This library has not yet reached 1.0 status (we reserve the right to make
+
+API changes), but is stable in terms
+
+of functionality and used in many projects. If you 
+
+encounter a problem, please file bugs;  bugs with unit tests attached are 
+
+much appreciated.
+
+</td>
+
+</tr><tr>
+
+    <td colspan="2">
+
+<h3>To Do:</h3>
+
+<ul>
+
+<li>JDK 5 and up enhancements:  Allow WizardPage ids/descriptions via 
+
+    annotations, generify where it makes sense</li>
+
+<li>Repackage to net.java namespace?</li>
+
+</ul>
+
+</td>
+
+</tr>
+
+</table>
+
+
+
 </body>
+
 </html>
+

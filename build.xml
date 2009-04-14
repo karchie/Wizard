@@ -19,19 +19,26 @@
         <zip destfile="www/WizardAPI.zip" basedir="dist/javadoc" update="false" whenempty="fail" compress="true"/>
     </target>
     
-    <target name="release" depends="jar,cleanjavadoc,release-javadoc,nbm" description="Prepare a new release">
+    <target name="release" depends="jar,cleanjavadoc,release-javadoc,release-source,nbm" description="Prepare a new release">
         <copy file="dist/wizard.jar" todir="www"/>
         <mkdir dir="www/javadoc"/>
         <copy todir="www/javadoc">
             <fileset dir="dist/javadoc" includes="**"/>
         </copy>
-    </target> 
+    </target>
+
+    <target name="release-source" description="Zip the sources">
+        <delete file="www/src.zip"/>
+        <zip zipfile="www/wizard-src.zip" compress="9">
+            <zipfileset dir="." excludes="www/**,nbproject/private/**,wizard-uml/**,NbDesigner/**,dist/**,build/**,doc/**,lib/**,.classpath,.project"/>
+        </zip>
+    </target>
     
     <target name="javadoc" description="Build the javadoc">
         <mkdir dir="dist/javadoc"/>
         <property file="${basedir}/nbproject/project.properties"/>
         <property file="${basedir}/nbproject/private/private.properties"/>
-        <javadoc overview="${basedir}/doc/api/overview.html" 
+        <javadoc overview="${basedir}/doc/api/overview.html"
                  destdir="dist/javadoc" 
                  source="1.4" 
                  notree="${javadoc.notree}" 
@@ -50,26 +57,26 @@
             </classpath>
 
             <packageset dir="src" defaultexcludes="yes">
-              <include name="org/netbeans/api/**" />
-              <include name="org/netbeans/spi/**" />
-              <exclude name="org/netbeans/modules/**"/>
-              <exclude name="org/netbeans/api/wizard/displayer/**"/>
-            </packageset>            
+                <include name="org/netbeans/api/**" />
+                <include name="org/netbeans/spi/**" />
+                <exclude name="org/netbeans/modules/**"/>
+                <exclude name="org/netbeans/api/wizard/displayer/**"/>
+            </packageset>
         </javadoc>
     </target>
     <target name="nbm" description="Generate a NetBeans Module" depends="jar,release-javadoc">
-      <zip zipfile="dist/wizard-src.zip">
-          <fileset dir="src">
-              <exclude name="**/CVS"/>
-          </fileset>
-      </zip>
-      <taskdef classpath="lib/beans2nbm.jar" classname="beans2nbm.ant.GenNbmTask"
+        <zip zipfile="dist/wizard-src.zip">
+            <fileset dir="src">
+                <exclude name="**/CVS"/>
+            </fileset>
+        </zip>
+        <taskdef classpath="lib/beans2nbm.jar" classname="beans2nbm.ant.GenNbmTask"
       name="nbm"/>
 
-      <nbm destFolder="www" 
+        <nbm destFolder="www"
         destFileName="org-netbeans-spi-wizard.nbm"
         description="A library for easily creating Wizard dialogs in Swing." 
-        version="0.99" 
+        version="1.0"
         homepage="http://wizard.dev.java.net"
         codeName="org.netbeans.spi.wizard" 
         jarFileName="dist\wizard.jar" 
