@@ -319,6 +319,18 @@ public class NavButtonManager implements ActionListener
         
         if (name.startsWith(DEFERRED_FAILED))
         {
+            // Cancel clicked after a deferred failure
+            if (o instanceof ActionEvent)
+            {
+                JButton button = (JButton) ((ActionEvent) o).getSource();
+                name = button.getName();
+                if (NAME_CANCEL.equals(name))
+                {
+                    processCancel(o instanceof ActionEvent ? (ActionEvent) o
+                            : null, false);
+                    return;
+                }
+            }
             // in failed state, so we always reload the current step's screen
             String currentStep = parent.getCurrentStep();
             parent.navigateTo(currentStep);
