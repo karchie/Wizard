@@ -30,6 +30,14 @@ public abstract class WizardPanelNavResult extends DeferredWizardResult
      * Value to remain on the current page in the wizard
      */
     public static final WizardPanelNavResult REMAIN_ON_PAGE = new WPNRimmediate(false);
+
+    public WizardPanelNavResult(boolean useBusy) {
+        super (false, useBusy);
+    }
+
+    public WizardPanelNavResult() {
+        super (false, false);
+    }
     
     public boolean isDeferredComputation()
     {
