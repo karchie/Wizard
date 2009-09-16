@@ -242,7 +242,7 @@ public class DbLoginPanel extends WizardPage
 
         OpenConnection()
         {
-            setUseBusy(true);
+            super(true);
         }
 
         public void start(Map settings, ResultProgressHandle progress)
