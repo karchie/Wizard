@@ -76,7 +76,7 @@
         <nbm destFolder="www"
         destFileName="org-netbeans-spi-wizard.nbm"
         description="A library for easily creating Wizard dialogs in Swing." 
-        version="1.0"
+        version="1.1"
         homepage="http://wizard.dev.java.net"
         codeName="org.netbeans.spi.wizard" 
         jarFileName="dist\wizard.jar" 
