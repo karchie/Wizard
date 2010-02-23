@@ -156,7 +156,6 @@ public class WizardPage extends JPanel implements WizardPanel {
      * @see #validateContents
      */
     public WizardPage(String stepId, String stepDescription, boolean autoListen) {
-    	logger.info("Creating new wizard page: " + stepId + " " + stepDescription);
         id = stepId == null ? getClass().getName() : stepId;
         this.autoListen = autoListen;
         description = stepDescription;
