@@ -28,12 +28,14 @@ import java.awt.KeyboardFocusManager;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.Window;
+import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
+
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import javax.swing.BorderFactory;
@@ -49,6 +51,7 @@ import javax.swing.WindowConstants;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
+
 import org.netbeans.api.wizard.WizardDisplayer;
 import org.netbeans.api.wizard.WizardResultReceiver;
 import org.netbeans.modules.wizard.InstructionsPanelImpl;
@@ -73,8 +76,6 @@ import org.netbeans.spi.wizard.WizardPanel;
  */
 public class WizardDisplayerImpl extends WizardDisplayer
 {
-
-
     ResultProgressHandle   progress       = null;
 
     JLabel                    ttlLabel       = null;
@@ -430,8 +431,7 @@ public class WizardDisplayerImpl extends WizardDisplayer
         inner.add(comp, BorderLayout.CENTER);
         inner.remove(wizardPanel);
         wizardPanel = comp;
-        inner.invalidate();
-        inner.revalidate();
+        inner.validate();
         inner.repaint();
         comp.requestFocus();
         if (!inSummary)
@@ -668,4 +668,12 @@ public class WizardDisplayerImpl extends WizardDisplayer
         problem.setBorder(b1);
     }
 
+    /*
+     * (non-Javadoc)
+     * @see org.netbeans.api.wizard.WizardDisplayer#setCloseHandler(java.awt.event.ActionListener)
+     */
+    public ActionListener setCloseHandler(final ActionListener l)
+    {
+    	return buttonManager.setCloseHandler(l);
+    }
 }

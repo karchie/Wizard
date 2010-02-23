@@ -12,6 +12,7 @@ package org.netbeans.api.wizard;
 
 import java.awt.Container;
 import java.awt.Rectangle;
+import java.awt.event.ActionListener;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
@@ -180,12 +181,15 @@ public abstract class WizardDisplayer {
      * @param receiver An object which will be called when the Finish or 
      *   Cancel buttons are pressed.  May not be null.
      */ 
-    public static void installInContainer (Container c, Object layoutConstraint, 
+    public static WizardDisplayer installInContainer (Container c,
+	    Object layoutConstraint, 
             Wizard awizard,
             Action helpAction, Map initialProperties, 
             WizardResultReceiver receiver) {
-        getDefault().install (c, layoutConstraint, awizard, helpAction, 
+	final WizardDisplayer displayer = getDefault();
+        displayer.install (c, layoutConstraint, awizard, helpAction, 
                 initialProperties, receiver);
+	return displayer;
     }
     
     /**
@@ -195,6 +199,16 @@ public abstract class WizardDisplayer {
             Wizard awizard, Action helpAction, Map initialProperties,  
             WizardResultReceiver receiver);
     
+    /**
+     * Assigns a handler used to close the wizard.
+     * @param l ActionListener to be invoked when the wizard is to be closed.
+     *   The event passed to the handler will typically be an ACTION_PERFORMED
+     *   on the cancel/close button.
+     * @return the handler replaced by this method invocation
+     */
+    public abstract ActionListener setCloseHandler(ActionListener l);
+    
+
     private static boolean nonBuggyWizard (Wizard wizard) {
         String[] s = wizard.getAllSteps();
         // assert new HashSet(Arrays.asList(s)).size() == s.length;

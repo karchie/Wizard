@@ -5,6 +5,7 @@
 
 package org.netbeans.api.wizard.displayer;
 
+import java.awt.Container;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Insets;
@@ -32,7 +33,6 @@ import org.netbeans.spi.wizard.Summary;
 import org.netbeans.spi.wizard.Wizard;
 import org.netbeans.spi.wizard.WizardException;
 import org.netbeans.spi.wizard.WizardObserver;
-import org.netbeans.spi.wizard.WizardPage;
 import org.netbeans.spi.wizard.WizardPanel;
 import org.netbeans.spi.wizard.WizardPanelNavResult;
 
@@ -61,10 +61,10 @@ public class NavButtonManager implements ActionListener
     /** Prefix for the name in deferredStatus */
     static final String DEFERRED_FAILED = "FAILED_";
 
+
     private static final Logger logger =
         Logger.getLogger(NavButtonManager.class.getName());
 
-    
     JButton             next           = null;
 
     JButton             prev           = null;
@@ -93,6 +93,18 @@ public class NavButtonManager implements ActionListener
      * operation.
      */
     String              deferredStatus = null;
+
+    private ActionListener closeHandler = new ActionListener() {
+        public void actionPerformed(final ActionEvent e) {
+	    final Container top = ((JComponent)e.getSource()).getTopLevelAncestor();
+	    if (top instanceof Window) {
+		final Window win = (Window) top;
+		win.setVisible(false);
+		win.dispose();
+	    }
+	}
+    };
+
 
     NavButtonManager(WizardDisplayerImpl impl)
     {
@@ -582,11 +594,20 @@ public class NavButtonManager implements ActionListener
         }
     }
 
-    protected void processClose(ActionEvent event)
-    {
-        Window win = (Window) ((JComponent) event.getSource()).getTopLevelAncestor();
-        win.setVisible(false);
-        win.dispose();
+    /**
+     * Assigns a handler used to carry out the close action.
+     * @param l ActionListener to be invoked when the wizard is to be closed.
+     * @return the handler replaced by this method invocation
+     */
+    public ActionListener setCloseHandler(final ActionListener l) {
+    	final ActionListener old = closeHandler;
+    	closeHandler = l;
+    	return old;
+    }
+    
+
+    protected void processClose(ActionEvent event) {
+	closeHandler.actionPerformed(event);
     }
 
     void updateButtons()

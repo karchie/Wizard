@@ -156,6 +156,7 @@ public class WizardPage extends JPanel implements WizardPanel {
      * @see #validateContents
      */
     public WizardPage(String stepId, String stepDescription, boolean autoListen) {
+    	logger.info("Creating new wizard page: " + stepId + " " + stepDescription);
         id = stepId == null ? getClass().getName() : stepId;
         this.autoListen = autoListen;
         description = stepDescription;
@@ -367,6 +368,8 @@ public class WizardPage extends JPanel implements WizardPanel {
         } finally {
             inValidateContents = false;
         }
+        validate();
+        repaint(0, 0, getWidth(), getHeight());
     }
 
     public WizardPanelNavResult allowBack(String stepName, Map settings, Wizard wizard) {
