@@ -16,6 +16,7 @@ package org.netbeans.api.wizard.displayer;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.ComponentOrientation;
 import java.awt.Container;
 import java.awt.Cursor;
@@ -76,6 +77,8 @@ import org.netbeans.spi.wizard.WizardPanel;
  */
 public class WizardDisplayerImpl extends WizardDisplayer
 {
+	Container				container = null;
+	
     ResultProgressHandle   progress       = null;
 
     JLabel                    ttlLabel       = null;
@@ -251,22 +254,23 @@ public class WizardDisplayerImpl extends WizardDisplayer
         return new InstructionsPanelImpl (wizard);
     }
     
-    public void install (Container c, Object layoutConstraint, Wizard awizard,
+    public void install (Container container, Object layoutConstraint, Wizard awizard,
             Action helpAction, Map initialProperties, WizardResultReceiver receiver) {        
         JPanel pnl = createOuterPanel (awizard, new Rectangle(), helpAction, initialProperties);
         if (layoutConstraint != null) {
-            if (c instanceof RootPaneContainer) {
-                ((RootPaneContainer) c).getContentPane().add (pnl, layoutConstraint);
+            if (container instanceof RootPaneContainer) {
+                ((RootPaneContainer) container).getContentPane().add (pnl, layoutConstraint);
             } else {
-                c.add (pnl, layoutConstraint);
+                container.add (pnl, layoutConstraint);
             }
         } else {
-            if (c instanceof RootPaneContainer) {
-                ((RootPaneContainer) c).getContentPane().add (pnl);
+            if (container instanceof RootPaneContainer) {
+                ((RootPaneContainer) container).getContentPane().add (pnl);
             } else {
-                c.add (pnl);
+                container.add (pnl);
             }
         }
+        this.container = container;
         this.receiver = receiver;
     }
     
@@ -473,11 +477,17 @@ public class WizardDisplayerImpl extends WizardDisplayer
         progress = createProgressDisplay(r.isUseBusy());
         Container inst = instructions.getComponent();
         progress.addProgressComponents(inst);
-        inst.invalidate();
         if (inst instanceof JComponent) {
             ((JComponent)inst).revalidate();
+        } else {
+        	inst.invalidate();
         }
         inst.repaint();
+        final Window window = buttonManager.getWindow();
+        final Component cursorExtent = null == window ? container : window;
+        if (null == cursorExtent) {
+        	throw new RuntimeException("No container found for cursor extent");
+        }
         Runnable run = new Runnable()
         {
             public void run()
@@ -488,8 +498,7 @@ public class WizardDisplayerImpl extends WizardDisplayer
                     {
                         EventQueue.invokeLater (new Runnable() {
                             public void run() {
-                            buttonManager.getWindow()
-                                .setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                            cursorExtent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
                             }
                         });
                         r.start(settings, progress);
@@ -518,7 +527,7 @@ public class WizardDisplayerImpl extends WizardDisplayer
                         }
                         finally
                         {
-                            buttonManager.getWindow().setCursor(Cursor.getDefaultCursor());
+                            cursorExtent.setCursor(Cursor.getDefaultCursor());
                         }
                     }
                 }
