@@ -168,6 +168,7 @@ public class NavButtonManager implements ActionListener
 
         buttons = new JPanel()
         {
+        	private final static long serialVersionUID = 1L;
             public void doLayout()
             {
                 Insets ins = getInsets();
@@ -455,7 +456,7 @@ public class NavButtonManager implements ActionListener
 
         String prevId = wizard.getPreviousStep();
         settings.popAndCalve();
-        parent.setDeferredResult(null);
+        parent.abortDeferredResult();
         parent.navigateTo(prevId);
         parent.setInSummary(false);
     }
@@ -564,6 +565,7 @@ public class NavButtonManager implements ActionListener
 
     protected void processCancel(ActionEvent event, boolean reallyCancel)
     {
+    	
         DeferredWizardResult deferredResult = parent.getDeferredResult();
         if (deferredResult != null && deferredResult.canAbort())
         {

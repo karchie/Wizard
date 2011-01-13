@@ -3,21 +3,18 @@ package org.netbeans.api.wizard.displayer;
 import java.awt.Container;
 import java.awt.EventQueue;
 import java.lang.reflect.InvocationTargetException;
-import java.net.URL;
 import java.util.logging.Logger;
 
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
+import javax.swing.BoxLayout;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.border.EmptyBorder;
 
 import org.netbeans.api.wizard.WizardDisplayer;
-import org.netbeans.modules.wizard.InstructionsPanelImpl;
 import org.netbeans.modules.wizard.NbBridge;
 import org.netbeans.spi.wizard.ResultProgressHandle;
 import org.netbeans.spi.wizard.Summary;
-import org.netbeans.spi.wizard.WizardPage;
 
 /**
  * Show progress bar for deferred results, with a label showing percent done and progress bar.
@@ -29,27 +26,23 @@ import org.netbeans.spi.wizard.WizardPage;
  * and <code>org.netbeans.spi.wizard</code></font></i></b>.
 
  * @author stanley@stanleyknutson.com
+ * @author Kevin A. Archie <karchie@wustl.edu>
  */
 public class NavProgress implements ResultProgressHandle
 {
-    private static final Logger logger =
-        Logger.getLogger(NavProgress.class.getName());
+    private final static String MESSAGE_SPACE =	// 64 underscores
+    	"________________________________________________________________";
+    private final Logger logger = Logger.getLogger(NavProgress.class.getName());
     
-    JProgressBar        progressBar = new JProgressBar();
+    private final JProgressBar        progressBar = new JProgressBar();
 
-    JLabel              lbl         = new JLabel();
-
-    JLabel              busy        = new JLabel();
+    JLabel              messageText         = new JLabel(MESSAGE_SPACE);
 
     WizardDisplayerImpl parent;
 
     String              failMessage = null;
     
-    boolean             isUseBusy = false;
-    
-    Container   ipanel = null;
-    
-    boolean             isInitialized = false;
+    JPanel 	panel = new JPanel();
     
     /** isRunning is true until finished or failed is called */
     boolean             isRunning = true;
@@ -57,23 +50,18 @@ public class NavProgress implements ResultProgressHandle
     NavProgress(WizardDisplayerImpl impl, boolean useBusy)
     {
         this.parent = impl;
-        isUseBusy = useBusy;
+        panel.setOpaque(false);
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        if (!useBusy) {
+            panel.add(messageText);
+            panel.add(progressBar);        	
+        }
     }
     
-    public void addProgressComponents (Container panel)
+    public void addProgressComponents(final Container container)
     {
-        panel.add(lbl);
-        if (isUseBusy)
-        {
-            ensureBusyInitialized();
-            panel.add(busy);
-        }
-        else
-        {
-            panel.add(progressBar);
-        }
-        isInitialized = true;
-        ipanel = panel;
+        container.add(panel);
+        container.invalidate();
     }
 
     public void setProgress(final String description, final int currentStep, final int totalSteps)
@@ -82,8 +70,10 @@ public class NavProgress implements ResultProgressHandle
         {
             public void run()
             {
-                lbl.setText(description == null ? " " : description); // NOI18N
+                messageText.setText(description == null ? " " : description); // NOI18N
+                messageText.revalidate();
                 setProgress(currentStep, totalSteps);
+                panel.repaint();
             }
         };
         invoke(r);
@@ -114,8 +104,6 @@ public class NavProgress implements ResultProgressHandle
                     progressBar.setMaximum(totalSteps);
                     progressBar.setValue(currentStep);
                 }
-                
-                setUseBusy(false);
             }
         };
         invoke(r);
@@ -127,45 +115,11 @@ public class NavProgress implements ResultProgressHandle
         {
             public void run()
             {
-                lbl.setText(description == null ? " " : description); // NOI18N
-
+                messageText.setText(description == null ? " " : description); // NOI18N
                 progressBar.setIndeterminate(true);
-                
-                setUseBusy(true);
             }
         };
         invoke(r);
-    }
-    
-    protected void setUseBusy (boolean useBusy)
-    {
-        if (isInitialized) 
-        {
-            if (useBusy && (! isUseBusy))
-            {
-                ipanel.remove(progressBar);
-                ensureBusyInitialized();
-                ipanel.add(busy);
-                ipanel.invalidate();
-            }
-            else if ( !useBusy && isUseBusy)
-            {
-                ipanel.remove(busy);
-                ipanel.add(progressBar);
-                ipanel.invalidate();
-            }
-        }
-        isUseBusy = useBusy; 
-    }
-    
-    private void ensureBusyInitialized()
-    {
-        if (busy.getIcon() == null)
-        {
-            URL url = getClass().getResource("busy.gif");
-            Icon icon = new ImageIcon(url);
-            busy.setIcon(icon);
-        }
     }
     
     private void invoke(Runnable r)
