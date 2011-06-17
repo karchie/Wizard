@@ -1,0 +1,8 @@
+*~
+*.class
+/build/
+/dist/
+/www/javadoc/
+/www/*.jar
+/www/*.nbm
+/www/*.zip
