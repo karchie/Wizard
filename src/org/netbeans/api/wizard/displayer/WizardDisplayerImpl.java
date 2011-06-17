@@ -74,6 +74,7 @@ import org.netbeans.spi.wizard.WizardPanel;
  * display wizards in a way which will continue to work over time.
  * @author stanley@StanleyKnutson.com
  * @author Tim Boudreau
+ * @author Kevin A. Archie <karchie@wustl.edu>
  */
 public class WizardDisplayerImpl extends WizardDisplayer
 {
@@ -471,20 +472,22 @@ public class WizardDisplayerImpl extends WizardDisplayer
         return new NavProgress(this, useBusyGif);
     }
     
+    
     void handleDeferredWizardResult(final DeferredWizardResult r, final boolean inSummary)
     {
         synchronized (this) {
             if (null != deferredResult) {
-                throw new IllegalStateException("deferred result already set");
+                throw new IllegalStateException("deferred result already set!");
             }
             deferredResult = r;
         }
-        final Container inst = instructions.getComponent();
         final Window window = buttonManager.getWindow();
+        final Container inst = instructions.getComponent();
         final Component cursorExtent = null == window ? container : window;
         if (null == cursorExtent) {
         	throw new IllegalStateException("No container found for cursor extent");
         }
+        
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 wizardPanel.setEnabled(false);
@@ -495,6 +498,7 @@ public class WizardDisplayerImpl extends WizardDisplayer
                 } else {
                     inst.invalidate();
                 }
+
                 inst.validate();
                 inst.repaint();
                 cursorExtent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));

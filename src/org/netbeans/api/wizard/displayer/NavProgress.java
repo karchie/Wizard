@@ -28,6 +28,7 @@ import org.netbeans.spi.wizard.Summary;
  * and <code>org.netbeans.spi.wizard</code></font></i></b>.
 
  * @author stanley@stanleyknutson.com
+ * @author Kevin A. Archie <karchie@wustl.edu>
  */
 public class NavProgress implements ResultProgressHandle
 {
@@ -37,7 +38,7 @@ public class NavProgress implements ResultProgressHandle
         "________________________________________________________________";
     
     private final JPanel panel = new JPanel();
-    private final JProgressBar        progressBar = new JProgressBar();
+    private final JProgressBar progressBar = new JProgressBar();
     private final JLabel messageLabel = new JLabel(MESSAGE_SPACE);
     private final JLabel busyLabel = new JLabel();
 
@@ -76,6 +77,7 @@ public class NavProgress implements ResultProgressHandle
                 messageLabel.setText(description == null ? " " : description); // NOI18N
                 messageLabel.revalidate();
                 setProgress(currentStep, totalSteps);
+                panel.repaint();
             }
         };
         invoke(r);

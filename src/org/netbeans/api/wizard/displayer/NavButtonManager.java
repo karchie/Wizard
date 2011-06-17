@@ -566,6 +566,7 @@ public class NavButtonManager implements ActionListener
 
     protected void processCancel(ActionEvent event, boolean reallyCancel)
     {
+    	
         DeferredWizardResult deferredResult = parent.getDeferredResult();
         if (deferredResult != null && deferredResult.canAbort())
         {
