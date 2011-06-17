@@ -29,12 +29,11 @@ import java.awt.KeyboardFocusManager;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.Window;
-import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
 import javax.swing.AbstractAction;
@@ -47,6 +46,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.RootPaneContainer;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.WindowConstants;
 import javax.swing.border.Border;
@@ -79,8 +79,6 @@ public class WizardDisplayerImpl extends WizardDisplayer
 {
 	Container				container = null;
 	
-    ResultProgressHandle   progress       = null;
-
     JLabel                    ttlLabel       = null;
 
     JPanel                    ttlPanel       = null;
@@ -129,6 +127,8 @@ public class WizardDisplayerImpl extends WizardDisplayer
             .getColor("textText")))); // NOI18N
         ttlPanel = new JPanel()
         {
+            private static final long serialVersionUID = 5496562619357847201L;
+
             public void doLayout()
             {
                 Dimension d = ttlLabel.getPreferredSize();
@@ -171,8 +171,7 @@ public class WizardDisplayerImpl extends WizardDisplayer
      * @return value of the 'finish' processing
      * @see org.netbeans.api.wizard.WizardDisplayer#show(org.netbeans.spi.wizard.Wizard, java.awt.Rectangle, javax.swing.Action, java.util.Map)
      */
-    private JPanel createOuterPanel(final Wizard awizard, Rectangle bounds, Action helpAction,
-                          Map initialProperties)
+    private JPanel createOuterPanel(final Wizard awizard, Rectangle bounds, Action helpAction, Map initialProperties)
     {
 
         this.wizard = awizard;
@@ -199,6 +198,8 @@ public class WizardDisplayerImpl extends WizardDisplayer
         outerPanel.setLayout(new BorderLayout());
         
         Action kbdCancel = new AbstractAction() {
+             private static final long serialVersionUID = 5479141814374638172L;
+
             public void actionPerformed(ActionEvent e) {
                 JButton b = buttonManager.getCancel();
                 if (b.isEnabled()) {
@@ -206,7 +207,7 @@ public class WizardDisplayerImpl extends WizardDisplayer
                 }
             }
         };
-        outerPanel.getInputMap(outerPanel.WHEN_IN_FOCUSED_WINDOW).put(
+        outerPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(
                 KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "cancel"); //NOI18N
         outerPanel.getActionMap().put("cancel", kbdCancel); //NOI18N
 
@@ -254,6 +255,7 @@ public class WizardDisplayerImpl extends WizardDisplayer
         return new InstructionsPanelImpl (wizard);
     }
     
+
     public void install (Container container, Object layoutConstraint, Wizard awizard,
             Action helpAction, Map initialProperties, WizardResultReceiver receiver) {        
         JPanel pnl = createOuterPanel (awizard, new Rectangle(), helpAction, initialProperties);
@@ -274,6 +276,7 @@ public class WizardDisplayerImpl extends WizardDisplayer
         this.receiver = receiver;
     }
     
+
     public Object show(final Wizard awizard, Rectangle bounds, Action helpAction,
                           Map initialProperties) {
         createOuterPanel (awizard, bounds, helpAction, initialProperties);
@@ -463,92 +466,68 @@ public class WizardDisplayerImpl extends WizardDisplayer
         
     }
 
-    protected ResultProgressHandle createProgressDisplay (boolean isUseBusy)
+    protected ResultProgressHandle createProgressDisplay (boolean useBusyGif)
     {
-        return new NavProgress(this, isUseBusy);
+        return new NavProgress(this, useBusyGif);
     }
     
     void handleDeferredWizardResult(final DeferredWizardResult r, final boolean inSummary)
     {
         synchronized (this) {
+            if (null != deferredResult) {
+                throw new IllegalStateException("deferred result already set");
+            }
             deferredResult = r;
         }
-        wizardPanel.setEnabled(false);
-        progress = createProgressDisplay(r.isUseBusy());
-        Container inst = instructions.getComponent();
-        progress.addProgressComponents(inst);
-        if (inst instanceof JComponent) {
-            ((JComponent)inst).revalidate();
-        } else {
-        	inst.invalidate();
-        }
-        inst.repaint();
+        final Container inst = instructions.getComponent();
         final Window window = buttonManager.getWindow();
         final Component cursorExtent = null == window ? container : window;
         if (null == cursorExtent) {
-        	throw new RuntimeException("No container found for cursor extent");
+        	throw new IllegalStateException("No container found for cursor extent");
         }
-        Runnable run = new Runnable()
-        {
-            public void run()
-            {
-                if (!EventQueue.isDispatchThread())
-                {
-                    try
-                    {
-                        EventQueue.invokeLater (new Runnable() {
-                            public void run() {
-                            cursorExtent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
-                            }
-                        });
-                        r.start(settings, progress);
-                        if (progress.isRunning())
-                        {
-                            progress.failed("Start method did not inidicate " +
-                                    "failure or finished in " + r, false);
-                        }
-                        
-                    }
-                    finally
-                    {
-                        try
-                        {
-                            EventQueue.invokeAndWait(this);
-                        }
-                        catch (InvocationTargetException ex)
-                        {
-                            ex.printStackTrace();
-                            return;
-                        }
-                        catch (InterruptedException ex)
-                        {
-                            ex.printStackTrace();
-                            return;
-                        }
-                        finally
-                        {
-                            cursorExtent.setCursor(Cursor.getDefaultCursor());
-                        }
-                    }
-                }
-                else
-                {
-                    synchronized (this) {
-                        deferredResult = null;
-                    }
-                    buttonManager.getCancel().setEnabled(true);
-                    Container inst = instructions.getComponent();
-                    inst.removeAll();
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                wizardPanel.setEnabled(false);
+                final ResultProgressHandle progress = createProgressDisplay(r.disableUIWhileBusy());
+                progress.addProgressComponents(inst);
+                if (inst instanceof JComponent) {
+                    ((JComponent)inst).revalidate();
+                } else {
                     inst.invalidate();
-                    if (inst instanceof JComponent) {
-                        ((JComponent)instructions).revalidate();
-                    }
-                    inst.repaint();
                 }
+                inst.validate();
+                inst.repaint();
+                cursorExtent.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+                
+                final Runnable producer = new Runnable() {
+                    public void run() {
+                        try {
+                            r.start(settings, progress);
+                            if (progress.isRunning()) {
+                                progress.failed("Start method did not indicate status in " + r, false);
+                            }
+                        } finally {
+                            SwingUtilities.invokeLater(new Runnable() {
+                                public void run() {
+                                    synchronized (WizardDisplayerImpl.this) {
+                                        deferredResult = null;
+                                    }
+                                    cursorExtent.setCursor(Cursor.getDefaultCursor());
+                                    buttonManager.getCancel().setEnabled(true);
+                                    inst.removeAll();
+                                    inst.invalidate();
+                                    if (inst instanceof JComponent) {
+                                        ((JComponent)instructions).revalidate();
+                                    }
+                                    inst.repaint();
+                                }
+                            });
+                        }
+                    }
+                };
+                new Thread(producer, "Deferred Wizard Result " + r).start();
             }
-        };
-        Thread runner = new Thread(run, "Wizard Background Result Thread " + r); // NOI18N
-        runner.start();
+        });
     }
 
     public void navigateTo(String id)
@@ -640,11 +619,13 @@ public class WizardDisplayerImpl extends WizardDisplayer
         }
     }
 
-    public synchronized void setDeferredResult(DeferredWizardResult deferredResult)
-    {
-        this.deferredResult = deferredResult;
+    public synchronized void abortDeferredResult() {
+        if (null != deferredResult && deferredResult.canAbort()) {
+            deferredResult.abort();
+        }
+        deferredResult = null;
     }
-    
+     
     /**
      * Will only be called if there is a WizardResultReceiver - i.e. if the
      * wizard is being displayed in some kind of custom container.  Return

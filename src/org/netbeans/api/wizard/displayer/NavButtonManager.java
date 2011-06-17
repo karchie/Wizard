@@ -168,6 +168,8 @@ public class NavButtonManager implements ActionListener
 
         buttons = new JPanel()
         {
+            private static final long serialVersionUID = -1219524604575467507L;
+
             public void doLayout()
             {
                 Insets ins = getInsets();
@@ -455,7 +457,7 @@ public class NavButtonManager implements ActionListener
 
         String prevId = wizard.getPreviousStep();
         settings.popAndCalve();
-        parent.setDeferredResult(null);
+        parent.abortDeferredResult();
         parent.navigateTo(prevId);
         parent.setInSummary(false);
     }

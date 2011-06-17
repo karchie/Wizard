@@ -215,7 +215,7 @@ public abstract class WizardDisplayer {
         // for JDK 1.4.2: replace assert with runtime exception
         if (new HashSet(Arrays.asList(s)).size() != s.length)
         {
-            throw new RuntimeException ("steps are duplicated: " + Arrays.asList(s));
+            throw new RuntimeException ("steps are duplicated: " + Arrays.toString(s));
         }
         if (s.length == 1 && Wizard.UNDETERMINED_STEP.equals(s[0])) {
            // assert false : "Only ID may not be UNDETERMINED_ID"; //NOI18N
@@ -226,7 +226,7 @@ public abstract class WizardDisplayer {
              //  assert false :  "UNDETERMINED_ID may only be last element in" + //NOI18N
                //        " ids array " + Arrays.asList(s); //NOI18N
                 throw new RuntimeException ( "UNDETERMINED_ID may only be last element in" + //NOI18N
-                                             " ids array " + Arrays.asList(s)); //NOI18N)
+                                             " ids array " + Arrays.toString(s)); //NOI18N)
             }
         }
         return true;

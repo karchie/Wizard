@@ -37,14 +37,13 @@ import java.util.Map;
  */
 public abstract class DeferredWizardResult {
     private final boolean canAbort;
-    private final boolean useBusy;
+    private final boolean disableUIWhileBusy;
     /** 
      * Creates a new instance of DeferredWizardResult which cannot be 
      * aborted and shows a progress bar.
      */
     public DeferredWizardResult() {
-        useBusy = false;
-        canAbort = false;
+        this(false, false);
     }
     
     /** Creates a new instance of DeferredWizardResult which may or may not
@@ -53,8 +52,7 @@ public abstract class DeferredWizardResult {
      * calling the <code>abort()</code> method
      */
     public DeferredWizardResult (boolean canAbort) {
-        this.canAbort = canAbort;
-        this.useBusy = false;
+        this(canAbort, false);
     }
     
     /** Creates a new instance of DeferredWizardResult which may or may not
@@ -62,11 +60,11 @@ public abstract class DeferredWizardResult {
      * instead of showing a progress bar while the background work runs.
      * 
      * @param canAbort
-     * @param useBusy
+     * @param disableUIWhileBusy
      */
-    public DeferredWizardResult (boolean canAbort, boolean useBusy) {
+    public DeferredWizardResult (boolean canAbort, boolean disableUIWhileBusy) {
         this.canAbort = canAbort;
-        this.useBusy = useBusy;
+        this.disableUIWhileBusy = disableUIWhileBusy;
     }
     
     
@@ -145,8 +143,8 @@ public abstract class DeferredWizardResult {
      * @return true if no progress bar should be displayed and the UI should
      * just disable itself
      */
-    public final boolean isUseBusy()
+    public final boolean disableUIWhileBusy()
     {
-        return useBusy;
+        return disableUIWhileBusy;
     }
 }
